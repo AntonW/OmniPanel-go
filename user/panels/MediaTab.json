@@ -19,6 +19,7 @@
                 "font_size": "20",
                 "max_entries": "20",
                 "new_entry_color": "#1ccad8ff",
+                "open_url_location": "host",
                 "refresh_interval": "60",
                 "show_date": "true",
                 "show_description": "true",
@@ -55,6 +56,10 @@
                 },
                 "new_entry_color": {
                     "type": "color"
+                },
+                "open_url_location": {
+                    "options": "host,client",
+                    "type": "select"
                 },
                 "refresh_interval": {
                     "min": "10",
@@ -164,7 +169,7 @@
             "theme": "kde_breeze",
             "top": "0%",
             "width": "50%",
-            "zIndex": 100
+            "zIndex": "100"
         }
     ],
     "grid": {
@@ -172,8 +177,8 @@
         "y": 8
     },
     "metadata": {
-        "created": "2026-05-16T11:32:38.912Z",
-        "modified": "2026-05-16T11:32:38.912Z"
+        "created": "2026-05-18T07:03:43.360Z",
+        "modified": "2026-05-18T07:03:43.360Z"
     },
     "name": "MediaTab",
     "theme": "default",
