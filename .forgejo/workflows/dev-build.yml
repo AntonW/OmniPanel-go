@@ -62,9 +62,9 @@ jobs:
 
       - name: Install Wine and dependencies
         run: |
+          dpkg --add-architecture i386
           apt-get update
-          apt-get install -y wine wine64 wine32 xvfb wget unzip zip
-          dpkg --add-architecture i386 || true
+          apt-get install -y wine wine64 xvfb wget unzip zip
 
       - name: Initialize Wine environment
         run: |
