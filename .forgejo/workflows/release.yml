@@ -23,6 +23,9 @@ jobs:
       - name: Install zip tool
         run: apt-get update && apt-get install -y zip
 
+      - name: Extract version from tag
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
       - name: Install Vosk library (Linux)
         run: |
           VOSK_LIB_VERSION="0.3.45"
@@ -38,19 +41,22 @@ jobs:
       - name: Package Linux ZIP
         run: |
           cp /usr/local/lib/libvosk.so .
-          zip -r omnipanel-go-linux-amd64.zip omnipanel-go-linux-amd64 user config.json libvosk.so
+          zip -r omnipanel-go-linux-amd64-${{ env.VERSION }}.zip omnipanel-go-linux-amd64 user config.json libvosk.so
 
       - name: Upload Linux artifact
         uses: https://code.forgejo.org/actions/upload-artifact@v3
         with:
           name: omnipanel-go-linux-archive
-          path: omnipanel-go-linux-amd64.zip
+          path: omnipanel-go-linux-amd64-${{ env.VERSION }}.zip
 
   build-windows:
     runs-on: docker
     steps:
       - name: Checkout code
         uses: https://code.forgejo.org/actions/checkout@v4
+
+      - name: Extract version from tag
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Install Wine and dependencies
         run: |
@@ -78,11 +84,9 @@ jobs:
           mkdir -p $HOME/.wine/drive_c/vosk-win
           unzip -q /tmp/libvosk-win.zip -d /tmp/libvosk-win-tmp
           
-          # Find and copy DLL and headers
           find /tmp/libvosk-win-tmp -name "*.dll" -type f -exec cp {} $HOME/.wine/drive_c/vosk-win/ \;
           find /tmp/libvosk-win-tmp -name "vosk_api.h" -type f -exec cp {} $HOME/.wine/drive_c/vosk-win/ \;
           
-          # Verify files were copied
           ls -la $HOME/.wine/drive_c/vosk-win/ || echo "Warning: vosk-win directory may be empty"
 
       - name: Copy project to Wine drive
@@ -118,13 +122,13 @@ jobs:
           cp omnipanel-go-windows-amd64.exe temp-package/
           cp libvosk.dll temp-package/ 2>/dev/null || echo "Warning: libvosk.dll not found"
           cp user config.json temp-package/ 2>/dev/null || true
-          cd temp-package && zip -r ../omnipanel-go-windows-amd64.zip . && cd ..
+          cd temp-package && zip -r ../omnipanel-go-windows-amd64-${{ env.VERSION }}.zip . && cd ..
 
       - name: Upload Windows artifact
         uses: https://code.forgejo.org/actions/upload-artifact@v3
         with:
           name: omnipanel-go-windows-archive
-          path: omnipanel-go-windows-amd64.zip
+          path: omnipanel-go-windows-amd64-${{ env.VERSION }}.zip
 
   create-release:
     runs-on: docker
@@ -145,5 +149,5 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/omnipanel-go-linux-archive/omnipanel-go-linux-amd64.zip
-            artifacts/omnipanel-go-windows-archive/omnipanel-go-windows-amd64.zip
+            artifacts/omnipanel-go-linux-archive/omnipanel-go-linux-amd64-*.zip
+            artifacts/omnipanel-go-windows-archive/omnipanel-go-windows-amd64-*.zip

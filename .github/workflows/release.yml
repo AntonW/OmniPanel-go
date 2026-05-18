@@ -20,6 +20,9 @@ jobs:
         with:
           go-version: "1.26"
 
+      - name: Extract version from tag
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
       - name: Install Vosk library (Linux)
         run: |
           VOSK_LIB_VERSION="0.3.45"
@@ -37,19 +40,22 @@ jobs:
         run: |
           # zip ist auf ubuntu-latest vorinstalliert
           cp /usr/local/lib/libvosk.so .
-          zip -r omnipanel-go-linux-amd64.zip omnipanel-go-linux-amd64 user config.json libvosk.so
+          zip -r omnipanel-go-linux-amd64-${{ env.VERSION }}.zip omnipanel-go-linux-amd64 user config.json libvosk.so
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: omnipanel-go-linux-archive
-          path: omnipanel-go-linux-amd64.zip
+          path: omnipanel-go-linux-amd64-${{ env.VERSION }}.zip
 
   build-windows:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Install Wine and dependencies
         run: |
@@ -117,13 +123,13 @@ jobs:
           cp omnipanel-go-windows-amd64.exe temp-package/
           cp libvosk.dll temp-package/ 2>/dev/null || echo "Warning: libvosk.dll not found"
           cp user config.json temp-package/ 2>/dev/null || true
-          cd temp-package && zip -r ../omnipanel-go-windows-amd64.zip . && cd ..
+          cd temp-package && zip -r ../omnipanel-go-windows-amd64-${{ env.VERSION }}.zip . && cd ..
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: omnipanel-go-windows-archive
-          path: omnipanel-go-windows-amd64.zip
+          path: omnipanel-go-windows-amd64-${{ env.VERSION }}.zip
 
   create-release:
     runs-on: ubuntu-latest
@@ -144,5 +150,5 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/omnipanel-go-linux-archive/omnipanel-go-linux-amd64.zip
-            artifacts/omnipanel-go-windows-archive/omnipanel-go-windows-amd64.zip
+            artifacts/omnipanel-go-linux-archive/omnipanel-go-linux-amd64-*.zip
+            artifacts/omnipanel-go-windows-archive/omnipanel-go-windows-amd64-*.zip
