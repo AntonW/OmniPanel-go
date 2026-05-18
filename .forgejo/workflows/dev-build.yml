@@ -116,6 +116,12 @@ jobs:
             user config.json \
             libvosk.dll
 
+      - name: Upload Windows artifact
+        uses: https://code.forgejo.org/actions/upload-artifact@v3
+        with:
+          name: omnipanel-go-windows-archive
+          path: omnipanel-go-windows-amd64-${{ env.GIT_HASH }}.zip
+
   publish-artifacts:
     runs-on: docker
     needs: [build-linux, build-windows]
