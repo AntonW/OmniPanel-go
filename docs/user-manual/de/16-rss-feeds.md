@@ -14,7 +14,7 @@ Der RSS-Feed-Block in OmniPanel-go funktioniert als RSS-Reader — er lädt dein
 - **Veröffentlichungsdatum** — wann der Eintrag veröffentlicht wurde
 - **Feed-Label** — ein benutzerdefinierter Name für jeden Feed (z. B. "Tech-News", "Mein Blog")
 - **Beschreibung** — eine kurze Zusammenfassung des Eintrags (optional)
-- **Klicken zum Öffnen** — tippe auf einen Eintrag, um ihn im Browser deines Host-PCs zu öffnen
+- **Klicken zum Öffnen** — tippe auf einen Eintrag, um ihn auf deinem Host-PC oder Panel-Gerät zu öffnen
 
 ---
 
@@ -61,6 +61,7 @@ https://www.youtube.com/feeds/videos.xml?channel_id=ABC123|Mein YouTube-Kanal
 | **Max. Beschreibungslänge** | Maximale Zeichen für die Beschreibung (20-500) | 150 |
 | **Farbe für neue Einträge** | Hervorhebungsfarbe für neue Einträge | Cyan (#1ccad8ff) |
 | **Feed-Label-Farbe** | Farbe für den Feed-Label-Text | Blau (#3daee9ff) |
+| **URL-Öffnungsort** | Wo URLs geöffnet werden — "host" (PC-Browser) oder "client" (Panel-Browser) | host |
 
 ### Schritt 5: Speichern und testen
 
@@ -85,11 +86,12 @@ Dies ist eine gerätespezifische Verfolgung, sodass du auf jedem Bildschirm sieh
 
 ## Einträge anklicken, um URLs zu öffnen
 
-Wenn du auf deinem Panel auf einen RSS-Eintrag tippst oder klickst, sendet OmniPanel-go einen Befehl an deinen Host-PC, um die URL in deinem Standardbrowser zu öffnen. Das bedeutet:
+Wenn du auf deinem Panel auf einen RSS-Eintrag tippst oder klickst, kannst du wählen, wo die URL geöffnet wird:
 
-- Du musst dein Panel nicht verlassen
-- Der Artikel öffnet sich auf deinem Gaming-PC, nicht im Browser deines Tablets
-- Funktioniert mit jedem Browser, der als Systemstandard eingestellt ist
+- **Host** (Standard): Sendet einen Befehl an deinen Host-PC, um die URL in deinem Standardbrowser zu öffnen. Der Artikel öffnet sich auf deinem Gaming-PC, nicht im Browser deines Tablets.
+- **Client**: Öffnet die URL direkt im Browser des Panels (deines Tablets/Handys). Nützlich, wenn du den Artikel auf dem Gerät lesen möchtest, das du in der Hand hältst.
+
+Stelle dies pro Block mit der Einstellung **URL-Öffnungsort** in den Blockeigenschaften ein.
 
 ---
 

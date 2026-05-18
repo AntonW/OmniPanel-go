@@ -11,7 +11,7 @@ The RSS feed block allows users to display live entries from one or more RSS/Ato
 - **Server-side polling**: The server fetches feeds, avoiding CORS issues and allowing access to internal networks
 - **Per-client seen tracking**: Each client maintains its own set of seen entry GUIDs
 - **Feed labels**: Each feed URL can have an optional display label (`URL|Label` format)
-- **Host URL opening**: Clicking an entry sends a WebSocket message to the server, which opens the URL in the host's default browser
+- **Configurable URL opening**: Clicking an entry opens the URL on the host or client device based on the `open_url_location` setting
 
 ## Architecture
 
@@ -403,23 +403,37 @@ function handleRSSUpdate(data) {
 
 ### Click Handler
 
+Clicking an RSS entry checks the block's `open_url_location` setting:
+
 ```javascript
-// static/client/client.js:1447-1459
-document.addEventListener('click', (e) => {
-    const rssEntry = e.target.closest('.rss-entry');
-    if (rssEntry) {
+// static/client/client.js:1679-1720
+document.querySelectorAll('.rss-entry').forEach(entry => {
+    entry.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        const url = rssEntry.getAttribute('data-link');
-        if (url && socket && socket.readyState === WebSocket.OPEN) {
+        const url = entry.getAttribute('data-link');
+        if (!url || !socket || socket.readyState !== WebSocket.OPEN) return;
+        const block = entry.closest('.loaded-block');
+        const openLocation = block?.settings?.['open_url_location'] || 'host';
+        if (openLocation === 'client') {
+            window.open(url, '_blank');
+        } else {
             socket.send(JSON.stringify({
                 type: 'open-url',
                 data: { url: url }
             }));
         }
-    }
+    });
 });
 ```
+
+> **Concept: Optional Chaining (`?.`)**
+> `block?.settings?.['open_url_location']` safely navigates nested properties without throwing if `block` is null or `settings` is undefined. If any part of the chain is nullish, the expression short-circuits to `undefined`. Combined with `|| 'host'`, this provides a safe default — if the setting hasn't been configured (e.g., on an older panel), URLs still open on the host.
+
+When `open_url_location` is `"host"` (default), an `open-url` WebSocket message is sent to the server, which opens the URL via `xdg-open` (Linux) or `start` (Windows). When set to `"client"`, the URL is opened directly in the panel browser via `window.open()`.
+
+> **Key Pattern: Dual Click Handlers**
+> Two handlers are registered: one via `querySelectorAll('.rss-entry')` for entries present when `enableInputs()` runs, and a delegated `document.addEventListener('click', ...)` for entries created later via `innerHTML`. This ensures clicks work regardless of when entries are rendered — a common pattern when DOM content is generated dynamically after page load.
 
 ## Editor Integration
 
@@ -472,4 +486,4 @@ addFeed(block) {
 5. **Entries merged** → sorted by date, deduplicated by GUID, limited to max
 6. **Per-client push** → `broadcast(clientID, blockID, entriesWithNew)` → `broadcastToClient()` → client channel
 7. **Client receives** → `handleRSSUpdate()` renders entries, marks new ones
-8. **User clicks entry** → `open-url` WebSocket message → `handleOpenURL()` → `xdg-open` / `start`
+8. **User clicks entry** → checks `open_url_location`: `"host"` sends `open-url` WebSocket → `handleOpenURL()` → `xdg-open` / `start`; `"client"` → `window.open()` in panel browser

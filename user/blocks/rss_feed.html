@@ -2,7 +2,7 @@
     RSS Feed Block — displays entries from one or more RSS/Atom feeds.
     Supports optional per-feed display labels (format: "URL|Label" in feed_urls).
     New entries are highlighted with a configurable color until newer entries arrive.
-    Clicking an entry opens the URL in the host's default browser.
+    Clicking an entry opens the URL on the host or client device based on open_url_location.
     
     Settings:
     - feed_urls: Newline-separated feed URLs, optional label via "URL|Label" format
@@ -14,6 +14,7 @@
     - description_max_length: Max characters for description truncation (20-500)
     - new_entry_color: Highlight color for new entries (8-digit hex with alpha)
     - feed_label_color: Color for the feed label text (8-digit hex with alpha)
+    - open_url_location: Where to open URLs - "host" (server browser) or "client" (panel browser)
     - font_size, bg_color, text_color, border_color, title_color: Visual styling
 -->
 <settings 
@@ -51,6 +52,9 @@
     type-title_color="color"
     feed_label_color="#3daee9ff"
     type-feed_label_color="color"
+    open_url_location="host"
+    type-open_url_location="select"
+    options-open_url_location="host,client"
 ></settings>
 
 <div class="rss-feed" style="--font-size: settings-font_size; --bg-color: settings-bg_color; --text-color: settings-text_color; --border-color: settings-border_color; --title-color: settings-title_color; --new-entry-color: settings-new_entry_color; --feed-label-color: settings-feed_label_color;">

@@ -10,7 +10,7 @@
 //   - speech-config/register-speech-trigger: speech settings
 //   - enter/exit-fullscreen: fullscreen control broadcast
 //   - rss-configure: set up RSS feed polling for a block
-//   - open-url: open a URL in the host's default browser
+//   - open-url: open a URL in the host's default browser (when block's open_url_location is "host")
 //
 // Binary WebSocket frames (audio data) are routed to HandleAudioChunk,
 // while text frames (JSON) are routed to HandleMessage.
@@ -666,7 +666,9 @@ func handleRSSConfigure(s *state.AppState, clientID uint64, data json.RawMessage
 
 // handleOpenURL opens a URL in the host's default browser.
 // It uses xdg-open on Linux and the start command on Windows.
-// Called when a user clicks an RSS feed entry on the panel client.
+// Called when a user clicks an RSS feed entry and the block's
+// open_url_location setting is "host". When set to "client",
+// the URL is opened directly in the panel browser via window.open.
 func handleOpenURL(s *state.AppState, data json.RawMessage) {
 	url := parseStringField(data, "url")
 	if url == "" {

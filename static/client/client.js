@@ -1676,12 +1676,22 @@ function enableInputs() {
         });
     });
 
+    // RSS entry click handlers — open URL on host or client based on block setting.
+    // When open_url_location is "client", window.open() is used directly.
+    // When "host" (default), an open-url WebSocket message is sent to the server.
+    // Two handlers are needed: one for entries present at enableInputs() time,
+    // and a delegated document-level handler for entries created later via innerHTML.
     document.querySelectorAll('.rss-entry').forEach(entry => {
         entry.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             const url = entry.getAttribute('data-link');
-            if (url && socket && socket.readyState === WebSocket.OPEN) {
+            if (!url || !socket || socket.readyState !== WebSocket.OPEN) return;
+            const block = entry.closest('.loaded-block');
+            const openLocation = block?.settings?.['open_url_location'] || 'host';
+            if (openLocation === 'client') {
+                window.open(url, '_blank');
+            } else {
                 socket.send(JSON.stringify({
                     type: 'open-url',
                     data: { url: url }
@@ -1696,7 +1706,12 @@ function enableInputs() {
             e.preventDefault();
             e.stopPropagation();
             const url = rssEntry.getAttribute('data-link');
-            if (url && socket && socket.readyState === WebSocket.OPEN) {
+            if (!url || !socket || socket.readyState !== WebSocket.OPEN) return;
+            const block = rssEntry.closest('.loaded-block');
+            const openLocation = block?.settings?.['open_url_location'] || 'host';
+            if (openLocation === 'client') {
+                window.open(url, '_blank');
+            } else {
                 socket.send(JSON.stringify({
                     type: 'open-url',
                     data: { url: url }

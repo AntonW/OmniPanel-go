@@ -14,8 +14,10 @@
 // is provided, the feed's own title from the RSS metadata is used. The label is included
 // in each entry's feed_label field and displayed on the client alongside the date.
 //
-// Clicking an entry on the client sends an "open-url" WebSocket message to the server,
-// which opens the URL in the host's default browser (xdg-open on Linux, start on Windows).
+// Clicking an entry on the client opens the URL either on the host (via an
+// "open-url" WebSocket message, handled by xdg-open on Linux or start on Windows)
+// or directly in the client browser via window.open, controlled by the block's
+// open_url_location setting ("host" or "client", default "host").
 package rssfeed
 
 import (

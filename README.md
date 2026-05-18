@@ -787,7 +787,7 @@ Connect to `ws://<host>:<port>/ws` (or `wss://` behind a reverse proxy).
 | `speech-config` | `{ "enabled": true }` | Toggle speech on client |
 | `register-speech-trigger` | `{ "block_id": "...", "phrase": "...", "aliases": [...], "type": "button", "joystick_index": 0, "button_id": 3, "axis_id": 0 }` | Register speech trigger for block with hardware IDs |
 | `rss-configure` | `{ "block_id": "...", "feed_urls": ["URL|Label", "..."], "refresh_interval": 60, "max_entries": 20 }` | Configure RSS feed polling for a block. Feed URLs support optional labels via `URL|Label` format |
-| `open-url` | `{ "url": "https://..." }` | Open a URL in the host's default browser (triggered by clicking RSS entries) |
+| `open-url` | `{ "url": "https://..." }` | Open a URL in the host's default browser (triggered by clicking RSS entries when `open_url_location` is "host") |
 
 **Binary WebSocket frames:**
 

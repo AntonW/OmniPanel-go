@@ -14,7 +14,7 @@ The RSS Feed block in OmniPanel-go works as an RSS reader — it fetches your ch
 - **Publication date** — when the entry was published
 - **Feed label** — a custom name for each feed (e.g., "Tech News", "My Blog")
 - **Description** — a short summary of the entry (optional)
-- **Click to open** — tap an entry to open it in your host PC's browser
+- **Click to open** — tap an entry to open it on your host PC or panel device
 
 ---
 
@@ -61,6 +61,7 @@ https://www.youtube.com/feeds/videos.xml?channel_id=ABC123|My YouTube Channel
 | **Description Max Length** | Maximum characters for the description (20-500) | 150 |
 | **New Entry Color** | Highlight color for new entries | Cyan (#1ccad8ff) |
 | **Feed Label Color** | Color for the feed label text | Blue (#3daee9ff) |
+| **Open URL Location** | Where to open URLs — "host" (PC browser) or "client" (panel browser) | host |
 
 ### Step 5: Save and Test
 
@@ -85,11 +86,12 @@ This is per-device tracking, so you always know what's new on each screen.
 
 ## Clicking Entries to Open URLs
 
-When you tap or click an RSS entry on your panel, OmniPanel-go sends a command to your host PC to open the URL in your default browser. This means:
+When you tap or click an RSS entry on your panel, you can choose where the URL opens:
 
-- You don't need to navigate away from your panel
-- The article opens on your gaming PC, not on your tablet's browser
-- Works with any browser set as your system default
+- **Host** (default): Sends a command to your host PC to open the URL in your default browser. The article opens on your gaming PC, not on your tablet's browser.
+- **Client**: Opens the URL directly in the panel's browser (your tablet/phone). Useful when you want to read the article on the device you're holding.
+
+Set this per-block using the **Open URL Location** setting in the block's properties.
 
 ---
 
