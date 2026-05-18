@@ -1,0 +1,145 @@
+name: Dev Build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    runs-on: docker
+    steps:
+      - name: Checkout code
+        uses: https://code.forgejo.org/actions/checkout@v4
+
+      - name: Setup Go 1.26
+        uses: https://code.forgejo.org/actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - name: Install zip tool
+        run: apt-get update && apt-get install -y zip
+
+      - name: Get Git commit hash
+        run: |
+          GIT_HASH=$(git rev-parse --short HEAD)
+          echo "GIT_HASH=$GIT_HASH" >> $GITHUB_ENV
+
+      - name: Install Vosk library (Linux)
+        run: |
+          VOSK_LIB_VERSION="0.3.45"
+          wget -q "https://github.com/alphacep/vosk-api/releases/download/v${VOSK_LIB_VERSION}/vosk-linux-x86_64-${VOSK_LIB_VERSION}.zip" -O /tmp/libvosk.zip
+          unzip -q /tmp/libvosk.zip -d /tmp/libvosk
+          cp /tmp/libvosk/vosk-linux-x86_64-${VOSK_LIB_VERSION}/libvosk.so /usr/local/lib/
+          cp /tmp/libvosk/vosk-linux-x86_64-${VOSK_LIB_VERSION}/vosk_api.h /usr/local/include/
+          ldconfig
+
+      - name: Build Linux binary
+        run: go build -o omnipanel-go-linux-amd64 .
+
+      - name: Package Linux ZIP
+        run: |
+          cp /usr/local/lib/libvosk.so .
+          zip -r omnipanel-go-linux-amd64-${{ env.GIT_HASH }}.zip omnipanel-go-linux-amd64 user config.json libvosk.so
+
+      - name: Upload Linux artifact
+        uses: https://code.forgejo.org/actions/upload-artifact@v3
+        with:
+          name: omnipanel-go-linux-archive
+          path: omnipanel-go-linux-amd64-${{ env.GIT_HASH }}.zip
+
+  build-windows:
+    runs-on: docker
+    steps:
+      - name: Checkout code
+        uses: https://code.forgejo.org/actions/checkout@v4
+
+      - name: Get Git commit hash
+        run: |
+          GIT_HASH=$(git rev-parse --short HEAD)
+          echo "GIT_HASH=$GIT_HASH" >> $GITHUB_ENV
+
+      - name: Install Wine and dependencies
+        run: |
+          apt-get update
+          apt-get install -y wine wine64 wine32 xvfb wget unzip zip
+          dpkg --add-architecture i386 || true
+
+      - name: Initialize Wine environment
+        run: |
+          export WINEARCH=win64
+          export WINEPREFIX=$HOME/.wine
+          wineboot -i
+
+      - name: Download Go for Windows
+        run: |
+          GOWIN_VERSION="1.26"
+          wget -q "https://go.dev/dl/go${GOWIN_VERSION}.windows-amd64.zip" -O /tmp/go-windows.zip
+          mkdir -p $HOME/.wine/drive_c/go-windows
+          unzip -q /tmp/go-windows.zip -d $HOME/.wine/drive_c/go-windows
+
+      - name: Download Vosk Windows SDK
+        run: |
+          VOSK_LIB_VERSION="0.3.45"
+          wget -q "https://github.com/alphacep/vosk-api/releases/download/v${VOSK_LIB_VERSION}/vosk-win64-${VOSK_LIB_VERSION}.zip" -O /tmp/libvosk-win.zip
+          mkdir -p $HOME/.wine/drive_c/vosk-win
+          unzip -q /tmp/libvosk-win.zip -d /tmp/libvosk-win-tmp
+          
+          find /tmp/libvosk-win-tmp -name "*.dll" -type f -exec cp {} $HOME/.wine/drive_c/vosk-win/ \;
+          find /tmp/libvosk-win-tmp -name "vosk_api.h" -type f -exec cp {} $HOME/.wine/drive_c/vosk-win/ \;
+          
+          ls -la $HOME/.wine/drive_c/vosk-win/ || echo "Warning: vosk-win directory may be empty"
+
+      - name: Copy project to Wine drive
+        run: |
+          mkdir -p $HOME/.wine/drive_c/omnipanel
+          cp -r $GITHUB_WORKSPACE/* $HOME/.wine/drive_c/omnipanel/
+
+      - name: Build Windows binary with Wine
+        run: |
+          export WINEARCH=win64
+          export WINEPREFIX=$HOME/.wine
+          xvfb-run -a wine cmd /c "cd C:\omnipanel && C:\go-windows\go\bin\go.exe build -v -o omnipanel-go-windows-amd64.exe ."
+
+      - name: Verify binary was created
+        run: |
+          if [ -f "$HOME/.wine/drive_c/omnipanel/omnipanel-go-windows-amd64.exe" ]; then
+            echo "✓ Binary created successfully"
+            ls -lh "$HOME/.wine/drive_c/omnipanel/omnipanel-go-windows-amd64.exe"
+          else
+            echo "✗ Binary creation failed!"
+            exit 1
+          fi
+
+      - name: Extract binary and DLL from Wine
+        run: |
+          cp "$HOME/.wine/drive_c/omnipanel/omnipanel-go-windows-amd64.exe" ./
+          cp "$HOME/.wine/drive_c/vosk-win/libvosk.dll" ./ || cp "$HOME/.wine/drive_c/vosk-win/vosk.dll" ./libvosk.dll || echo "Warning: DLL not found"
+          ls -lh *.exe *.dll 2>/dev/null || true
+
+      - name: Package Windows ZIP
+        run: |
+          mkdir -p temp-package
+          cp omnipanel-go-windows-amd64.exe temp-package/
+          cp libvosk.dll temp-package/ 2>/dev/null || echo "Warning: libvosk.dll not found"
+          cp user config.json temp-package/ 2>/dev/null || true
+          cd temp-package && zip -r ../omnipanel-go-windows-amd64-${{ env.GIT_HASH }}.zip . && cd ..
+
+      - name: Upload Windows artifact
+        uses: https://code.forgejo.org/actions/upload-artifact@v3
+        with:
+          name: omnipanel-go-windows-archive
+          path: omnipanel-go-windows-amd64-${{ env.GIT_HASH }}.zip
+
+  publish-artifacts:
+    runs-on: docker
+    needs: [build-linux, build-windows]
+    steps:
+      - name: Download all artifacts
+        uses: https://code.forgejo.org/actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: List artifacts
+        run: find artifacts -type f -name "*.zip"
