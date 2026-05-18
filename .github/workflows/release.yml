@@ -51,43 +51,73 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Go 1.26
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.26"
+      - name: Install Wine and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wine wine64 wine32 xvfb wget unzip zip
+          sudo dpkg --add-architecture i386 || true
 
-      - name: Install MinGW (CGO cross-compiler) # sudo hinzugefügt
-        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64
+      - name: Initialize Wine environment
+        run: |
+          export WINEARCH=win64
+          export WINEPREFIX=$HOME/.wine
+          wineboot -i
 
-      - name: Install Vosk library (Windows -> downloaded to Linux)
+      - name: Download Go for Windows
+        run: |
+          GOWIN_VERSION="1.26"
+          wget -q "https://go.dev/dl/go${GOWIN_VERSION}.windows-amd64.zip" -O /tmp/go-windows.zip
+          mkdir -p $HOME/.wine/drive_c/go-windows
+          unzip -q /tmp/go-windows.zip -d $HOME/.wine/drive_c/go-windows
+
+      - name: Download Vosk Windows SDK
         run: |
           VOSK_LIB_VERSION="0.3.45"
           wget -q "https://github.com/alphacep/vosk-api/releases/download/v${VOSK_LIB_VERSION}/vosk-win64-${VOSK_LIB_VERSION}.zip" -O /tmp/libvosk-win.zip
-          unzip -q /tmp/libvosk-win.zip -d /tmp/libvosk-win
+          mkdir -p $HOME/.wine/drive_c/vosk-win
+          unzip -q /tmp/libvosk-win.zip -d /tmp/libvosk-win-tmp
           
-          mkdir -p $GITHUB_WORKSPACE/vosk-win
+          # Find and copy DLL and headers
+          find /tmp/libvosk-win-tmp -name "*.dll" -type f -exec cp {} $HOME/.wine/drive_c/vosk-win/ \;
+          find /tmp/libvosk-win-tmp -name "vosk_api.h" -type f -exec cp {} $HOME/.wine/drive_c/vosk-win/ \;
           
-          find /tmp/libvosk-win -name "*.dll" -exec cp {} $GITHUB_WORKSPACE/vosk-win/ \;
-          find /tmp/libvosk-win -name "vosk_api.h" -exec cp {} $GITHUB_WORKSPACE/vosk-win/ \;
-          
-          if [ -f "$GITHUB_WORKSPACE/vosk-win/vosk.dll" ] && [ ! -f "$GITHUB_WORKSPACE/vosk-win/libvosk.dll" ]; then
-            cp $GITHUB_WORKSPACE/vosk-win/vosk.dll $GITHUB_WORKSPACE/vosk-win/libvosk.dll
+          # Verify files were copied
+          ls -la $HOME/.wine/drive_c/vosk-win/ || echo "Warning: vosk-win directory may be empty"
+
+      - name: Copy project to Wine drive
+        run: |
+          mkdir -p $HOME/.wine/drive_c/omnipanel
+          cp -r ${{ github.workspace }}/* $HOME/.wine/drive_c/omnipanel/
+
+      - name: Build Windows binary with Wine
+        run: |
+          export WINEARCH=win64
+          export WINEPREFIX=$HOME/.wine
+          xvfb-run -a wine cmd /c "cd C:\omnipanel && C:\go-windows\go\bin\go.exe build -v -o omnipanel-go-windows-amd64.exe ."
+
+      - name: Verify binary was created
+        run: |
+          if [ -f "$HOME/.wine/drive_c/omnipanel/omnipanel-go-windows-amd64.exe" ]; then
+            echo "✓ Binary created successfully"
+            ls -lh "$HOME/.wine/drive_c/omnipanel/omnipanel-go-windows-amd64.exe"
+          else
+            echo "✗ Binary creation failed!"
+            exit 1
           fi
 
-      - name: Build Windows binary (CGO Cross-compile)
-        run: go build -o omnipanel-go-windows-amd64.exe .
-        env:
-          CGO_ENABLED: 1
-          GOOS: windows
-          GOARCH: amd64
-          CC: x86_64-w64-mingw32-gcc
-          CGO_CFLAGS: "-I${{ github.workspace }}/vosk-win"
-          CGO_LDFLAGS: "-L${{ github.workspace }}/vosk-win -lvosk"
+      - name: Extract binary and DLL from Wine
+        run: |
+          cp "$HOME/.wine/drive_c/omnipanel/omnipanel-go-windows-amd64.exe" ./
+          cp "$HOME/.wine/drive_c/vosk-win/libvosk.dll" ./ || cp "$HOME/.wine/drive_c/vosk-win/vosk.dll" ./libvosk.dll || echo "Warning: DLL not found"
+          ls -lh *.exe *.dll 2>/dev/null || true
 
       - name: Package Windows ZIP
         run: |
-          cp ${{ github.workspace }}/vosk-win/libvosk.dll .
-          zip -r omnipanel-go-windows-amd64.zip omnipanel-go-windows-amd64.exe user config.json libvosk.dll
+          mkdir -p temp-package
+          cp omnipanel-go-windows-amd64.exe temp-package/
+          cp libvosk.dll temp-package/ 2>/dev/null || echo "Warning: libvosk.dll not found"
+          cp user config.json temp-package/ 2>/dev/null || true
+          cd temp-package && zip -r ../omnipanel-go-windows-amd64.zip . && cd ..
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
