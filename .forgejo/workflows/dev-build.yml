@@ -74,7 +74,7 @@ jobs:
 
       - name: Download Go for Windows
         run: |
-          GOWIN_VERSION="1.26"
+          GOWIN_VERSION="1.26.3"
           wget -q "https://go.dev/dl/go${GOWIN_VERSION}.windows-amd64.zip" -O /tmp/go-windows.zip
           mkdir -p $HOME/.wine/drive_c/go-windows
           unzip -q /tmp/go-windows.zip -d $HOME/.wine/drive_c/go-windows
