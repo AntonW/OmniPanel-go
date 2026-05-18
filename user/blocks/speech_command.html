@@ -1,0 +1,96 @@
+<settings 
+    label="Speech Command"
+    type-label="text"
+    font_size="12"
+    type-font_size="number"
+    min-font_size="1"
+    width="80%"
+    type-width="percentage"
+    min-width="10"
+    max-width="100"
+    height="80%"
+    type-height="percentage"
+    min-height="10"
+    max-height="100"
+    border_radius="5"
+    type-border_radius="number"
+    min-border_radius="0"
+    max-border_radius="100"
+    bg_color="#1a2636ff"
+    type-bg_color="color"
+    border_color="#1ccad8ff"
+    type-border_color="color"
+    text_color="#8ba4b8ff"
+    type-text_color="color"
+    icon_color="#1ccad8ff"
+    type-icon_color="color"
+    display_mode="last"
+    type-display_mode="select"
+    options-display_mode="last,history"
+></settings>
+
+<div class="speech-command-block" data-block-id="settings-__block_id__" style="--font-size: settings-font_size; --bg-color: settings-bg_color; --border-color: settings-border_color; --text-color: settings-text_color; --icon-color: settings-icon_color; --border-radius: settings-border_radius;">
+    <div class="speech-icon">&#x1F3A4;</div>
+    <div class="speech-label">settings-label</div>
+    <div class="speech-status">Ready</div>
+    <div class="speech-history" style="display: none;"></div>
+</div>
+
+<script>
+(function() {
+    const block = document.currentScript.closest('.speech-command-block');
+    if (!block) return;
+
+    const blockId = block.dataset.blockId;
+    const displayMode = block.getAttribute('data-display-mode') || 'last';
+    const historyEl = block.querySelector('.speech-history');
+    const statusEl = block.querySelector('.speech-status');
+    const history = [];
+
+    window.addEventListener('speech-result-' + blockId, (e) => {
+        const data = e.detail;
+        block.classList.remove('listening', 'matched', 'error');
+
+        if (data.matched) {
+            block.classList.add('matched');
+            statusEl.textContent = `"${data.text}" - Executed`;
+        } else {
+            statusEl.textContent = `"${data.text}" - No match`;
+        }
+
+        if (displayMode === 'history') {
+            history.unshift(data.text);
+            if (history.length > 10) history.pop();
+            historyEl.style.display = 'block';
+            historyEl.innerHTML = history.map(t => `<div class="speech-history-item">${t}</div>`).join('');
+        }
+
+        setTimeout(() => {
+            block.classList.remove('matched', 'error');
+            if (!block.classList.contains('listening')) {
+                statusEl.textContent = 'Ready';
+            }
+        }, 3000);
+    });
+
+    window.addEventListener('speech-error-' + blockId, (e) => {
+        block.classList.remove('listening', 'matched');
+        block.classList.add('error');
+        statusEl.textContent = 'Error';
+        setTimeout(() => {
+            block.classList.remove('error');
+            statusEl.textContent = 'Ready';
+        }, 3000);
+    });
+
+    window.addEventListener('recording-status-' + blockId, (e) => {
+        block.classList.remove('listening', 'matched', 'error');
+        if (e.detail.state === 'listening') {
+            block.classList.add('listening');
+            statusEl.textContent = 'Listening...';
+        } else if (e.detail.state === 'processing') {
+            statusEl.textContent = 'Processing...';
+        }
+    });
+})();
+</script>

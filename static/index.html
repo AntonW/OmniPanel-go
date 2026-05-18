@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniPanel-go</title>
+    <link rel="stylesheet" href="/index.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-left">
+            <h1 class="logo">OmniPanel-go</h1>
+        </div>
+        <div class="header-right">
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                <span class="theme-icon">🌙</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="tools-section">
+            <h2 class="section-title">Tools</h2>
+            <div class="tools-grid">
+                <a href="/editor" class="tool-card">
+                    <span class="tool-icon">🛠️</span>
+                    <span class="tool-name">Panel Editor</span>
+                    <span class="tool-desc">Design and edit panels</span>
+                </a>
+                <a href="/editor?new=true" class="tool-card">
+                    <span class="tool-icon">➕</span>
+                    <span class="tool-name">New Panel</span>
+                    <span class="tool-desc">Create a blank panel</span>
+                </a>
+            </div>
+        </section>
+
+        <section class="host-section">
+            <h2 class="section-title">Host Controls</h2>
+            <div class="host-controls">
+                <div class="control-row">
+                    <label for="url-display">Connection string:</label>
+                    <span id="url-display">loading...</span>
+                </div>
+                <div class="control-row">
+                    <button id="enter-fullscreen" class="btn-primary">Enter fullscreen</button>
+                    <button id="exit-fullscreen" class="btn-secondary">Exit fullscreen</button>
+                </div>
+            </div>
+            <div id="log-container">
+                <div class="log-entry">Waiting for connection...</div>
+            </div>
+        </section>
+
+        <section class="panels-section">
+            <h2 class="section-title">Available Panels</h2>
+            <div id="panels-grid" class="panels-grid">
+                <div class="loading">Loading panels...</div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = themeToggle.querySelector('.theme-icon');
+        const html = document.documentElement;
+
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        html.setAttribute('data-theme', savedTheme);
+        themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+        themeToggle.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            themeIcon.textContent = next === 'dark' ? '☀️' : '🌙';
+        });
+
+        async function loadPanels() {
+            const grid = document.getElementById('panels-grid');
+            try {
+                const res = await fetch('/api/panels');
+                const data = await res.json();
+
+                if (!data.allPanels || data.allPanels.length === 0) {
+                    grid.innerHTML = '<div class="empty-state">No panels found. Create one in the <a href="/editor">Panel Editor</a>.</div>';
+                    return;
+                }
+
+                grid.innerHTML = '';
+                data.allPanels.forEach(panel => {
+                    const card = document.createElement('a');
+                    card.href = `/panel?name=${encodeURIComponent(panel)}`;
+                    card.target = '_blank';
+                    card.className = 'panel-card';
+                    card.innerHTML = `
+                        <span class="panel-icon">📟</span>
+                        <span class="panel-name">${panel}</span>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (e) {
+                grid.innerHTML = `<div class="error-state">Failed to load panels: ${e.message}</div>`;
+            }
+        }
+
+        function getLocalIP() {
+            const a = document.createElement('a');
+            a.href = window.location.href;
+            return a.hostname;
+        }
+
+        function showLocalIP(port) {
+            document.getElementById('url-display').innerText = `http://${ip}:${port}`;
+        }
+
+        function addLogEntry(timestamp, type, data) {
+            const container = document.getElementById('log-container');
+            if (!container) return;
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span class="log-type">${type}:</span>
+                <span class="log-data">${data}</span>
+            `;
+            container.prepend(entry);
+            while (container.children.length > 500) {
+                container.lastElementChild.remove();
+            }
+        }
+
+        async function loadConfig() {
+            try {
+                const res = await fetch('/api/config');
+                const config = await res.json();
+                const ip = getLocalIP();
+                document.getElementById('url-display').innerText = `http://${ip}:${config.port}`;
+            } catch (e) {
+                console.error('Failed to load config:', e);
+            }
+        }
+
+        let ws;
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            ws.onopen = () => {
+                addLogEntry(new Date().toLocaleTimeString(), 'System', 'Host UI connected');
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === 'log-event') {
+                        addLogEntry(msg.timestamp, 'System', msg.data);
+                    }
+                } catch (e) {
+                    // ignore non-JSON messages
+                }
+            };
+
+            ws.onclose = () => {
+                addLogEntry(new Date().toLocaleTimeString(), 'System', 'Host UI disconnected, reconnecting...');
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPanels();
+            loadConfig();
+            connectWebSocket();
+
+            document.getElementById('enter-fullscreen').addEventListener('click', () => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'enter-fullscreen' }));
+                }
+            });
+
+            document.getElementById('exit-fullscreen').addEventListener('click', () => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'exit-fullscreen' }));
+                }
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

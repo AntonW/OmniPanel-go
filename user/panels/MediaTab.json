@@ -1,0 +1,181 @@
+{
+    "aspectRatio": "16/9",
+    "backgroundColor": "#e6e6e6",
+    "backgroundFit": "cover",
+    "backgroundImage": "none",
+    "blocks": [
+        {
+            "children": [],
+            "height": "100%",
+            "id": "block_1778896152960_p9voecska",
+            "left": "50%",
+            "path": "user/blocks/rss_feed.html",
+            "settings": {
+                "bg_color": "#1a2636ff",
+                "border_color": "#1ccad8ff",
+                "description_max_length": "150",
+                "feed_label_color": "#3daee9ff",
+                "feed_urls": "https://rss.golem.de/rss.php?feed=RSS2.0|GOLEM",
+                "font_size": "20",
+                "max_entries": "20",
+                "new_entry_color": "#1ccad8ff",
+                "refresh_interval": "60",
+                "show_date": "true",
+                "show_description": "true",
+                "show_feed_label": "true",
+                "text_color": "#8ba4b8ff",
+                "title_color": "#fcfcfcff"
+            },
+            "settingsMeta": {
+                "bg_color": {
+                    "type": "color"
+                },
+                "border_color": {
+                    "type": "color"
+                },
+                "description_max_length": {
+                    "max": "500",
+                    "min": "20",
+                    "type": "number"
+                },
+                "feed_label_color": {
+                    "type": "color"
+                },
+                "feed_urls": {
+                    "type": "textarea"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "max_entries": {
+                    "max": "100",
+                    "min": "1",
+                    "type": "number"
+                },
+                "new_entry_color": {
+                    "type": "color"
+                },
+                "refresh_interval": {
+                    "min": "10",
+                    "type": "number"
+                },
+                "show_date": {
+                    "type": "toggle"
+                },
+                "show_description": {
+                    "type": "toggle"
+                },
+                "show_feed_label": {
+                    "type": "toggle"
+                },
+                "text_color": {
+                    "type": "color"
+                },
+                "title_color": {
+                    "type": "color"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "0%",
+            "width": "50%",
+            "zIndex": "100"
+        },
+        {
+            "children": [],
+            "height": "100%",
+            "id": "block_1778931125190_52znrlbs2",
+            "left": "0%",
+            "path": "user/blocks/media_player.html",
+            "settings": {
+                "artist": "Artist Name",
+                "bg_color": "#1a2636ff",
+                "border_color": "#1ccad8ff",
+                "border_radius": "8",
+                "button_color": "#2a3a4aff",
+                "button_color_active": "#1ccad8ff",
+                "control_mode": "mpris",
+                "cover_image": "",
+                "font_size": "12",
+                "progress_value": "0",
+                "show_artist": "true",
+                "show_cover": "true",
+                "show_progress": "true",
+                "show_title": "true",
+                "text_color": "#8ba4b8ff",
+                "title": "Now Playing"
+            },
+            "settingsMeta": {
+                "artist": {
+                    "type": "text"
+                },
+                "bg_color": {
+                    "type": "color"
+                },
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "control_mode": {
+                    "options": "keyboard,mpris",
+                    "type": "select"
+                },
+                "cover_image": {
+                    "type": "text"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "progress_value": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "percentage"
+                },
+                "show_artist": {
+                    "type": "toggle"
+                },
+                "show_cover": {
+                    "type": "toggle"
+                },
+                "show_progress": {
+                    "type": "toggle"
+                },
+                "show_title": {
+                    "type": "toggle"
+                },
+                "text_color": {
+                    "type": "color"
+                },
+                "title": {
+                    "type": "text"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "0%",
+            "width": "50%",
+            "zIndex": 100
+        }
+    ],
+    "grid": {
+        "x": 8,
+        "y": 8
+    },
+    "metadata": {
+        "created": "2026-05-16T11:32:38.912Z",
+        "modified": "2026-05-16T11:32:38.912Z"
+    },
+    "name": "MediaTab",
+    "theme": "default",
+    "version": 2
+}

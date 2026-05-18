@@ -1,0 +1,1255 @@
+/* star citizen theme styles */
+/* Auto-generated from block templates */
+
+/* button.html */
+
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+    
+    .simple-button {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .simple-button button {
+        width: var(--width);
+        height: var(--height);
+        background: linear-gradient(135deg, var(--button-color) 0%, #0d1520 100%);
+        padding: 0;
+        color: var(--label-color);
+        border: 1px solid var(--border-color);
+        font-size: calc(var(--font-size) * 0.18cqmin);
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
+        clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+        box-shadow: 0 0 10px rgba(28, 202, 216, 0.1), inset 0 0 20px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .simple-button button:hover {
+        background: linear-gradient(135deg, #243447 0%, #0d1520 100%);
+        box-shadow: 0 0 15px rgba(28, 202, 216, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.3);
+        border-color: #4dd8e3;
+    }
+
+    .simple-button button:active {
+        background: linear-gradient(135deg, var(--button-color-active) 0%, #0d1520 100%);
+        box-shadow: 0 0 20px rgba(28, 202, 216, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.3);
+        border-color: var(--button-color-active);
+    }
+
+    /* Shared button content layout */
+    .btn-content {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5cqmin;
+    }
+    .btn-content.layout-image-only .btn-label { display: none; }
+    .btn-content.layout-text-only .btn-icon { display: none; }
+    .btn-content.layout-image-text.text-bottom { flex-direction: column; }
+    .btn-content.layout-image-text.text-top { flex-direction: column-reverse; }
+    .btn-content.layout-image-text.text-left { flex-direction: row-reverse; }
+    .btn-content.layout-image-text.text-right { flex-direction: row; }
+    .btn-icon { width: 2cqmin; height: 2cqmin; object-fit: contain; flex-shrink: 0; }
+    .btn-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+
+/* data_display.html */
+
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+    
+    .data-display {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .data-display .data-box {
+        width: var(--width);
+        height: var(--height);
+        background: linear-gradient(135deg, var(--bg-color) 0%, #0d1520 100%);
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        box-shadow: 0 0 15px rgba(28, 202, 216, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.4);
+        clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+        overflow: hidden;
+    }
+
+    .data-display .data-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent 0%, rgba(28, 202, 216, 0.05) 50%, transparent 100%);
+        animation: data-scanline 4s linear infinite;
+    }
+
+    @keyframes data-scanline {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .data-display .data-title {
+        color: var(--title-color);
+        font-size: calc(var(--font-size) * 0.15cqmin);
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        text-shadow: 0 0 8px var(--title-color);
+        z-index: 1;
+        margin-bottom: 0.3cqmin;
+    }
+
+    .data-display .data-value-container {
+        display: flex;
+        align-items: baseline;
+        gap: 0.3cqmin;
+        z-index: 1;
+    }
+
+    .data-display .data-value {
+        color: var(--value-color);
+        font-size: calc(var(--font-size) * 0.4cqmin);
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        text-shadow: 0 0 12px var(--value-color);
+        transition: transform 0.1s ease;
+    }
+
+    .data-display .data-value.data-flash {
+        transform: scale(1.08);
+    }
+
+    .data-display .data-unit {
+        color: var(--value-color);
+        font-size: calc(var(--font-size) * 0.2cqmin);
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 500;
+        opacity: 0.8;
+        text-shadow: 0 0 8px var(--value-color);
+    }
+
+
+/* emergency_button.html */
+
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+    
+    .emergency-button {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .emergency-button button {
+        width: var(--width);
+        height: var(--height);
+        background: linear-gradient(135deg, var(--button-color) 0%, #1a0505 100%);
+        padding: 0;
+        color: var(--label-color);
+        border: 2px solid var(--border-color);
+        font-size: calc(var(--font-size) * 0.2cqmin);
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
+        box-shadow: 0 0 15px rgba(255, 32, 32, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.5);
+        animation: emergency-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes emergency-pulse {
+        0%, 100% { box-shadow: 0 0 15px rgba(255, 32, 32, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.5); }
+        50% { box-shadow: 0 0 25px rgba(255, 32, 32, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.5); }
+    }
+
+    .emergency-button button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 5px,
+            rgba(255, 32, 32, 0.1) 5px,
+            rgba(255, 32, 32, 0.1) 10px
+        );
+        pointer-events: none;
+    }
+
+    .emergency-button button:hover {
+        background: linear-gradient(135deg, #5a1515 0%, #1a0505 100%);
+        box-shadow: 0 0 20px rgba(255, 32, 32, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .emergency-button button:active {
+        background: linear-gradient(135deg, var(--button-color-active) 0%, #1a0505 100%);
+        box-shadow: 0 0 30px rgba(255, 32, 32, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.5);
+        border-color: #ff6b6b;
+    }
+
+
+/* paged_container.html */
+
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+    
+    .ui-container {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        background: linear-gradient(135deg, #0a0e14 0%, #0d1520 50%, #0a0e14 100%);
+        display: flex;
+        flex-direction: column; 
+        border: 1px solid var(--border-color);
+        box-shadow: 0 0 15px rgba(28, 202, 216, 0.15), inset 0 0 30px rgba(0, 0, 0, 0.5);
+        font-family: 'Rajdhani', sans-serif;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ui-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(28, 202, 216, 0.02) 2px,
+            rgba(28, 202, 216, 0.02) 4px
+        );
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .tab-header {
+        display: flex;
+        background: linear-gradient(180deg, #0d1520 0%, #0a0e14 100%);
+        flex-direction: row;
+        height: var(--menu-width);
+        border-bottom: 1px solid var(--border-color);
+        z-index: 2;
+    }
+    
+    .ui-container[data-position="top"] {
+        flex-direction: column;
+    }
+
+    .ui-container[data-position="bottom"] {
+        flex-direction: column-reverse;
+    }
+
+    .ui-container[data-position="left"] {
+        flex-direction: row;
+    }
+    .ui-container[data-position="left"] > .tab-header {
+        flex-direction: column;
+        width: var(--menu-width);
+        height: 100%;
+        border-bottom: none;
+        border-right: 1px solid var(--border-color);
+    }
+
+    .ui-container[data-position="right"] {
+        flex-direction: row-reverse;
+    }
+    .ui-container[data-position="right"] > .tab-header {
+        flex-direction: column;
+        width: var(--menu-width);
+        height: 100%;
+        border-bottom: none;
+        border-left: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+        flex: 1;
+        color: var(--menu-color-text);
+        cursor: pointer;
+        border: none;
+        background: var(--menu-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: calc(var(--font-size) * 0.18cqmin);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        position: relative;
+        transition: all 0.2s ease;
+        /*clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);*/
+    }
+
+    .tab-btn:hover {
+        background: #243447;
+        color: var(--border-color);
+    }
+
+    .tab-btn.active {
+        background: var(--menu-color-active);
+        color: var(--menu-color-text-active, --menu-color-text);
+        box-shadow: 0 0 10px rgba(28, 202, 216, 0.4);
+    }
+
+    .tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 20%;
+        right: 20%;
+        height: 2px;
+        background: var(--border-color);
+        box-shadow: 0 0 8px var(--border-color);
+    }
+
+    .pages-container {
+        flex: 1;
+        display: flex;
+        min-height: 50px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .page-wrapper {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        display: none;
+        width: 100%;
+        height: 100%;
+    }
+
+    .page-wrapper.active {
+        display: block;
+        pointer-events: all;
+    }
+
+    .page-wrapper.nested-dropzone {
+        border: 1px dashed transparent;
+        transition: background 0.2s;
+    }
+
+
+/* power_slider.html */
+
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+    
+    .power-slider {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        width: 100%;
+        padding: 1cqmin;
+        box-sizing: border-box;
+        position: relative;
+    }
+
+    .power-slider .track-container {
+        width: var(--width);
+        height: var(--height);
+        background: var(--track-color);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(28, 202, 216, 0.15), inset 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .power-slider .progress-fill {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 0%;
+        background: linear-gradient(180deg, var(--progress-color) 0%, rgba(28, 202, 216, 0.3) 100%);
+        box-shadow: 0 0 15px var(--progress-color);
+        transition: height 0.1s ease;
+    }
+
+    .power-slider input {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 100%;
+        writing-mode: vertical-lr;
+        direction: rtl;
+        background: transparent;
+        position: absolute;
+        top: 0;
+        left: 0;
+        outline: none;
+        overflow: hidden;
+        touch-action: none;
+        cursor: pointer;
+    }
+
+    /* Chromium Track */
+    .power-slider input::-webkit-slider-runnable-track {
+        width: 100%;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    /* Chromium Thumb */
+    .power-slider input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 20px;
+        width: calc(100% - 4px);
+        background: linear-gradient(135deg, #ffffff 0%, var(--thumb-color) 100%);
+        border-radius: 10px;
+        box-shadow: 0 0 15px var(--thumb-color), 0 0 30px rgba(28, 202, 216, 0.4);
+        cursor: pointer;
+        margin-left: 2px;
+    }
+
+    /* Firefox Support */
+    .power-slider input::-moz-range-track {
+        width: 100%;
+        height: 100%;
+        background: transparent;
+    }
+
+    .power-slider input::-moz-range-progress {
+        background: var(--progress-color);
+        width: 100%;
+    }
+
+    .power-slider input::-moz-range-thumb {
+        height: 20px;
+        width: calc(100% - 4px);
+        background: linear-gradient(135deg, #ffffff 0%, var(--thumb-color) 100%);
+        border-radius: 10px;
+        box-shadow: 0 0 15px var(--thumb-color);
+    }
+
+    .power-slider p {
+        text-align: center;
+        color: var(--label-color);
+        font-size: calc(var(--font-size) * 0.18cqmin);
+        margin: 0;
+        margin-bottom: 0.5cqmin;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+    }
+
+
+/* section_group.html */
+
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+    
+    .section-group {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        background: var(--background-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 0 10px rgba(28, 202, 216, 0.1), inset 0 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .section-group .section-title {
+        position: absolute;
+        top: -0.6cqmin;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #0a0e14;
+        padding: 0 1cqmin;
+        color: var(--title-color);
+        font-size: calc(var(--font-size) * 0.16cqmin);
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        text-shadow: 0 0 8px var(--title-color);
+        z-index: 1;
+    }
+
+    .section-group .section-content {
+        flex: 1;
+        padding: 1cqmin;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5cqmin;
+        align-content: flex-start;
+    }
+
+
+/* slider.html */
+
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+    
+    .slider {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+        width: 100%;
+        padding: 2cqmin;
+        box-sizing: border-box;
+    }
+
+    .slider input {
+        -webkit-appearance: none;
+        appearance: none;
+        width: var(--width);
+        height: var(--height);
+        background: var(--background-color);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        outline: none;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(28, 202, 216, 0.15), inset 0 0 15px rgba(0, 0, 0, 0.4);
+
+        /* Critical for shadow trick */
+        touch-action: none;
+    }
+
+    /* Chromium Track */
+    .slider input::-webkit-slider-runnable-track {
+        height: 100%;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    /* Chromium Thumb */
+    .slider input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 6vmin;
+        /* Thumb size scales with screen */
+        height: 100%;
+        background: var(--thumb-color);
+        /* border: 2px solid #fa0909; */
+        border-radius: 2px;
+        /* The Box Shadow Trick */
+        box-shadow: calc(-100vw - 8px) 0 0 100vw var(--progress-color), 0 0 10px var(--thumb-color);
+        cursor: pointer;
+    }
+
+    /* Firefox Support */
+    .slider input::-moz-range-track {
+        width: 100%;
+        height: 100%;
+        background: transparent;
+    }
+
+    .slider input::-moz-range-progress {
+        background: var(--progress-color);
+        height: 100%;
+    }
+
+    .slider input::-moz-range-thumb {
+        width: 6vmin;
+        height: 100%;
+        background: var(--thumb-color);
+        border-radius: 2px;
+        box-shadow: 0 0 10px var(--thumb-color);
+    }
+
+    .slider p {
+        text-align: center;
+        color: var(--label-color);
+        font-size: calc(var(--font-size) * 0.18cqmin);
+        margin: 0;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+
+/* slider_vertical.html */
+
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+    
+    .v-slider {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        width: 100%;
+        padding: 2cqmin;
+        box-sizing: border-box;
+    }
+
+    .v-slider input {
+        -webkit-appearance: none;
+        appearance: none;
+        width: var(--width);
+        height: var(--height);
+        writing-mode: vertical-lr;
+        direction: rtl;
+        background: var(--background-color);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        box-shadow: 0 0 10px rgba(28, 202, 216, 0.15), inset 0 0 15px rgba(0, 0, 0, 0.4);
+        outline: none;
+        overflow: hidden;
+        touch-action: none;
+    }
+
+    /* Chromium Track */
+    .v-slider input::-webkit-slider-runnable-track {
+        width: 100%;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    /* Chromium Thumb */
+    .v-slider input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 6vmin;
+        width: 100%;
+        background: var(--thumb-color);
+        border-radius: 2px;
+        box-shadow: 0 calc(100vh + 8px) 0 100vh var(--progress-color), 0 0 10px var(--thumb-color);
+        cursor: pointer;
+    }
+
+    /* Firefox Support */
+    .v-slider input::-moz-range-track {
+        width: 100%;
+        height: 100%;
+        background: transparent;
+    }
+
+    .v-slider input::-moz-range-progress {
+        background: var(--progress-color);
+        width: 100%;
+    }
+
+    .v-slider input::-moz-range-thumb {
+        height: 6vmin;
+        width: 100%;
+        background: var(--thumb-color);
+        box-shadow: 0 0 10px var(--thumb-color);
+    }
+
+    .v-slider p {
+        text-align: center;
+        color: var(--label-color);
+        font-size: calc(var(--font-size) * 0.18cqmin);
+        margin: 0;
+        margin-bottom: 5px;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+
+/* status_indicator.html */
+
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+    
+    .status-indicator {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .status-indicator .status-box {
+        width: var(--width);
+        height: var(--height);
+        background: linear-gradient(135deg, var(--background-color) 0%, #0d1520 100%);
+        border: 1px solid var(--border-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        box-shadow: 0 0 15px rgba(28, 202, 216, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.4);
+        clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+    }
+
+    .status-indicator .status-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent 0%, rgba(28, 202, 216, 0.1) 50%, transparent 100%);
+        animation: scanline 3s linear infinite;
+    }
+
+    @keyframes scanline {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .status-indicator .status-box p {
+        color: var(--label-color);
+        font-size: calc(var(--font-size) * 0.2cqmin);
+        margin: 0;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        text-shadow: 0 0 10px var(--status-color);
+        z-index: 1;
+    }
+
+    .status-indicator .status-box.active {
+        border-color: var(--status-color-active);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .status-indicator .status-box.active p {
+        color: var(--status-color-active);
+        text-shadow: 0 0 15px var(--status-color-active);
+    }
+
+
+/* toggle.html — pill-shaped track with circular sliding knob
+   Track: aspect-ratio 2/1 maintains proportions on resize
+   Knob: width 40% × height 80% = perfect circle (40% of 2x width = 80% of 1x height)
+   Knob centered vertically via top:50% + translateY(-50%)
+   Active state slides knob to right edge via calc(100% - 80% - 3px)
+*/
+
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+    
+    .toggle-switch {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5cqmin;
+    }
+
+    /* Toggle track: pill-shaped container with circular knob (::after pseudo-element).
+       Knob width is 40% of track width, height is 80% of track height.
+       OFF state: knob at left: 3px padding from left edge.
+       ON state: knob at calc(100% - 40% - 3px) — right edge minus knob width minus padding.
+       This ensures the knob moves fully to the right when active. */
+    .toggle-switch button,
+    .toggle-track {
+        height: var(--height);
+        aspect-ratio: 2 / 1;
+        min-width: 4cqmin;
+        min-height: 2cqmin;
+        background: var(--toggle-color);
+        border: 1px solid var(--border-color);
+        border-radius: 999px;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px rgba(28, 202, 216, 0.1), inset 0 0 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .toggle-switch button::after,
+    .toggle-track::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 3px;
+        transform: translateY(-50%);
+        width: 40%;
+        height: 80%;
+        background: linear-gradient(135deg, #8ba4b8 0%, #5a7a8a 100%);
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 8px rgba(139, 164, 184, 0.5);
+    }
+
+    .toggle-switch button.active,
+    .toggle-track.active {
+        background: linear-gradient(135deg, var(--toggle-color-active) 0%, #0d1520 100%);
+        box-shadow: 0 0 15px rgba(28, 202, 216, 0.4), inset 0 0 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .toggle-switch button.active::after,
+    .toggle-track.active::after {
+        left: calc(100% - 40% - 3px);
+        background: linear-gradient(135deg, #ffffff 0%, #1ccad8 100%);
+        box-shadow: 0 0 12px rgba(28, 202, 216, 0.8);
+    }
+
+    .toggle-switch p {
+        color: var(--label-color);
+        font-size: calc(var(--font-size) * 0.18cqmin);
+        margin: 0;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+
+/* touch_pad.html */
+
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+    
+    .joy-container {
+        width: 100%; height: 100%;
+        display: flex; align-items: center; justify-content: center;
+        background: linear-gradient(135deg, #0a0e14 0%, #0d1520 100%);
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 0 10px rgba(28, 202, 216, 0.15), inset 0 0 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .joy-hitbox {
+        width: calc(100% - (var(--joy-safe-zone) * 2));
+        height: calc(100% - (var(--joy-safe-zone) * 2));
+        background: rgba(28, 202, 216, 0.03);
+        border: 1px solid rgba(28, 202, 216, 0.2);
+        position: relative;
+        cursor: crosshair;
+    }
+
+    .joy-base {
+        position: absolute;
+        width: 50px; height: 50px;
+        border: 2px solid var(--border-color);
+        border-radius: 50%;
+        display: none;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        box-shadow: 0 0 15px rgba(28, 202, 216, 0.3);
+    }
+
+    .joy-thumb {
+        position: absolute;
+        width: 30px; height: 30px;
+        background: var(--joy-color);
+        border-radius: 50%;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 20px var(--joy-color), 0 0 40px rgba(28, 202, 216, 0.3);
+    }
+
+
+/* media_player.html
+ * Star Citizen theme: Rajdhani font, cyan (#1ccad8) neon glow effects,
+ * angular clip-path corners on buttons, drop-shadow filters on SVGs,
+ * scanline-style top border accent, inset box shadows.
+ * Layout: flex column — cover image (flex-grow), info text, progress bar, control buttons.
+ * CSS custom properties: --bg-color, --button-color, --button-color-active,
+ *   --text-color, --border-color, --border-radius, --font-size.
+ * Cover art uses object-fit:contain; placeholder icon shown when no image available.
+ * Play button is circular with cyan border and glow; other buttons have angled clip-path cuts.
+ */
+
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+    
+    .media-player {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(135deg, rgba(10, 14, 20, 0.95) 0%, rgba(13, 21, 32, 0.95) 100%);
+        border: 1px solid rgba(28, 202, 216, 0.3);
+        border-radius: 2px;
+        padding: 1cqmin;
+        box-sizing: border-box;
+        gap: 0.8cqmin;
+        overflow: hidden;
+        font-family: 'Rajdhani', sans-serif;
+        box-shadow: 0 0 15px rgba(28, 202, 216, 0.15), inset 0 0 30px rgba(0, 0, 0, 0.5);
+        position: relative;
+    }
+
+    .media-player::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(28, 202, 216, 0.6), transparent);
+    }
+
+    .media-cover {
+        width: 100%;
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 2px;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(28, 202, 216, 0.2);
+        box-shadow: inset 0 0 20px rgba(28, 202, 216, 0.05);
+        position: relative;
+    }
+
+    .media-source-tabs-overlay {
+        position: absolute;
+        top: 0.5cqmin;
+        left: 0.5cqmin;
+        right: 0.5cqmin;
+        display: none;
+        gap: 0.4cqmin;
+        z-index: 10;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .media-source-tab {
+        padding: 0.3cqmin 0.8cqmin;
+        border: 1px solid rgba(28, 202, 216, 0.4);
+        border-radius: 2px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #8ba4b8;
+        font-size: calc(var(--font-size, 12) * 0.85px);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        backdrop-filter: blur(4px);
+        white-space: nowrap;
+        max-width: 90%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .media-source-tab:hover {
+        background: rgba(28, 202, 216, 0.2);
+        border-color: rgba(28, 202, 216, 0.7);
+        color: #1ccad8;
+    }
+
+    .media-source-tab.active {
+        background: rgba(28, 202, 216, 0.3);
+        color: #1ccad8;
+        border-color: #1ccad8;
+        font-weight: 600;
+        box-shadow: 0 0 8px rgba(28, 202, 216, 0.3);
+    }
+
+    .media-cover-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: none;
+    }
+
+    .media-cover-image[src]:not([src=""]) {
+        display: block;
+    }
+
+    .media-cover-image[src]:not([src=""]) ~ .media-cover-placeholder {
+        display: none;
+    }
+
+    .media-cover-placeholder {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        color: #1ccad8;
+        opacity: 0.3;
+    }
+
+    .media-cover-placeholder svg {
+        width: 4cqmin;
+        height: 4cqmin;
+        fill: currentColor;
+        filter: drop-shadow(0 0 5px rgba(28, 202, 216, 0.5));
+    }
+
+    .media-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3cqmin;
+        min-height: 0;
+    }
+
+    .media-title {
+        font-size: calc(var(--font-size) * 0.18cqmin);
+        color: #1ccad8;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-shadow: 0 0 8px rgba(28, 202, 216, 0.3);
+    }
+
+    .media-artist {
+        font-size: calc(var(--font-size) * 0.14cqmin);
+        color: #8ba4b8;
+        opacity: 0.8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .media-progress-container {
+        width: 100%;
+        display: flex;
+        align-items: center;
+    }
+
+    .media-progress-bar {
+        width: 100%;
+        height: 0.6cqmin;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 1px;
+        overflow: hidden;
+        position: relative;
+        border: 1px solid rgba(28, 202, 216, 0.2);
+    }
+
+    .media-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #1ccad8, #0f8a94);
+        border-radius: 1px;
+        transition: width 0.3s ease;
+        box-shadow: 0 0 10px rgba(28, 202, 216, 0.5);
+    }
+
+    .media-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.8cqmin;
+        margin-top: 0.8cqmin;
+    }
+
+    .media-control-btn {
+        width: 5cqmin;
+        height: 5cqmin;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(10, 14, 20, 0.8);
+        border: 1px solid rgba(28, 202, 216, 0.4);
+        border-radius: 2px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        padding: 0;
+        color: #1ccad8;
+        touch-action: manipulation;
+        box-shadow: 0 0 8px rgba(28, 202, 216, 0.15), inset 0 0 10px rgba(28, 202, 216, 0.05);
+        clip-path: polygon(10% 0%, 100% 0%, 100% 90%, 90% 100%, 0% 100%, 0% 10%);
+    }
+
+    .media-control-btn svg {
+        width: 3cqmin;
+        height: 3cqmin;
+        fill: currentColor;
+        transition: fill 0.2s ease;
+        filter: drop-shadow(0 0 3px rgba(28, 202, 216, 0.5));
+    }
+
+    .media-control-btn:hover {
+        background: rgba(28, 202, 216, 0.15);
+        border-color: #1ccad8;
+        box-shadow: 0 0 15px rgba(28, 202, 216, 0.3), inset 0 0 15px rgba(28, 202, 216, 0.1);
+        color: #fcfcfc;
+    }
+
+    .media-control-btn:active {
+        transform: scale(0.92);
+        background: rgba(28, 202, 216, 0.25);
+    }
+
+    .media-play-btn {
+        width: 6cqmin;
+        height: 6cqmin;
+        border-radius: 50%;
+        background: rgba(28, 202, 216, 0.2);
+        border: 2px solid #1ccad8;
+        clip-path: none;
+        box-shadow: 0 0 20px rgba(28, 202, 216, 0.3), inset 0 0 15px rgba(28, 202, 216, 0.1);
+    }
+
+    .media-play-btn svg {
+        width: 3.5cqmin;
+        height: 3.5cqmin;
+    }
+
+    .media-play-btn:hover {
+        background: rgba(28, 202, 216, 0.35);
+        box-shadow: 0 0 30px rgba(28, 202, 216, 0.5), inset 0 0 20px rgba(28, 202, 216, 0.2);
+    }
+
+
+/* rss_feed.html */
+
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+    
+    .rss-feed {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(135deg, rgba(10, 14, 20, 0.95) 0%, rgba(13, 21, 32, 0.95) 100%);
+        border: 1px solid rgba(28, 202, 216, 0.3);
+        border-radius: 2px;
+        padding: 1cqmin;
+        box-sizing: border-box;
+        overflow: hidden;
+        font-family: 'Rajdhani', sans-serif;
+        box-shadow: 0 0 15px rgba(28, 202, 216, 0.15), inset 0 0 30px rgba(0, 0, 0, 0.5);
+        position: relative;
+    }
+
+    .rss-feed::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(28, 202, 216, 0.6), transparent);
+    }
+
+    .rss-entries-list {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8cqmin;
+        min-height: 0;
+    }
+
+    .rss-entries-list::-webkit-scrollbar {
+        width: 0.5cqmin;
+    }
+
+    .rss-entries-list::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 1px;
+    }
+
+    .rss-entries-list::-webkit-scrollbar-thumb {
+        background: rgba(28, 202, 216, 0.3);
+        border-radius: 1px;
+    }
+
+    .rss-entries-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(28, 202, 216, 0.5);
+    }
+
+    .rss-entry {
+        padding: 0.8cqmin;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(28, 202, 216, 0.15);
+        border-radius: 2px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+        clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+    }
+
+    .rss-entry:hover {
+        background: rgba(28, 202, 216, 0.08);
+        border-color: rgba(28, 202, 216, 0.3);
+        transform: translateX(2px);
+    }
+
+    .rss-entry.new-entry {
+        border-left-color: var(--new-entry-color, #1ccad8);
+        background: rgba(28, 202, 216, 0.12);
+        box-shadow: 0 0 12px rgba(28, 202, 216, 0.2), inset 0 0 15px rgba(28, 202, 216, 0.05);
+    }
+
+    .rss-entry-title {
+        font-size: calc(var(--font-size, 14) * 0.16cqmin);
+        color: #1ccad8;
+        font-weight: 600;
+        line-height: 1.3;
+        margin-bottom: 0.3cqmin;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        text-shadow: 0 0 6px rgba(28, 202, 216, 0.2);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .rss-entry-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.6cqmin;
+        margin-bottom: 0.3cqmin;
+    }
+
+    .rss-entry-feed-label {
+        font-size: calc(var(--font-size, 14) * 0.1cqmin);
+        color: #1ccad8;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        text-shadow: 0 0 4px rgba(28, 202, 216, 0.3);
+    }
+
+    .rss-entry-date {
+        font-size: calc(var(--font-size, 14) * 0.11cqmin);
+        color: #8ba4b8;
+        opacity: 0.6;
+    }
+
+    .rss-entry-description {
+        font-size: calc(var(--font-size, 14) * 0.12cqmin);
+        color: #8ba4b8;
+        opacity: 0.7;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .rss-empty-state {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #8ba4b8;
+        opacity: 0.5;
+        font-size: calc(var(--font-size, 14) * 0.14cqmin);
+        text-align: center;
+        padding: 2cqmin;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+
+

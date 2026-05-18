@@ -1,0 +1,104 @@
+<!--
+    Media Player Block — displays media cover art, title, artist, progress bar,
+    and control buttons. Supports two control modes:
+    - "keyboard": Sends keyboard media keys (Play/Pause, Next, Previous, Volume)
+    - "mpris": Automatically connects to MPRIS D-Bus media players (KDE Plasma, GNOME, etc.)
+
+    Dynamic content (cover, title, artist, progress) can be updated via the data bus system.
+    In MPRIS mode, these are automatically populated from the active media player.
+
+    When multiple MPRIS players are running, source selection tabs appear as an overlay
+    on the cover art area. Clicking a tab switches the active player, updating the cover,
+    title, artist, and progress bar to match the selected source. The tabs are rendered
+    automatically by the client when the mpris_available_players DataBus key contains
+    more than one entry.
+
+    Settings:
+    - control_mode: "keyboard" or "mpris" (determines how controls work)
+    - show_cover: Toggle to show/hide cover art area
+    - cover_image: Cover art URL/path (dynamically updatable via data bus)
+    - show_title: Toggle to show/hide title text
+    - title: Media title (dynamically updatable via data bus)
+    - show_artist: Toggle to show/hide artist text
+    - artist: Artist name (dynamically updatable via data bus)
+    - show_progress: Toggle to show/hide progress bar
+    - progress_value: Progress percentage 0-100 (dynamically updatable via data bus)
+    - bg_color, button_color, button_color_active, text_color, border_color, border_radius: Visual styling
+-->
+<settings 
+    control_mode="keyboard"
+    type-control_mode="select"
+    options-control_mode="keyboard,mpris"
+    show_cover="true"
+    type-show_cover="toggle"
+    cover_image=""
+    type-cover_image="text"
+    show_title="true"
+    type-show_title="toggle"
+    title="Now Playing"
+    type-title="text"
+    show_artist="true"
+    type-show_artist="toggle"
+    artist="Artist Name"
+    type-artist="text"
+    show_progress="true"
+    type-show_progress="toggle"
+    progress_value="0"
+    type-progress_value="percentage"
+    min-progress_value="0"
+    max-progress_value="100"
+    font_size="12"
+    type-font_size="number"
+    min-font_size="1"
+    bg_color="#1a2636ff"
+    type-bg_color="color"
+    button_color="#2a3a4aff"
+    type-button_color="color"
+    button_color_active="#1ccad8ff"
+    type-button_color_active="color"
+    text_color="#8ba4b8ff"
+    type-text_color="color"
+    border_color="#1ccad8ff"
+    type-border_color="color"
+    border_radius="8"
+    type-border_radius="number"
+    min-border_radius="0"
+    max-border_radius="100"
+></settings>
+
+<div class="media-player" data-control-mode="settings-control_mode" data-media-cover="settings-cover_image" data-media-title="settings-title" data-media-artist="settings-artist" data-media-progress="settings-progress_value" style="--font-size: settings-font_size; --bg-color: settings-bg_color; --button-color: settings-button_color; --button-color-active: settings-button_color_active; --text-color: settings-text_color; --border-color: settings-border_color; --border-radius: settings-border_radius;">
+    <div class="media-cover" data-show-cover="settings-show_cover">
+        <div class="media-source-tabs-overlay"></div>
+        <img class="media-cover-image" src="settings-cover_image" alt="">
+        <div class="media-cover-placeholder">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+        </div>
+    </div>
+    <div class="media-info">
+        <div class="media-title" data-show-title="settings-show_title">settings-title</div>
+        <div class="media-artist" data-show-artist="settings-show_artist">settings-artist</div>
+    </div>
+    <div class="media-progress-container" data-show-progress="settings-show_progress">
+        <div class="media-progress-bar">
+            <div class="media-progress-fill" style="width: settings-progress_value%;"></div>
+        </div>
+    </div>
+    <div class="media-controls">
+        <button class="media-control-btn" data-action="previous" title="Previous Track">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button class="media-control-btn media-play-btn" data-action="playpause" title="Play/Pause">
+            <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <svg class="pause-icon" viewBox="0 0 24 24" fill="currentColor" style="display: none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+        <button class="media-control-btn" data-action="next" title="Next Track">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        </button>
+        <button class="media-control-btn media-volume-btn" data-action="volumedown" title="Volume Down">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/></svg>
+        </button>
+        <button class="media-control-btn" data-action="volumeup" title="Volume Up">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        </button>
+    </div>
+</div>

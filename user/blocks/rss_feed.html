@@ -1,0 +1,60 @@
+<!--
+    RSS Feed Block — displays entries from one or more RSS/Atom feeds.
+    Supports optional per-feed display labels (format: "URL|Label" in feed_urls).
+    New entries are highlighted with a configurable color until newer entries arrive.
+    Clicking an entry opens the URL in the host's default browser.
+    
+    Settings:
+    - feed_urls: Newline-separated feed URLs, optional label via "URL|Label" format
+    - refresh_interval: Poll interval in seconds (min 10)
+    - max_entries: Maximum entries to display (1-100)
+    - show_date: Toggle to show/hide entry publication date
+    - show_feed_label: Toggle to show/hide the feed's display label
+    - show_description: Toggle to show/hide entry description
+    - description_max_length: Max characters for description truncation (20-500)
+    - new_entry_color: Highlight color for new entries (8-digit hex with alpha)
+    - feed_label_color: Color for the feed label text (8-digit hex with alpha)
+    - font_size, bg_color, text_color, border_color, title_color: Visual styling
+-->
+<settings 
+    feed_urls=""
+    type-feed_urls="textarea"
+    refresh_interval="60"
+    type-refresh_interval="number"
+    min-refresh_interval="10"
+    max_entries="20"
+    type-max_entries="number"
+    min-max_entries="1"
+    max-max_entries="100"
+    show_date="true"
+    type-show_date="toggle"
+    show_feed_label="true"
+    type-show_feed_label="toggle"
+    show_description="true"
+    type-show_description="toggle"
+    description_max_length="150"
+    type-description_max_length="number"
+    min-description_max_length="20"
+    max-description_max_length="500"
+    new_entry_color="#1ccad8ff"
+    type-new_entry_color="color"
+    font_size="14"
+    type-font_size="number"
+    min-font_size="1"
+    bg_color="#1a2636ff"
+    type-bg_color="color"
+    text_color="#8ba4b8ff"
+    type-text_color="color"
+    border_color="#1ccad8ff"
+    type-border_color="color"
+    title_color="#fcfcfcff"
+    type-title_color="color"
+    feed_label_color="#3daee9ff"
+    type-feed_label_color="color"
+></settings>
+
+<div class="rss-feed" style="--font-size: settings-font_size; --bg-color: settings-bg_color; --text-color: settings-text_color; --border-color: settings-border_color; --title-color: settings-title_color; --new-entry-color: settings-new_entry_color; --feed-label-color: settings-feed_label_color;">
+    <div class="rss-entries-list">
+        <div class="rss-empty-state">No feeds configured</div>
+    </div>
+</div>

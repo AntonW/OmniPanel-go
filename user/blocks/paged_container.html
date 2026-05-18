@@ -1,0 +1,53 @@
+<!--
+  Paged Container Block
+  =====================
+  A multi-page container with tab navigation. Each page is an independent dropzone
+  for child blocks. Pages are defined via the `pages` setting (comma-separated names).
+
+  Settings:
+    - pages: Comma-separated page names, a number (creates "Page 1, Page 2, ..."), or single name
+    - position: Tab bar position (top, bottom, left, right)
+    - currentPage: Active page index (1-based, persisted on tab click, defaults to 1)
+    - gridx/gridy: Internal grid dimensions for each page
+    - menu_*: Tab styling colors and width
+    - background_*: Page background image and color
+    - border_color: Border color for the container
+-->
+<settings 
+    pages="Page 1, Page 2"
+    font_size="12"
+    type-font_size="number"
+    min-font_size="1"
+    position="top"
+    menu_width="15%"
+    type-menu_width="percentage"
+    min-menu_width="5"
+    max-menu_width="95"
+    gridx="6"
+    type-gridx="number"
+    min-gridx="1"
+    max-gridx="20"
+    gridy="6"
+    type-gridy="number"
+    min-gridy="1"
+    max-gridy="20"
+    background_image="none"
+    type-background_image="asset"
+    background_color="#0a0e14ff"
+    type-background_color="color"
+    menu_color="#1a2636ff"
+    type-menu_color="color"
+    menu_color_active="#1ccad8ff"
+    type-menu_color_active="color"
+    menu_color_text="#8ba4b8ff"
+    type-menu_color_text="color"
+    menu_color_text_active="#0a0e14ff"
+    type-menu_color_text_active="color"
+    border_color="#1ccad8ff"
+    type-border_color="color"
+></settings>
+
+<div class="ui-container" data-position="settings-position" style="--font-size: settings-font_size; --background-color: settings-background_color; --menu-width: settings-menu_width; --menu-color: settings-menu_color; --menu-color-active: settings-menu_color_active; --menu-color-text: settings-menu_color_text; --menu-color-text-active: settings-menu_color_text_active; --border-color: settings-border_color;">
+    <div class="tab-header"></div>
+    <div class="pages-container"></div>
+</div>

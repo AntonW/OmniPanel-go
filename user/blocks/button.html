@@ -1,0 +1,80 @@
+<!--
+    Button Block — sends a virtual joystick button press or keyboard key/combo when tapped.
+    
+    Structure: <settings> tag defines configurable properties with types and constraints.
+    The HTML uses settings-<key> placeholders replaced at render time with actual values.
+    CSS variables (--button-color, etc.) are set inline and consumed by theme CSS files.
+    
+    Theme CSS (loaded dynamically per block): user/themes/{default,star_citizen,kde_breeze,windows_11}.css
+    All theme CSS selectors are scoped to the block's DOM element ID to prevent conflicts.
+    
+    Settings:
+    - icon_url: Path/URL to button icon image (relative to /assets/ or full URL)
+    - label: Button text
+    - layout: Display mode - "image-only", "text-only", "image-text"
+    - text_position: When using image-text layout - "bottom", "top", "left", "right"
+    - joystick: Virtual joystick index (0-9)
+    - button: Button ID on that joystick (0-15)
+    - keyboard_index: Virtual keyboard index (0-9), used when keyboard_key is set
+    - keyboard_key: Key or combo to send (e.g., "a", "ctrl+a"). When set, clicking sends keyboard events instead of joystick button events.
+    - font_size, width, height, border_radius: Visual styling
+    - button_color, button_color_active, label_color, border_color: Theme-aware colors
+-->
+<settings 
+    icon_url=""
+    type-icon_url="text"
+    label="Click Me"
+    type-label="text"
+    layout="text-only"
+    type-layout="select"
+    options-layout="image-only,text-only,image-text"
+    text_position="bottom"
+    type-text_position="select"
+    options-text_position="bottom,top,left,right"
+    joystick="0"
+    type-joystick="number"
+    min-joystick="0"
+    max-joystick="9"
+    button="0"
+    type-button="number"
+    min-button="0"
+    max-button="15"
+    keyboard_index="0"
+    type-keyboard_index="number"
+    min-keyboard_index="0"
+    max-keyboard_index="9"
+    keyboard_key=""
+    type-keyboard_key="text"
+    font_size="12"
+    type-font_size="number"
+    min-font_size="1"
+    width="80%"
+    type-width="percentage"
+    min-width="10"
+    max-width="100"
+    height="80%"
+    type-height="percentage"
+    min-height="10"
+    max-height="100"
+    border_radius="5"
+    type-border_radius="number"
+    min-border_radius="0"
+    max-border_radius="100"
+    button_color="#1a2636ff"
+    type-button_color="color"
+    button_color_active="#1ccad8ff"
+    type-button_color_active="color"
+    label_color="#8ba4b8ff"
+    type-label_color="color"
+    border_color="#1ccad8ff"
+    type-border_color="color"
+></settings>
+
+<div class="simple-button" style="--font-size: settings-font_size; --width: settings-width; --height: settings-height; --button-color: settings-button_color; --label-color: settings-label_color; --button-color-active: settings-button_color_active; --border-color: settings-border_color; --border-radius: settings-border_radius;">
+    <button virtual-joystick="settings-joystick" emulate-button="settings-button" keyboard-index="settings-keyboard_index" keyboard-key="settings-keyboard_key" data-layout="settings-layout" data-text-position="settings-text_position">
+        <div class="btn-content layout-settings-layout text-settings-text_position">
+            <img class="btn-icon" data-icon-url="settings-icon_url" alt="" style="display: none;" />
+            <span class="btn-label">settings-label</span>
+        </div>
+    </button>
+</div>

@@ -1,0 +1,312 @@
+{
+    "aspectRatio": "16/9",
+    "backgroundColor": "#2a2e32",
+    "backgroundFit": "cover",
+    "backgroundImage": "none",
+    "blocks": [
+        {
+            "children": [
+                {
+                    "blocks": [
+                        {
+                            "children": [],
+                            "height": "33.3333%",
+                            "id": "block_1778927827462_fuuup1wew",
+                            "left": "16.6667%",
+                            "path": "user/blocks/slider_vertical.html",
+                            "settings": {
+                                "border_color": "#1ccad8ff",
+                                "font_size": "12",
+                                "height": "100%",
+                                "joystick": "0",
+                                "label": "Label",
+                                "label_color": "#8ba4b8ff",
+                                "progress_color": "#1ccad8ff",
+                                "slider": "0",
+                                "thumb_color": "#1ccad8ff",
+                                "width": "80%"
+                            },
+                            "settingsMeta": {
+                                "border_color": {
+                                    "type": "color"
+                                },
+                                "font_size": {
+                                    "min": "1",
+                                    "type": "number"
+                                },
+                                "height": {
+                                    "max": "100",
+                                    "min": "10",
+                                    "type": "percentage"
+                                },
+                                "joystick": {
+                                    "max": "9",
+                                    "min": "0",
+                                    "type": "number"
+                                },
+                                "label": {
+                                    "type": "string"
+                                },
+                                "label_color": {
+                                    "type": "color"
+                                },
+                                "progress_color": {
+                                    "type": "color"
+                                },
+                                "slider": {
+                                    "max": "7",
+                                    "min": "0",
+                                    "type": "number"
+                                },
+                                "thumb_color": {
+                                    "type": "color"
+                                },
+                                "width": {
+                                    "max": "100",
+                                    "min": "10",
+                                    "type": "percentage"
+                                }
+                            },
+                            "theme": "kde_breeze",
+                            "top": "33.3333%",
+                            "width": "33.3333%",
+                            "zIndex": "100"
+                        }
+                    ],
+                    "pageIndex": 1
+                },
+                {
+                    "blocks": [
+                        {
+                            "children": [],
+                            "height": "33.3333%",
+                            "id": "block_1778927822617_vflnbbqh4",
+                            "left": "16.6667%",
+                            "path": "user/blocks/emergency_button.html",
+                            "settings": {
+                                "border_color": "#ff2020ff",
+                                "button": "0",
+                                "button_color": "#3d0a0aff",
+                                "button_color_active": "#ff2020ff",
+                                "font_size": "14",
+                                "height": "60%",
+                                "joystick": "0",
+                                "label": "EMERGENCY",
+                                "label_color": "#ff6b6bff",
+                                "width": "90%"
+                            },
+                            "settingsMeta": {
+                                "border_color": {
+                                    "type": "color"
+                                },
+                                "button": {
+                                    "max": "15",
+                                    "min": "0",
+                                    "type": "number"
+                                },
+                                "button_color": {
+                                    "type": "color"
+                                },
+                                "button_color_active": {
+                                    "type": "color"
+                                },
+                                "font_size": {
+                                    "min": "1",
+                                    "type": "number"
+                                },
+                                "height": {
+                                    "max": "100",
+                                    "min": "10",
+                                    "type": "percentage"
+                                },
+                                "joystick": {
+                                    "max": "9",
+                                    "min": "0",
+                                    "type": "number"
+                                },
+                                "label": {
+                                    "type": "text"
+                                },
+                                "label_color": {
+                                    "type": "color"
+                                },
+                                "width": {
+                                    "max": "100",
+                                    "min": "10",
+                                    "type": "percentage"
+                                }
+                            },
+                            "theme": "kde_breeze",
+                            "top": "16.6667%",
+                            "width": "33.3333%",
+                            "zIndex": "100"
+                        }
+                    ],
+                    "pageIndex": 2
+                },
+                {
+                    "blocks": [
+                        {
+                            "children": [],
+                            "height": "33.3333%",
+                            "id": "block_1778927819763_ucs023ox6",
+                            "left": "0%",
+                            "path": "user/blocks/button.html",
+                            "settings": {
+                                "border_color": "#1ccad8ff",
+                                "border_radius": "5",
+                                "button": "0",
+                                "button_color": "#1a2636ff",
+                                "button_color_active": "#1ccad8ff",
+                                "font_size": "12",
+                                "height": "80%",
+                                "joystick": "0",
+                                "keyboard_index": "0",
+                                "keyboard_key": "",
+                                "label": "Click Me",
+                                "label_color": "#8ba4b8ff",
+                                "width": "80%"
+                            },
+                            "settingsMeta": {
+                                "border_color": {
+                                    "type": "color"
+                                },
+                                "border_radius": {
+                                    "max": "100",
+                                    "min": "0",
+                                    "type": "number"
+                                },
+                                "button": {
+                                    "max": "15",
+                                    "min": "0",
+                                    "type": "number"
+                                },
+                                "button_color": {
+                                    "type": "color"
+                                },
+                                "button_color_active": {
+                                    "type": "color"
+                                },
+                                "font_size": {
+                                    "min": "1",
+                                    "type": "number"
+                                },
+                                "height": {
+                                    "max": "100",
+                                    "min": "10",
+                                    "type": "percentage"
+                                },
+                                "joystick": {
+                                    "max": "9",
+                                    "min": "0",
+                                    "type": "number"
+                                },
+                                "keyboard_index": {
+                                    "max": "9",
+                                    "min": "0",
+                                    "type": "number"
+                                },
+                                "keyboard_key": {
+                                    "type": "text"
+                                },
+                                "label": {
+                                    "type": "text"
+                                },
+                                "label_color": {
+                                    "type": "color"
+                                },
+                                "width": {
+                                    "max": "100",
+                                    "min": "10",
+                                    "type": "percentage"
+                                }
+                            },
+                            "theme": "kde_breeze",
+                            "top": "16.6667%",
+                            "width": "33.3333%",
+                            "zIndex": "100"
+                        }
+                    ],
+                    "pageIndex": 3
+                }
+            ],
+            "height": "83.3333%",
+            "id": "block_1778926976519_51amp8d00",
+            "left": "16.6667%",
+            "path": "user/blocks/paged_container.html",
+            "settings": {
+                "background_color": "#0A0E1400",
+                "background_image": "none",
+                "border_color": "#1ccad8ff",
+                "currentPage": 1,
+                "font_size": "12",
+                "gridx": "6",
+                "gridy": "6",
+                "menu_color": "#1a2636ff",
+                "menu_color_active": "#1ccad8ff",
+                "menu_color_text": "#8ba4b8ff",
+                "menu_color_text_active": "#0a0e14ff",
+                "menu_width": "15%",
+                "pages": "Page 1, Page 2, Test",
+                "position": "bottom"
+            },
+            "settingsMeta": {
+                "background_color": {
+                    "type": "color"
+                },
+                "background_image": {
+                    "type": "asset"
+                },
+                "border_color": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "gridx": {
+                    "max": "20",
+                    "min": "1",
+                    "type": "number"
+                },
+                "gridy": {
+                    "max": "20",
+                    "min": "1",
+                    "type": "number"
+                },
+                "menu_color": {
+                    "type": "color"
+                },
+                "menu_color_active": {
+                    "type": "color"
+                },
+                "menu_color_text": {
+                    "type": "color"
+                },
+                "menu_color_text_active": {
+                    "type": "color"
+                },
+                "menu_width": {
+                    "max": "95",
+                    "min": "5",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "8.33333%",
+            "width": "62.5%",
+            "zIndex": "100"
+        }
+    ],
+    "grid": {
+        "x": 24,
+        "y": 24
+    },
+    "metadata": {
+        "created": "2026-05-16T10:56:58.421Z",
+        "modified": "2026-05-16T10:56:58.421Z"
+    },
+    "name": "PagedTest",
+    "theme": "kde_breeze",
+    "version": 2
+}

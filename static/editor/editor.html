@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/editor/editor-style.css">
+    <title>OmniPanel-go Editor</title>
+</head>
+
+<body>
+    <div id="menubar">
+        <div class="menu-group">
+            <button id="btn-new-panel" title="New Panel">New</button>
+            <button id="btn-load-panel" title="Load Panel">Load</button>
+            <button id="btn-save-panel" title="Save Panel">Save</button>
+            <button id="btn-duplicate-panel" title="Duplicate Panel">Duplicate</button>
+            <button id="btn-delete-panel" title="Delete Panel">Delete</button>
+        </div>
+        <div class="menu-group">
+            <button id="btn-undo" title="Undo (Ctrl+Z)" disabled>&#8617;</button>
+            <button id="btn-redo" title="Redo (Ctrl+Shift+Z)" disabled>&#8618;</button>
+        </div>
+        <div class="menu-group">
+            <span id="current-panel-name">No Panel Loaded</span>
+        </div>
+        <div class="menu-group menu-right">
+            <button id="btn-export" title="Export Panel JSON">Export</button>
+            <button id="btn-import" title="Import Panel JSON">Import</button>
+        </div>
+    </div>
+
+    <div id="editor-layout">
+        <div id="sidebar-left">
+            <div class="sidebar-header">
+                <h3>Blocks</h3>
+                <input type="text" id="block-search" placeholder="Search blocks...">
+            </div>
+            <div id="block-library"></div>
+        </div>
+
+        <div id="workspace-container">
+            <div id="workspace-toolbar">
+                <div class="toolbar-group">
+                    <button id="btn-zoom-out" title="Zoom Out">&#8722;</button>
+                    <span id="zoom-level">100%</span>
+                    <button id="btn-zoom-in" title="Zoom In">+</button>
+                    <button id="btn-zoom-fit" title="Fit to Screen">Fit</button>
+                </div>
+                <div class="toolbar-group">
+                    <label><input type="checkbox" id="grid-toggle" checked> Grid</label>
+                    <select id="grid-size">
+                        <option value="8">8&#215;8</option>
+                        <option value="12" selected>12&#215;12</option>
+                        <option value="16">16&#215;16</option>
+                        <option value="24">24&#215;24</option>
+                    </select>
+                </div>
+                <div class="toolbar-group">
+                    <label><input type="checkbox" id="snap-toggle" checked> Snap</label>
+                    <label><input type="checkbox" id="align-guides" checked> Guides</label>
+                </div>
+            </div>
+            <div id="workspace-viewport">
+                <div id="workspace-canvas">
+                    <div id="maincontainer"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sidebar-right">
+            <div class="sidebar-tabs">
+                <button class="tab-btn active" data-tab="properties">Properties</button>
+                <button class="tab-btn" data-tab="layers">Layers</button>
+                <button class="tab-btn" data-tab="bindings">Bindings</button>
+                <button class="tab-btn" data-tab="speech">Speech</button>
+            </div>
+
+            <div id="tab-properties" class="tab-content active">
+                <div id="properties-panel">
+                    <div class="empty-state">Select a block to edit its properties</div>
+                </div>
+            </div>
+
+            <div id="tab-layers" class="tab-content">
+                <div id="layers-panel">
+                    <div id="layers-tree"></div>
+                </div>
+            </div>
+
+            <div id="tab-bindings" class="tab-content">
+                <div id="bindings-panel"></div>
+            </div>
+
+            <div id="tab-speech" class="tab-content">
+                <div id="speech-panel"></div>
+            </div>
+
+            <div id="workspace-settings">
+                <h4>Workspace</h4>
+                <div class="setting-row">
+                    <label>Panel Theme</label>
+                    <select id="panel-theme-selector">
+                        <option value="default">Default</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label>Aspect Ratio</label>
+                    <select id="aspect-preset">
+                        <optgroup label="Handheld (Portrait)">
+                            <option value="9/16">9:16 Slim</option>
+                            <option value="10/16">10:16 Standard</option>
+                            <option value="2/3">2:3 Classic</option>
+                        </optgroup>
+                        <optgroup label="Tablet & Square">
+                            <option value="1/1">1:1 Square</option>
+                            <option value="4/3">4:3 Standard Tablet</option>
+                            <option value="16/10">16:10 Tablet</option>
+                        </optgroup>
+                        <optgroup label="Landscape Display">
+                            <option value="3/2">3:2 Laptop</option>
+                            <option value="16/9" selected>16:9 Widescreen</option>
+                            <option value="16/10">16:10 Professional</option>
+                            <option value="21/9">21:9 Ultra-Wide</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label>Background Color</label>
+                    <div class="color-picker-row">
+                        <input type="color" id="workspace-bg-color" value="#e6e6e6">
+                        <input type="text" id="workspace-bg-text" value="#E6E6E6">
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <label>Background Image</label>
+                    <select id="workspace-bg-image">
+                        <option value="none">None</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label>Image Fit</label>
+                    <select id="workspace-bg-fit">
+                        <option value="cover">Cover</option>
+                        <option value="contain">Contain</option>
+                        <option value="stretch">Stretch</option>
+                        <option value="tile">Tile</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div id="modal-container"></div>
+    </div>
+
+    <div id="delete-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Delete Block?</h3>
+            <p>This will permanently remove this block and everything inside it.</p>
+            <div class="modal-actions">
+                <button id="modal-cancel">Cancel</button>
+                <button id="modal-confirm" class="danger">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script src="/editor/js/utils.js"></script>
+    <script src="/editor/js/state.js"></script>
+    <script src="/editor/js/workspace.js"></script>
+    <script src="/editor/js/block-library.js"></script>
+    <script src="/editor/js/block-renderer.js"></script>
+    <script src="/editor/js/drag-drop.js"></script>
+    <script src="/editor/js/selection.js"></script>
+    <script src="/editor/js/properties-panel.js"></script>
+    <script src="/editor/js/panel-manager.js"></script>
+    <script src="/editor/js/binding-manager.js"></script>
+    <script src="/editor/js/speech-center.js"></script>
+    <script src="/editor/js/main.js"></script>
+</body>
+
+</html>

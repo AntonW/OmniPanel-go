@@ -1,0 +1,2392 @@
+{
+    "aspectRatio": "16/9",
+    "backgroundColor": "#2a2e32",
+    "backgroundFit": "cover",
+    "backgroundImage": "none",
+    "blocks": [
+        {
+            "children": [],
+            "height": "8%",
+            "id": "block_title",
+            "left": "0%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "0",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "20",
+                "height": "80%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "",
+                "label": "KDE DESKTOP CONTROLS",
+                "label_color": "#fcfcfcff",
+                "width": "100%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "0%",
+            "width": "100%",
+            "zIndex": "100"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_label_system",
+            "left": "0%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#f67400ff",
+                "border_radius": "4",
+                "button": "0",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "16",
+                "height": "70%",
+                "joystick": "0",
+                "keyboard_index": "0",
+                "keyboard_key": "",
+                "label": "SYSTEM",
+                "label_color": "#f67400ff",
+                "width": "90%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "10%",
+            "width": "25%",
+            "zIndex": "101"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_lock_screen",
+            "left": "0%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "1",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "meta+l",
+                "label": "Lock Screen",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "22%",
+            "width": "25%",
+            "zIndex": "102"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_screenshot",
+            "left": "0%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "2",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "printscreen",
+                "label": "Screenshot",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "34%",
+            "width": "25%",
+            "zIndex": "103"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_screen_record",
+            "left": "0%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "3",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "meta+shift+r",
+                "label": "Screen Record",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "46%",
+            "width": "25%",
+            "zIndex": "104"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_krunner",
+            "left": "0%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "4",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "alt+space",
+                "label": "KRunner",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "58%",
+            "width": "25%",
+            "zIndex": "105"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_label_apps",
+            "left": "25%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#f67400ff",
+                "border_radius": "4",
+                "button": "0",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "16",
+                "height": "70%",
+                "joystick": "0",
+                "keyboard_index": "0",
+                "keyboard_key": "",
+                "label": "APPLICATIONS",
+                "label_color": "#f67400ff",
+                "width": "90%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "10%",
+            "width": "25%",
+            "zIndex": "106"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_file_manager",
+            "left": "25%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "5",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "meta+e",
+                "label": "File Manager",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "22%",
+            "width": "25%",
+            "zIndex": "107"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_terminal",
+            "left": "25%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "6",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "ctrl+alt+t",
+                "label": "Terminal",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "34%",
+            "width": "25%",
+            "zIndex": "108"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_browser",
+            "left": "25%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "7",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "meta+b",
+                "label": "Browser",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "46%",
+            "width": "25%",
+            "zIndex": "109"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_settings",
+            "left": "25%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "8",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "meta+comma",
+                "label": "Settings",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "58%",
+            "width": "25%",
+            "zIndex": "110"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_label_media",
+            "left": "50%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#f67400ff",
+                "border_radius": "4",
+                "button": "0",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "16",
+                "height": "70%",
+                "joystick": "0",
+                "keyboard_index": "0",
+                "keyboard_key": "",
+                "label": "MEDIA CONTROLS",
+                "label_color": "#f67400ff",
+                "width": "90%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "10%",
+            "width": "25%",
+            "zIndex": "111"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_volume_up",
+            "left": "50%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "9",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "volumeup",
+                "label": "Volume Up",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "22%",
+            "width": "25%",
+            "zIndex": "112"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_volume_down",
+            "left": "50%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "10",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "volumedown",
+                "label": "Volume Down",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "34%",
+            "width": "25%",
+            "zIndex": "113"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_mute",
+            "left": "50%",
+            "path": "user/blocks/toggle.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "button": "11",
+                "font_size": "12",
+                "height": "50%",
+                "joystick": 0,
+                "label": "Mute",
+                "label_color": "#fcfcfcff",
+                "toggle_color": "#31363bff",
+                "toggle_color_active": "#da4453ff",
+                "toggle_mode": "momentary",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "toggle_color": {
+                    "type": "color"
+                },
+                "toggle_color_active": {
+                    "type": "color"
+                },
+                "toggle_mode": {
+                    "options": "momentary,toggle",
+                    "type": "select"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "46%",
+            "width": "25%",
+            "zIndex": "114"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_media_play_pause",
+            "left": "50%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "12",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "playpause",
+                "label": "Play/Pause",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "58%",
+            "width": "25%",
+            "zIndex": "115"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_label_windows",
+            "left": "75%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#f67400ff",
+                "border_radius": "4",
+                "button": "0",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "16",
+                "height": "70%",
+                "joystick": "0",
+                "keyboard_index": "0",
+                "keyboard_key": "",
+                "label": "WINDOW MGMT",
+                "label_color": "#f67400ff",
+                "width": "90%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "10%",
+            "width": "25%",
+            "zIndex": "116"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_show_desktop",
+            "left": "75%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "13",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "meta+d",
+                "label": "Show Desktop",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "22%",
+            "width": "25%",
+            "zIndex": "117"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_window_overview",
+            "left": "75%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "14",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "meta+w",
+                "label": "Overview",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "34%",
+            "width": "25%",
+            "zIndex": "118"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_next_desktop",
+            "left": "75%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "15",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "ctrl+f1",
+                "label": "Next Desktop",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "46%",
+            "width": "25%",
+            "zIndex": "119"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_prev_desktop",
+            "left": "75%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "16",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "ctrl+f2",
+                "label": "Prev Desktop",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "58%",
+            "width": "25%",
+            "zIndex": "120"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_label_power",
+            "left": "0%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#da4453ff",
+                "border_radius": "4",
+                "button": "0",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "16",
+                "height": "70%",
+                "joystick": "0",
+                "keyboard_index": "0",
+                "keyboard_key": "",
+                "label": "POWER",
+                "label_color": "#da4453ff",
+                "width": "90%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "70%",
+            "width": "25%",
+            "zIndex": "121"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_sleep",
+            "left": "0%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "17",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "",
+                "label": "Sleep",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "82%",
+            "width": "25%",
+            "zIndex": "122"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_reboot",
+            "left": "0%",
+            "path": "user/blocks/emergency_button.html",
+            "settings": {
+                "border_color": "#f67400ff",
+                "button": "18",
+                "button_color": "#4a3a2aff",
+                "button_color_active": "#f67400ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_key": "",
+                "label": "Reboot",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "82%",
+            "width": "25%",
+            "zIndex": "123"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_shutdown",
+            "left": "0%",
+            "path": "user/blocks/emergency_button.html",
+            "settings": {
+                "border_color": "#da4453ff",
+                "button": "19",
+                "button_color": "#4a1a1aff",
+                "button_color_active": "#da4453ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_key": "",
+                "label": "Shutdown",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "82%",
+            "width": "25%",
+            "zIndex": "124"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_brightness_up",
+            "left": "50%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "20",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "brightnessup",
+                "label": "Brightness +",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "70%",
+            "width": "25%",
+            "zIndex": "125"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_brightness_down",
+            "left": "50%",
+            "path": "user/blocks/button.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "border_radius": "4",
+                "button": "21",
+                "button_color": "#31363bff",
+                "button_color_active": "#3daee9ff",
+                "font_size": "12",
+                "height": "70%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "brightnessdown",
+                "label": "Brightness -",
+                "label_color": "#fcfcfcff",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "border_radius": {
+                    "max": "100",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "button_color": {
+                    "type": "color"
+                },
+                "button_color_active": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "82%",
+            "width": "25%",
+            "zIndex": "126"
+        },
+        {
+            "children": [],
+            "height": "10%",
+            "id": "block_night_light",
+            "left": "75%",
+            "path": "user/blocks/toggle.html",
+            "settings": {
+                "border_color": "#5a6167ff",
+                "button": "22",
+                "font_size": "12",
+                "height": "50%",
+                "joystick": 0,
+                "label": "Night Light",
+                "label_color": "#fcfcfcff",
+                "toggle_color": "#31363bff",
+                "toggle_color_active": "#f67400ff",
+                "toggle_mode": "momentary",
+                "width": "80%"
+            },
+            "settingsMeta": {
+                "border_color": {
+                    "type": "color"
+                },
+                "button": {
+                    "max": "15",
+                    "min": "0",
+                    "type": "number"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "label": {
+                    "type": "text"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "toggle_color": {
+                    "type": "color"
+                },
+                "toggle_color_active": {
+                    "type": "color"
+                },
+                "toggle_mode": {
+                    "options": "momentary,toggle",
+                    "type": "select"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "70%",
+            "width": "25%",
+            "zIndex": "127"
+        },
+        {
+            "children": [],
+            "height": "12.5%",
+            "id": "block_volume_slider",
+            "left": "25%",
+            "path": "user/blocks/slider.html",
+            "settings": {
+                "background_color": "#31363bff",
+                "border_color": "#5a6167ff",
+                "font_size": "12",
+                "height": "80%",
+                "joystick": 0,
+                "keyboard_index": "0",
+                "keyboard_key": "",
+                "label": "Volume",
+                "label_color": "#fcfcfcff",
+                "max_value": "150",
+                "progress_color": "#3daee9ff",
+                "slider": "0",
+                "system_control": "volume",
+                "system_control_command": "pactl set-sink-volume @DEFAULT_SINK@ {value}%",
+                "thumb_color": "#3daee9ff",
+                "width": "100%",
+                "zIndex": 123
+            },
+            "settingsMeta": {
+                "background_color": {
+                    "type": "color"
+                },
+                "border_color": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "max_value": {
+                    "max": "1000",
+                    "min": "1",
+                    "type": "number"
+                },
+                "progress_color": {
+                    "type": "color"
+                },
+                "slider": {
+                    "max": "7",
+                    "min": "0",
+                    "type": "number"
+                },
+                "system_control": {
+                    "type": "text"
+                },
+                "system_control_command": {
+                    "type": "text"
+                },
+                "thumb_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "79.1667%",
+            "width": "25%",
+            "zIndex": "128"
+        },
+        {
+            "children": [],
+            "height": "12.5%",
+            "id": "block_brightness_slider",
+            "left": "25%",
+            "path": "user/blocks/slider.html",
+            "settings": {
+                "background_color": "#31363bff",
+                "border_color": "#5a6167ff",
+                "font_size": "12",
+                "height": "80%",
+                "joystick": 0,
+                "keyboard_index": "",
+                "keyboard_key": "",
+                "label": "Brightness",
+                "label_color": "#fcfcfcff",
+                "max_value": "100",
+                "progress_color": "#f67400ff",
+                "slider": "",
+                "system_control": "brightness",
+                "system_control_command": "ddcutil -d 1 setvcp 10 {value}",
+                "thumb_color": "#1ccad8ff",
+                "width": "100%"
+            },
+            "settingsMeta": {
+                "background_color": {
+                    "type": "color"
+                },
+                "border_color": {
+                    "type": "color"
+                },
+                "font_size": {
+                    "min": "1",
+                    "type": "number"
+                },
+                "height": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                },
+                "joystick": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_index": {
+                    "max": "9",
+                    "min": "0",
+                    "type": "number"
+                },
+                "keyboard_key": {
+                    "type": "text"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "label_color": {
+                    "type": "color"
+                },
+                "max_value": {
+                    "max": "1000",
+                    "min": "1",
+                    "type": "number"
+                },
+                "progress_color": {
+                    "type": "color"
+                },
+                "slider": {
+                    "max": "7",
+                    "min": "0",
+                    "type": "number"
+                },
+                "system_control": {
+                    "type": "text"
+                },
+                "system_control_command": {
+                    "type": "text"
+                },
+                "thumb_color": {
+                    "type": "color"
+                },
+                "width": {
+                    "max": "100",
+                    "min": "10",
+                    "type": "percentage"
+                }
+            },
+            "theme": "kde_breeze",
+            "top": "66.6667%",
+            "width": "25%",
+            "zIndex": "129"
+        }
+    ],
+    "grid": {
+        "x": 24,
+        "y": 24
+    },
+    "metadata": {
+        "created": "2026-05-16T11:20:53.490Z",
+        "modified": "2026-05-16T11:20:53.490Z"
+    },
+    "name": "KDE Desktop",
+    "theme": "kde_breeze",
+    "version": 2
+}

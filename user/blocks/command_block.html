@@ -1,0 +1,90 @@
+<!-- Command Block
+  A button that executes shell commands or HTTP requests when tapped.
+  Supports dynamic parameters (added via the editor's Properties panel)
+  that appear as input controls above the button and are substituted
+  into the command using {name} placeholders.
+
+  Settings:
+    command_type  - "shell" or "http" execution mode
+    command       - shell command template (shell mode)
+    http_method   - HTTP method: GET, POST, PUT, DELETE, PATCH (http mode)
+    http_url      - target URL (http mode)
+    http_body     - request body (http mode, POST/PUT/PATCH)
+    icon_url      - Path/URL to button icon image (relative to /assets/ or full URL)
+    label         - button text
+    layout        - Display mode - "image-only", "text-only", "image-text"
+    text_position - When using image-text layout - "bottom", "top", "left", "right"
+    hold_repeat   - enable repeat-while-held ("true"/"false")
+    hold_interval - milliseconds between repeats when held
+
+  Parameters:
+    Defined dynamically in the editor via "Add Parameter" in the
+    Properties panel. Each parameter is stored as param_<name> in
+    settings with metadata in settingsMeta (type: text|number|toggle).
+    Parameter values are substituted into commands as {name}.
+-->
+<settings 
+    command_type="shell"
+    type-command_type="select"
+    options-command_type="shell,http"
+    command="echo Hello from OmniPanel-go"
+    type-command="textarea"
+    http_method="GET"
+    type-http_method="select"
+    options-http_method="GET,POST,PUT,DELETE,PATCH"
+    http_url="http://localhost:8080/api"
+    type-http_url="text"
+    http_body=""
+    type-http_body="textarea"
+    icon_url=""
+    type-icon_url="text"
+    label="Execute"
+    type-label="text"
+    layout="text-only"
+    type-layout="select"
+    options-layout="image-only,text-only,image-text"
+    text_position="bottom"
+    type-text_position="select"
+    options-text_position="bottom,top,left,right"
+    font_size="12"
+    type-font_size="number"
+    min-font_size="1"
+    width="80%"
+    type-width="percentage"
+    min-width="10"
+    max-width="100"
+    height="80%"
+    type-height="percentage"
+    min-height="10"
+    max-height="100"
+    border_radius="5"
+    type-border_radius="number"
+    min-border_radius="0"
+    max-border_radius="100"
+    button_color="#2a3a4aff"
+    type-button_color="color"
+    button_color_active="#1ccad8ff"
+    type-button_color_active="color"
+    label_color="#8ba4b8ff"
+    type-label_color="color"
+    border_color="#1ccad8ff"
+    type-border_color="color"
+    hold_repeat="false"
+    type-hold_repeat="toggle"
+    hold_interval="200"
+    type-hold_interval="number"
+    min-hold_interval="50"
+></settings>
+
+<!-- Wrapper: CSS custom properties map settings to theme values -->
+<div class="command-block-wrapper" style="--font-size: settings-font_size; --width: settings-width; --height: settings-height; --button-color: settings-button_color; --label-color: settings-label_color; --button-color-active: settings-button_color_active; --border-color: settings-border_color; --border-radius: settings-border_radius;">
+    <!-- Parameter inputs: populated dynamically by renderCommandParams() in client.js -->
+    <div class="params-container" data-block-id="settings-__block_id__"></div>
+    <!-- Command button: data-* attributes carry settings to executeCommand() in client.js -->
+    <button class="command-button" data-command-type="settings-command_type" data-command="settings-command" data-http-method="settings-http_method" data-http-url="settings-http_url" data-http-body="settings-http_body" data-hold-repeat="settings-hold_repeat" data-hold-interval="settings-hold_interval" data-layout="settings-layout" data-text-position="settings-text_position">
+        <div class="btn-content layout-settings-layout text-settings-text_position">
+            <img class="btn-icon" data-icon-url="settings-icon_url" alt="" style="display: none;" />
+            <span class="btn-label">settings-label</span>
+        </div>
+    </button>
+</div>

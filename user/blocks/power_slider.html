@@ -1,0 +1,69 @@
+<settings 
+    joystick="0"
+    type-joystick="number"
+    min-joystick="0"
+    max-joystick="9"
+    slider="0"
+    type-slider="number"
+    min-slider="0"
+    max-slider="7"
+    label="PWR"
+    type-label="string"
+    font_size="12"
+    type-font_size="number"
+    min-font_size="1"
+    width="60%"
+    type-width="percentage"
+    min-width="10"
+    max-width="100"
+    height="100%"
+    type-height="percentage"
+    min-height="10"
+    max-height="100"
+    thumb_color="#1ccad8ff"
+    type-thumb_color="color"
+    track_color="#1a2636ff"
+    type-track_color="color"
+    progress_color="#1ccad8ff"
+    type-progress_color="color"
+    label_color="#8ba4b8ff"
+    type-label_color="color"
+    border_color="#1ccad8ff"
+    type-border_color="color"
+></settings>
+
+<div class="power-slider" style="
+        --thumb-color: settings-thumb_color;
+        --track-color: settings-track_color;
+        --progress-color: settings-progress_color;
+        --label-color: settings-label_color;
+        --font-size: settings-font_size;
+        --width: settings-width;
+        --height: settings-height;
+        --border-color: settings-border_color;
+        ">
+    <p>settings-label</p>
+    <div class="track-container">
+        <div class="progress-fill"></div>
+        <input virtual-joystick="settings-joystick" emulate-slider="settings-slider" type="range" min="0" max="255" value="0" orient="vertical">
+    </div>
+</div>
+
+<script>
+    (function() {
+        const container = document.currentScript.parentElement;
+        const input = container.querySelector('input[type="range"]');
+        const progressFill = container.querySelector('.progress-fill');
+        
+        function updateProgress() {
+            const value = input.value;
+            const max = input.max;
+            const min = input.min;
+            const percentage = ((value - min) / (max - min)) * 100;
+            progressFill.style.height = percentage + '%';
+        }
+        
+        input.addEventListener('input', updateProgress);
+        updateProgress();
+    })();
+</script>

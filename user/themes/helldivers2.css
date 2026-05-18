@@ -1,0 +1,287 @@
+/* helldivers 2 theme styles */
+/* Military sci-fi terminal UI aesthetic */
+
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+
+/* sequence_button.html */
+
+.sequence-button {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.sequence-button button {
+    width: var(--width);
+    height: var(--height);
+    background: linear-gradient(180deg, #2a2a1a 0%, #1a1a0e 100%);
+    color: var(--label-color);
+    border: 2px solid var(--border-color);
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 600;
+    font-size: calc(var(--font-size) * 0.15cqmin);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s ease;
+    padding: 0.5cqmin;
+    overflow: hidden;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+}
+
+.sequence-button button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+    opacity: 0.6;
+}
+
+.sequence-button button:hover {
+    background: linear-gradient(180deg, #3a3a2a 0%, #2a2a1a 100%);
+    border-color: #FFD700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3), inset 0 0 20px rgba(255, 215, 0, 0.1);
+}
+
+.sequence-button button:active,
+.sequence-button button.executing {
+    background: linear-gradient(180deg, var(--button-color-active) 0%, #3a3a1a 100%);
+    border-color: #FFD700;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.5), inset 0 0 30px rgba(255, 215, 0, 0.2);
+    color: #1a1a0e;
+}
+
+.sequence-button button.executing::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+    animation: sequence-scan 0.5s linear infinite;
+}
+
+@keyframes sequence-scan {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Shared button content layout (used by button.html, command_block.html, sequence_button.html) */
+/* Supports three layouts: image-only, text-only, image-text with four text positions. */
+
+.btn-content {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-content.layout-image-only {
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-content.layout-text-only {
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-content.layout-image-text.text-bottom {
+    flex-direction: column;
+}
+
+.btn-content.layout-image-text.text-top {
+    flex-direction: column-reverse;
+}
+
+.btn-content.layout-image-text.text-left {
+    flex-direction: row-reverse;
+}
+
+.btn-content.layout-image-text.text-right {
+    flex-direction: row;
+}
+
+.btn-icon {
+    max-width: 60%;
+    max-height: 60%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.3));
+    transition: filter 0.15s ease;
+}
+
+button:hover .btn-icon {
+    filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
+}
+
+.btn-label {
+    text-align: center;
+    line-height: 1.2;
+    padding: 0.2cqmin;
+}
+
+.btn-content.text-left .btn-label,
+.btn-content.text-right .btn-label {
+    padding: 0 0.4cqmin;
+}
+
+.btn-content.text-bottom .btn-label {
+    margin-top: 0.3cqmin;
+}
+
+.btn-content.text-top .btn-label {
+    margin-bottom: 0.3cqmin;
+}
+
+/* paged_container.html */
+
+.ui-container {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    background: linear-gradient(180deg, #0e0e08 0%, #1a1a0e 50%, #0e0e08 100%);
+    display: flex;
+    flex-direction: column;
+    border: 2px solid var(--border-color);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.15), inset 0 0 40px rgba(0, 0, 0, 0.5);
+    font-family: 'Orbitron', sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+.ui-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(255, 215, 0, 0.015) 3px,
+        rgba(255, 215, 0, 0.015) 6px
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+.ui-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+    z-index: 2;
+}
+
+.tab-header {
+    display: flex;
+    background: linear-gradient(180deg, #1a1a0e 0%, #0e0e08 100%);
+    flex-direction: row;
+    height: var(--menu-width);
+    border-bottom: 2px solid var(--border-color);
+    z-index: 2;
+}
+
+.ui-container[data-position="top"] {
+    flex-direction: column;
+}
+
+.ui-container[data-position="bottom"] {
+    flex-direction: column-reverse;
+}
+
+.ui-container[data-position="left"] {
+    flex-direction: row;
+}
+.ui-container[data-position="left"] > .tab-header {
+    flex-direction: column;
+    width: var(--menu-width);
+    height: 100%;
+    border-bottom: none;
+    border-right: 2px solid var(--border-color);
+}
+
+.ui-container[data-position="right"] {
+    flex-direction: row-reverse;
+}
+.ui-container[data-position="right"] > .tab-header {
+    flex-direction: column;
+    width: var(--menu-width);
+    height: 100%;
+    border-bottom: none;
+    border-left: 2px solid var(--border-color);
+}
+
+.tab-btn {
+    flex: 1;
+    color: var(--menu-color-text);
+    cursor: pointer;
+    border: none;
+    background: var(--menu-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(var(--font-size) * 0.14cqmin);
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+    background: #3a3a2a;
+    color: var(--border-color);
+}
+
+.tab-btn.active {
+    background: var(--menu-color-active);
+    color: var(--menu-color-text-active);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 15%;
+    right: 15%;
+    height: 2px;
+    background: var(--border-color);
+    box-shadow: 0 0 8px var(--border-color);
+}
+
+.pages-container {
+    flex: 1;
+    display: flex;
+    min-height: 50px;
+    position: relative;
+    z-index: 2;
+}
+
+.page-wrapper {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: none;
+    width: 100%;
+    height: 100%;
+}
+
+.page-wrapper.active {
+    display: block;
+    pointer-events: all;
+}

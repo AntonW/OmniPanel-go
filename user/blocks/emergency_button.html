@@ -1,0 +1,37 @@
+<settings 
+    joystick="0"
+    type-joystick="number"
+    min-joystick="0"
+    max-joystick="9"
+    button="0"
+    type-button="number"
+    min-button="0"
+    max-button="15"
+    label="EMERGENCY"
+    type-label="text"
+    font_size="14"
+    type-font_size="number"
+    min-font_size="1"
+    width="90%"
+    type-width="percentage"
+    min-width="10"
+    max-width="100"
+    height="60%"
+    type-height="percentage"
+    min-height="10"
+    max-height="100"
+    button_color="#3d0a0aff"
+    type-button_color="color"
+    button_color_active="#ff2020ff"
+    type-button_color_active="color"
+    label_color="#ff6b6bff"
+    type-label_color="color"
+    border_color="#ff2020ff"
+    type-border_color="color"
+></settings>
+
+<div class="emergency-button" style="--font-size: settings-font_size; --width: settings-width; --height: settings-height; --button-color: settings-button_color; --label-color: settings-label_color; --button-color-active: settings-button_color_active; --border-color: settings-border_color;">
+    <button virtual-joystick="settings-joystick" emulate-button="settings-button">
+        settings-label
+    </button>
+</div>

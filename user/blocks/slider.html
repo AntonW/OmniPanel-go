@@ -1,0 +1,87 @@
+<!--
+    Slider Block — Horizontal
+    A draggable range input that sends joystick axis values (0 to max_value) to the host.
+    Can also execute shell commands on the host system (e.g., volume, brightness control).
+
+    Settings:
+    - joystick: Virtual joystick index (0-9)
+    - slider: Axis ID on that joystick (0-7)
+    - keyboard_index: Virtual keyboard index (0-9)
+    - keyboard_key: Physical key that triggers this slider (e.g., "volumeup")
+    - label: Display text above the slider
+    - font_size: Label text size
+    - width/height: Slider dimensions as percentages
+    - thumb_color: Draggable knob color
+    - background_color: Empty track color
+    - progress_color: Filled portion color
+    - label_color: Label text color
+    - border_color: Track outline color
+    - system_control: Optional label for system control mode (e.g., "volume", "brightness").
+      When set alongside system_control_command, the slider sends execute-command messages
+      instead of simulate-slider messages.
+    - system_control_command: Shell command template executed on the host when the slider
+      changes. Use {value} as a placeholder for the current slider value.
+      Examples: "pactl set-sink-volume @DEFAULT_SINK@ {value}%", "ddcutil -d 1 setvcp 10 {value}"
+    - max_value: Maximum slider value (default 255). Use 100 for percentage-based commands.
+-->
+<settings 
+    joystick="0"
+    type-joystick="number"
+    min-joystick="0"
+    max-joystick="9"
+    slider="0"
+    type-slider="number"
+    min-slider="0"
+    max-slider="7"
+    keyboard_index="0"
+    type-keyboard_index="number"
+    min-keyboard_index="0"
+    max-keyboard_index="9"
+    keyboard_key=""
+    type-keyboard_key="text"
+    label="Label"
+    type-label="string"
+    font_size="12"
+    type-font_size="number"
+    min-font_size="1"
+    width="100%"
+    type-width="percentage"
+    min-width="10"
+    max-width="100"
+    height="80%"
+    type-height="percentage"
+    min-height="10"
+    max-height="100"
+    thumb_color="#1ccad8ff"
+    type-thumb_color="color"
+    background_color="#1a2636ff"
+    type-background_color="color"
+    progress_color="#1ccad8ff"
+    type-progress_color="color"
+    label_color="#8ba4b8ff"
+    type-label_color="color"
+    border_color="#1ccad8ff"
+    type-border_color="color"
+    system_control=""
+    type-system_control="text"
+    system_control_command=""
+    type-system_control_command="text"
+    max_value="255"
+    type-max_value="number"
+    min-max_value="1"
+    max-max_value="1000"
+></settings>
+
+<div class="slider" style="
+        --thumb-color: settings-thumb_color;
+        --background-color: settings-background_color;
+        --progress-color: settings-progress_color;
+        --label-color: settings-label_color;
+        --font-size: settings-font_size;
+        --width: settings-width;
+        --height: settings-height;
+        ">
+    <p>settings-label</p>
+    <input virtual-joystick="settings-joystick" emulate-slider="settings-slider" keyboard-index="settings-keyboard_index" keyboard-key="settings-keyboard_key" system-control="settings-system_control" system-control-command="settings-system_control_command" type="range" min="0" max="settings-max_value"
+        value="0">
+</div>

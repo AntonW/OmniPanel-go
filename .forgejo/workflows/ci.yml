@@ -1,0 +1,86 @@
+name: CI Build and Test
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-test-linux:
+    runs-on: docker
+    steps:
+      - name: Checkout code
+        uses: https://code.forgejo.org/actions/checkout@v4
+
+      - name: Setup Go 1.26
+        uses: https://code.forgejo.org/actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - name: Install Vosk library (Linux)
+        run: |
+          VOSK_LIB_VERSION="0.3.45"
+          wget -q "https://github.com/alphacep/vosk-api/releases/download/v${VOSK_LIB_VERSION}/vosk-linux-x86_64-${VOSK_LIB_VERSION}.zip" -O /tmp/libvosk.zip
+          unzip -q /tmp/libvosk.zip -d /tmp/libvosk
+          cp /tmp/libvosk/vosk-linux-x86_64-${VOSK_LIB_VERSION}/libvosk.so /usr/local/lib/
+          cp /tmp/libvosk/vosk-linux-x86_64-${VOSK_LIB_VERSION}/vosk_api.h /usr/local/include/
+          ldconfig
+
+      - name: Build Linux binary
+        run: go build -o omnipanel-go .
+
+      - name: Run tests
+        run: go test ./... -v
+
+  build-windows:
+    # We use a Linux runner, but cross-compile to Windows
+    runs-on: docker
+    steps:
+      - name: Checkout code
+        uses: https://code.forgejo.org/actions/checkout@v4
+
+      - name: Setup Go 1.26
+        uses: https://code.forgejo.org/actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - name: Install MinGW (CGO cross-compiler)
+        run: apt-get update && apt-get install -y gcc-mingw-w64
+
+      - name: Install Vosk library (Windows -> downloaded to Linux)
+        run: |
+          VOSK_LIB_VERSION="0.3.45"
+          wget -q "https://github.com/alphacep/vosk-api/releases/download/v${VOSK_LIB_VERSION}/vosk-win64-${VOSK_LIB_VERSION}.zip" -O /tmp/libvosk-win.zip
+          unzip -q /tmp/libvosk-win.zip -d /tmp/libvosk-win
+          
+          mkdir -p $GITHUB_WORKSPACE/vosk-win
+          
+          # Find and copy any DLLs and header files regardless of the zip's internal subfolder name
+          find /tmp/libvosk-win -name "*.dll" -exec cp {} $GITHUB_WORKSPACE/vosk-win/ \;
+          find /tmp/libvosk-win -name "vosk_api.h" -exec cp {} $GITHUB_WORKSPACE/vosk-win/ \;
+          
+          # If the dll extracted as 'vosk.dll', duplicate it to 'libvosk.dll' 
+          # so gcc MinGW can find it successfully when building with '-lvosk'
+          if [ -f "$GITHUB_WORKSPACE/vosk-win/vosk.dll" ] && [ ! -f "$GITHUB_WORKSPACE/vosk-win/libvosk.dll" ]; then
+            cp $GITHUB_WORKSPACE/vosk-win/vosk.dll $GITHUB_WORKSPACE/vosk-win/libvosk.dll
+          fi
+          
+          # Debug print to ensure they copied successfully
+          echo "Contents of vosk-win directory:"
+          ls -la $GITHUB_WORKSPACE/vosk-win/
+
+      - name: Build Windows binary (CGO Cross-compile)
+        run: go build -o omnipanel-go-windows-amd64.exe .
+        env:
+          CGO_ENABLED: 1
+          GOOS: windows
+          GOARCH: amd64
+          CC: x86_64-w64-mingw32-gcc
+          # Tell CGO where to find the Windows headers and libraries we downloaded
+          CGO_CFLAGS: "-I${{ github.workspace }}/vosk-win"
+          CGO_LDFLAGS: "-L${{ github.workspace }}/vosk-win -lvosk"
+
+      # Note: You cannot easily run "go test" for a Windows CGO binary
+      # while sitting in a Linux container, so testing is usually skipped
+      # for cross-compiled binaries unless you set up Wine.

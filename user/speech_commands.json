@@ -1,0 +1,434 @@
+[
+  {
+    "phrase": "hello",
+    "aliases": ["hi", "hey"],
+    "type": "shell",
+    "command": "echo Hello from OmniPanel-go"
+  },
+  {
+    "phrase": "missiles plus",
+    "aliases": ["missiles up", "add missiles", "more missiles"],
+    "type": "button",
+    "block_id": "block_1773577461700_60k93ohz5"
+  },
+  {
+    "phrase": "missiles minus",
+    "aliases": ["missiles down", "remove missiles", "less missiles"],
+    "type": "button",
+    "block_id": "block_1773577496512_zql35vr7o"
+  },
+  {
+    "phrase": "decoy plus",
+    "aliases": ["add decoy", "more decoys"],
+    "type": "button",
+    "block_id": "block_1773577606223_4vloobb3j"
+  },
+  {
+    "phrase": "decoy minus",
+    "aliases": ["remove decoy", "less decoys"],
+    "type": "button",
+    "block_id": "block-1773577625046v6chr"
+  },
+  {
+    "phrase": "missile mode",
+    "aliases": ["change missile mode", "switch missile mode"],
+    "type": "button",
+    "block_id": "block_1773585819267_l0lsizrcq"
+  },
+  {
+    "phrase": "cycle friendlies back",
+    "aliases": ["previous friendly", "friendlies back"],
+    "type": "button",
+    "block_id": "block_1773585998117_ljtof8czc"
+  },
+  {
+    "phrase": "cycle friendlies forward",
+    "aliases": ["next friendly", "friendlies forward"],
+    "type": "button",
+    "block_id": "block_1773586004017_l33cia7mk"
+  },
+  {
+    "phrase": "cycle hostiles back",
+    "aliases": ["previous hostile", "hostiles back"],
+    "type": "button",
+    "block_id": "block_1773586189647_wathb2yjj"
+  },
+  {
+    "phrase": "cycle hostiles forward",
+    "aliases": ["next hostile", "hostiles forward"],
+    "type": "button",
+    "block_id": "block_1773586207216_sd6g8cjno"
+  },
+  {
+    "phrase": "lock closest attacker",
+    "aliases": ["target attacker", "lock attacker"],
+    "type": "button",
+    "block_id": "block_1773586365600_7v3t1mzqt"
+  },
+  {
+    "phrase": "toggle advanced HUD",
+    "aliases": ["advanced HUD", "show advanced HUD"],
+    "type": "button",
+    "block_id": "block-1773586392453scvwp"
+  },
+  {
+    "phrase": "unlock targets",
+    "aliases": ["clear targets", "release targets"],
+    "type": "button",
+    "block_id": "block_1773586585587_9vjknhm47"
+  },
+  {
+    "phrase": "next missile type",
+    "aliases": ["switch missile", "change missile type"],
+    "type": "button",
+    "block_id": "block_1773870772113_6bf2zits7"
+  },
+  {
+    "phrase": "noise radar",
+    "aliases": ["radar noise", "activate noise"],
+    "type": "button",
+    "block_id": "block_noise"
+  },
+  {
+    "phrase": "decoy IR",
+    "aliases": ["IR decoy", "launch decoy"],
+    "type": "button",
+    "block_id": "block_decoy"
+  },
+  {
+    "phrase": "toggle mining mode",
+    "aliases": ["mining mode", "start mining"],
+    "type": "button",
+    "block_id": "block_1773580505017_8jzzpb315"
+  },
+  {
+    "phrase": "switch heads",
+    "aliases": ["change heads", "switch laser head"],
+    "type": "button",
+    "block_id": "block-1773580828389xy200"
+  },
+  {
+    "phrase": "module one",
+    "aliases": ["module 1", "select module one"],
+    "type": "button",
+    "block_id": "block_1773580991727_2elt7afh8"
+  },
+  {
+    "phrase": "module two",
+    "aliases": ["module 2", "select module two"],
+    "type": "button",
+    "block_id": "block-17735810175711m0ms"
+  },
+  {
+    "phrase": "module three",
+    "aliases": ["module 3", "select module three"],
+    "type": "button",
+    "block_id": "block-1773581022983l5uz5"
+  },
+  {
+    "phrase": "jettison cargo",
+    "aliases": ["drop cargo", "eject cargo"],
+    "type": "button",
+    "block_id": "block_1773584137335_5jr8x3nr4"
+  },
+  {
+    "phrase": "toggle salvage mode",
+    "aliases": ["salvage mode", "start salvaging"],
+    "type": "button",
+    "block_id": "block-1773580554955qus2n"
+  },
+  {
+    "phrase": "scraping mode",
+    "aliases": ["start scraping", "enable scraping"],
+    "type": "button",
+    "block_id": "block_1773581118248_up55oarli"
+  },
+  {
+    "phrase": "fracture mode",
+    "aliases": ["start fracturing", "enable fracture"],
+    "type": "button",
+    "block_id": "block-1773581143213f7yz7"
+  },
+  {
+    "phrase": "disintegration mode",
+    "aliases": ["start disintegrating", "enable disintegration"],
+    "type": "button",
+    "block_id": "block-177358114388121a3n"
+  },
+  {
+    "phrase": "scraper gimbals",
+    "aliases": ["toggle gimbals", "scraper gimbal"],
+    "type": "button",
+    "block_id": "block_1773581388852_pz7jld4rq"
+  },
+  {
+    "phrase": "cycle modifier",
+    "aliases": ["next modifier", "change modifier"],
+    "type": "button",
+    "block_id": "block_1774034898752_8hs7lw7p6"
+  },
+  {
+    "phrase": "power",
+    "aliases": ["power management", "show power"],
+    "type": "button",
+    "block_id": "block_1773576423539_kd8sblmey"
+  },
+  {
+    "phrase": "engines",
+    "aliases": ["engine power", "show engines"],
+    "type": "button",
+    "block_id": "block_1773576503203_afiz9c812"
+  },
+  {
+    "phrase": "shields",
+    "aliases": ["shield power", "show shields"],
+    "type": "button",
+    "block_id": "block-1773576614784bua3f"
+  },
+  {
+    "phrase": "weapons",
+    "aliases": ["weapon power", "show weapons"],
+    "type": "button",
+    "block_id": "block-1773576620573kbkko"
+  },
+  {
+    "phrase": "reset power",
+    "aliases": ["power reset", "reset power distribution"],
+    "type": "button",
+    "block_id": "block_1773577136140_qtv0q16d4"
+  },
+  {
+    "phrase": "engines plus",
+    "aliases": ["engines up", "more engine power", "increase engines"],
+    "type": "button",
+    "block_id": "block-1773584071948qei1l"
+  },
+  {
+    "phrase": "shields plus",
+    "aliases": ["shields up", "more shield power", "increase shields"],
+    "type": "button",
+    "block_id": "block_1773577160258_usobrv3xf"
+  },
+  {
+    "phrase": "weapons plus",
+    "aliases": ["weapons up", "more weapon power", "increase weapons"],
+    "type": "button",
+    "block_id": "block_1773577163401_amwpquin8"
+  },
+  {
+    "phrase": "engines minus",
+    "aliases": ["engines down", "less engine power", "decrease engines"],
+    "type": "button",
+    "block_id": "block_engines_minus"
+  },
+  {
+    "phrase": "shields minus",
+    "aliases": ["shields down", "less shield power", "decrease shields"],
+    "type": "button",
+    "block_id": "block_shields_minus"
+  },
+  {
+    "phrase": "weapons minus",
+    "aliases": ["weapons down", "less weapon power", "decrease weapons"],
+    "type": "button",
+    "block_id": "block_weapons_minus"
+  },
+  {
+    "phrase": "request landing",
+    "aliases": ["landing request", "ask to land"],
+    "type": "button",
+    "block_id": "block_1773578786459_31ft1v14d"
+  },
+  {
+    "phrase": "request docking",
+    "aliases": ["docking request"],
+    "type": "button",
+    "block_id": "block_1773578934698_8fcd9g8rn"
+  },
+  {
+    "phrase": "accept",
+    "aliases": ["accept request", "confirm"],
+    "type": "button",
+    "block_id": "block_1773579033555_dev4pe9bc"
+  },
+  {
+    "phrase": "deny",
+    "aliases": ["deny request", "reject"],
+    "type": "button",
+    "block_id": "block_1773579091731_h26osnsng"
+  },
+  {
+    "phrase": "hail target",
+    "aliases": ["hail ship", "contact target"],
+    "type": "button",
+    "block_id": "block_1773579139251_mx4qme9p4"
+  },
+  {
+    "phrase": "request cargo",
+    "aliases": ["cargo request", "ask for cargo"],
+    "type": "button",
+    "block_id": "block_1773585629430_wqcxjml0n"
+  },
+  {
+    "phrase": "self repair",
+    "aliases": ["repair ship", "start repairs"],
+    "type": "button",
+    "block_id": "block_1773579344473_o9pltkz1n"
+  },
+  {
+    "phrase": "decoy panic launch",
+    "aliases": ["panic launch", "emergency decoy"],
+    "type": "button",
+    "block_id": "block_1773579426800_ymzgjpam1"
+  },
+  {
+    "phrase": "self destruct",
+    "aliases": ["destroy ship", "blow up ship"],
+    "type": "button",
+    "block_id": "block-1773579480560atuq2"
+  },
+  {
+    "phrase": "MFD pips",
+    "aliases": ["show pips", "pips display"],
+    "type": "button",
+    "block_id": "block_1773579645022_qoplwjub9"
+  },
+  {
+    "phrase": "MFD health",
+    "aliases": ["show health", "health display"],
+    "type": "button",
+    "block_id": "block_1773579702601_jfh0c1xjr"
+  },
+  {
+    "phrase": "next display",
+    "aliases": ["next screen", "forward display"],
+    "type": "button",
+    "block_id": "block_1773580104336_rwypruh16"
+  },
+  {
+    "phrase": "previous display",
+    "aliases": ["previous screen", "back display"],
+    "type": "button",
+    "block_id": "block-1773580151589gemez"
+  },
+  {
+    "phrase": "cycle MFD forward",
+    "aliases": ["next MFD", "MFD right"],
+    "type": "button",
+    "block_id": "block_1773580193458_myb11r97r"
+  },
+  {
+    "phrase": "cycle MFD back",
+    "aliases": ["previous MFD", "MFD left"],
+    "type": "button",
+    "block_id": "block-1773580226758x4p4n"
+  },
+  {
+    "phrase": "open doors",
+    "aliases": ["doors open", "open all doors"],
+    "type": "button",
+    "block_id": "block_1773581707653_oagbm1wj1"
+  },
+  {
+    "phrase": "unlock ship",
+    "aliases": ["ship unlock", "unlock the ship"],
+    "type": "button",
+    "block_id": "block-1773581756723pcq94"
+  },
+  {
+    "phrase": "lock ship",
+    "aliases": ["ship lock", "lock the ship"],
+    "type": "button",
+    "block_id": "block-1773581796937x1l1p"
+  },
+  {
+    "phrase": "unlock ports",
+    "aliases": ["ports unlock", "unlock all ports"],
+    "type": "button",
+    "block_id": "block-1773581757397481hi"
+  },
+  {
+    "phrase": "lock ports",
+    "aliases": ["ports lock", "lock all ports"],
+    "type": "button",
+    "block_id": "block-1773581800555mwf3y"
+  },
+  {
+    "phrase": "close doors",
+    "aliases": ["doors close", "close all doors"],
+    "type": "button",
+    "block_id": "block-1773581743719z559u"
+  },
+  {
+    "phrase": "gear",
+    "aliases": ["landing gear", "toggle gear"],
+    "type": "button",
+    "block_id": "block_1773578199353_lmca0x89t"
+  },
+  {
+    "phrase": "VTOL",
+    "aliases": ["toggle VTOL", "vertical takeoff"],
+    "type": "button",
+    "block_id": "block_1773578258944_tw4w5f8ln"
+  },
+  {
+    "phrase": "scan mode",
+    "aliases": ["toggle scan", "scanning mode"],
+    "type": "button",
+    "block_id": "block_1773578302498_lnrbd398l"
+  },
+  {
+    "phrase": "cruise control",
+    "aliases": ["toggle cruise", "cruise mode"],
+    "type": "button",
+    "block_id": "block_1773578417168_6rvxsneno"
+  },
+  {
+    "phrase": "lights",
+    "aliases": ["toggle lights", "ship lights"],
+    "type": "button",
+    "block_id": "block_1773578568849_3wkof53ii"
+  },
+  {
+    "phrase": "lamp",
+    "aliases": ["toggle lamp", "ship lamp"],
+    "type": "button",
+    "block_id": "block_1773578584476_eck64qnrh"
+  },
+  {
+    "phrase": "cycle config",
+    "aliases": ["next config", "change configuration"],
+    "type": "button",
+    "block_id": "block_1774042366348_i83x0xi44"
+  },
+  {
+    "phrase": "scanning angle plus",
+    "aliases": ["scanning angle up", "increase scan angle"],
+    "type": "button",
+    "block_id": "block_1774052207744_qyb0jssna"
+  },
+  {
+    "phrase": "scanning angle minus",
+    "aliases": ["scanning angle down", "decrease scan angle"],
+    "type": "button",
+    "block_id": "block_1774052214258_4ijz5mb8u"
+  },
+  {
+    "phrase": "G-safe",
+    "aliases": ["toggle G safe", "G safety"],
+    "type": "button",
+    "block_id": "block_1773577846461_ayyb93c6o"
+  },
+  {
+    "phrase": "gimbal",
+    "aliases": ["toggle gimbal", "gimbals"],
+    "type": "button",
+    "block_id": "block_1773577910116_ztm2gmbby"
+  },
+  {
+    "phrase": "ESP",
+    "aliases": ["toggle ESP", "electronic stability"],
+    "type": "button",
+    "block_id": "block_1773577884190_ax9hf1k5m"
+  }
+]

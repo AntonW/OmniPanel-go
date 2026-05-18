@@ -1,0 +1,71 @@
+<!--
+    Toggle Block — a switch that toggles between on/off states and sends a virtual joystick button press.
+    
+    Structure: <settings> tag defines configurable properties with types and constraints.
+    The HTML uses settings-<key> placeholders replaced at render time with actual values.
+    CSS variables (--toggle-color, etc.) are set inline and consumed by theme CSS files.
+    
+    Theme CSS (loaded dynamically per block): user/themes/{default,star_citizen,kde_breeze,windows_11}.css
+    All theme CSS selectors are scoped to the block's DOM element ID to prevent conflicts.
+    
+    DOM Structure:
+    - .toggle-switch: Flex container holding the label and track
+    - p: Label text displayed above or beside the toggle
+    - .toggle-track: The pill-shaped track with a circular knob (::after pseudo-element)
+      The knob stays perfectly circular regardless of block resize because:
+      - Track uses aspect-ratio: 2/1 to maintain 2:1 proportions
+      - Knob uses height: 80% and width: 40% (40% of 2x width = 80% of 1x height)
+      - Knob is centered vertically with top: 50% + transform: translateY(-50%)
+      - Active state moves knob to right via left: calc(100% - 40% - 3px)
+    
+    Settings:
+    - joystick: Virtual joystick index (0-9)
+    - button: Button ID on that joystick (0-15)
+    - label: Toggle label text
+    - font_size: Base font size for responsive scaling
+    - width/height: Block dimensions (track width is derived from height via aspect-ratio)
+    - toggle_color: Track background color when OFF
+    - toggle_color_active: Track background color when ON
+    - label_color: Label text color
+    - border_color: Track border color
+    - toggle_mode: Behavior mode — "momentary" sends a quick press/release pulse (100ms), "toggle" sends state based on position (1 when on, 0 when off). Both modes persist the visual toggle state.
+-->
+<settings 
+    joystick="0"
+    type-joystick="number"
+    min-joystick="0"
+    max-joystick="9"
+    button="0"
+    type-button="number"
+    min-button="0"
+    max-button="15"
+    label="Toggle"
+    type-label="text"
+    font_size="12"
+    type-font_size="number"
+    min-font_size="1"
+    width="80%"
+    type-width="percentage"
+    min-width="10"
+    max-width="100"
+    height="40%"
+    type-height="percentage"
+    min-height="10"
+    max-height="100"
+    toggle_color="#1a2636ff"
+    type-toggle_color="color"
+    toggle_color_active="#1ccad8ff"
+    type-toggle_color_active="color"
+    label_color="#8ba4b8ff"
+    type-label_color="color"
+    border_color="#1ccad8ff"
+    type-border_color="color"
+    toggle_mode="momentary"
+    type-toggle_mode="select"
+    options-toggle_mode="momentary,toggle"
+></settings>
+
+<div class="toggle-switch" style="--font-size: settings_font_size; --height: settings-height; --toggle-color: settings-toggle_color; --label-color: settings-label_color; --toggle-color-active: settings-toggle_color_active; --border-color: settings-border_color;">
+    <p>settings-label</p>
+    <div class="toggle-track" virtual-joystick="settings-joystick" emulate-button="settings-button" toggle-mode="settings-toggle_mode"></div>
+</div>
