@@ -1,6 +1,7 @@
 param(
     [string]$VoskTag = "v0.3.45",
     [string]$Msys2UcrtBin = "C:\msys64\ucrt64\bin",
+    [string]$GitHubToken = $env:GITHUB_TOKEN,
     [switch]$Clean,
     [switch]$Run
 )
@@ -74,48 +75,160 @@ Write-Host "==> Prüfe Toolchain"
 gcc --version
 go version
 
-$ReleaseApiUrl = "https://api.github.com/repos/alphacep/vosk-api/releases/tags/$VoskTag"
-Write-Host "==> Lade Release-Metadaten: $ReleaseApiUrl"
-$release = Invoke-RestMethod -Uri $ReleaseApiUrl -Headers @{ "User-Agent" = "PowerShell-Vosk-Build-Script" }
+$HasLocalVosk = (Test-Path $HeaderPath) -and (Test-Path $DllPath) -and ((Test-Path $LibAPath) -or (Test-Path $LibPath))
 
-if (-not $release.assets) { throw "Keine Assets im Release $VoskTag gefunden." }
+if ($HasLocalVosk) {
+    Write-Host "==> Verwende vorhandene Vosk-Dateien in $VoskRoot"
+} else {
+    $ReleaseApiUrl = "https://api.github.com/repos/alphacep/vosk-api/releases/tags/$VoskTag"
+    Write-Host "==> Lade Release-Metadaten: $ReleaseApiUrl"
 
-$AssetUrl = Select-AssetUrl -Assets $release.assets -Patterns @(
-    "vosk-win64-*.zip",
-    "*win64*.zip"
-)
-if (-not $AssetUrl) { throw "Kein passendes win64-Asset im Release $VoskTag gefunden." }
+    $apiHeaders = @{
+        "User-Agent" = "PowerShell-Vosk-Build-Script"
+        "Accept"     = "application/vnd.github+json"
+    }
+    if ($GitHubToken) {
+        $apiHeaders["Authorization"] = "Bearer $GitHubToken"
+    }
 
-Write-Host "==> Verwende Asset: $AssetUrl"
-Invoke-WebRequest -Uri $AssetUrl -OutFile $ZipPath
+    $release = $null
+    $AssetUrl = $null
 
-if (Test-Path $ExtractRoot) { Remove-Item -Recurse -Force $ExtractRoot }
-New-Item -ItemType Directory -Force -Path $ExtractRoot | Out-Null
+    try {
+        $release = Invoke-RestMethod -Uri $ReleaseApiUrl -Headers $apiHeaders
+    } catch {
+        $statusCode = $null
+        if ($_.Exception.Response -and $_.Exception.Response.StatusCode) {
+            $statusCode = [int]$_.Exception.Response.StatusCode
+        }
+        $errText = $_.Exception.Message
 
-Write-Host "==> Entpacke Asset nach $ExtractRoot"
-Expand-Archive -Path $ZipPath -DestinationPath $ExtractRoot -Force
+        if ($statusCode -eq 403 -or $errText -match "rate limit") {
+            Write-Warning "GitHub API Rate-Limit erreicht. Versuche Direkt-Download ohne API."
+            if (-not $GitHubToken) {
+                Write-Warning "Tipp: Setze GITHUB_TOKEN fuer hoehere API-Limits (z.B. `$env:GITHUB_TOKEN='ghp_...')."
+            }
+        } else {
+            throw
+        }
+    }
 
-$SrcHeader = Get-ChildItem -Path $ExtractRoot -Recurse -File -Filter "vosk_api.h" | Select-Object -First 1
-$SrcDll    = Get-ChildItem -Path $ExtractRoot -Recurse -File |
-    Where-Object { $_.Name -in @("libvosk.dll", "vosk.dll") } |
-    Select-Object -First 1
-$SrcLibA   = Get-ChildItem -Path $ExtractRoot -Recurse -File |
-    Where-Object { $_.Name -in @("libvosk.dll.a", "libvosk.a") } |
-    Select-Object -First 1
-$SrcLib    = Get-ChildItem -Path $ExtractRoot -Recurse -File |
-    Where-Object { $_.Name -in @("libvosk.lib", "vosk.lib") } |
-    Select-Object -First 1
+    if ($release -and $release.assets) {
+        $AssetUrl = Select-AssetUrl -Assets $release.assets -Patterns @(
+            "vosk-win64-*.zip",
+            "*win64*.zip"
+        )
+    }
 
-if (-not $SrcHeader) { throw "Fehlt: vosk_api.h im Asset." }
-if (-not $SrcDll)    { throw "Fehlt: Runtime-DLL (libvosk.dll oder vosk.dll) im Asset." }
-if (-not $SrcLibA -and -not $SrcLib) {
-    throw "Fehlt: Import-Library (libvosk.dll.a/libvosk.a/libvosk.lib/vosk.lib) im Asset."
+    if (-not $AssetUrl) {
+        $tagNoV = if ($VoskTag.StartsWith("v")) { $VoskTag.Substring(1) } else { $VoskTag }
+        $fallbackNames = @(
+            "vosk-win64-$tagNoV.zip",
+            "vosk-win64-$VoskTag.zip",
+            "vosk-win64.zip"
+        )
+
+        foreach ($name in $fallbackNames) {
+            $candidate = "https://github.com/alphacep/vosk-api/releases/download/$VoskTag/$name"
+            if (Test-UrlExists -Url $candidate) {
+                $AssetUrl = $candidate
+                break
+            }
+        }
+    }
+
+    if (-not $AssetUrl) { throw "Kein passendes win64-Asset im Release $VoskTag gefunden." }
+
+    Write-Host "==> Verwende Asset: $AssetUrl"
+    Invoke-WebRequest -Uri $AssetUrl -OutFile $ZipPath
+
+    if (Test-Path $ExtractRoot) { Remove-Item -Recurse -Force $ExtractRoot }
+    New-Item -ItemType Directory -Force -Path $ExtractRoot | Out-Null
+
+    Write-Host "==> Entpacke Asset nach $ExtractRoot"
+    Expand-Archive -Path $ZipPath -DestinationPath $ExtractRoot -Force
+
+    $SrcHeader = Get-ChildItem -Path $ExtractRoot -Recurse -File -Filter "vosk_api.h" | Select-Object -First 1
+    $SrcDll    = Get-ChildItem -Path $ExtractRoot -Recurse -File |
+        Where-Object { $_.Name -in @("libvosk.dll", "vosk.dll") } |
+        Select-Object -First 1
+    $SrcLibA   = Get-ChildItem -Path $ExtractRoot -Recurse -File |
+        Where-Object { $_.Name -in @("libvosk.dll.a", "libvosk.a") } |
+        Select-Object -First 1
+    $SrcLib    = Get-ChildItem -Path $ExtractRoot -Recurse -File |
+        Where-Object { $_.Name -in @("libvosk.lib", "vosk.lib") } |
+        Select-Object -First 1
+
+    if (-not $SrcHeader) { throw "Fehlt: vosk_api.h im Asset." }
+    if (-not $SrcDll)    { throw "Fehlt: Runtime-DLL (libvosk.dll oder vosk.dll) im Asset." }
+    if (-not $SrcLibA -and -not $SrcLib) {
+        throw "Fehlt: Import-Library (libvosk.dll.a/libvosk.a/libvosk.lib/vosk.lib) im Asset."
+    }
+
+    Copy-Item -Force $SrcHeader.FullName $HeaderPath
+    Copy-Item -Force $SrcDll.FullName    $DllPath
+    if ($SrcLibA) { Copy-Item -Force $SrcLibA.FullName $LibAPath }
+    if ($SrcLib)  { Copy-Item -Force $SrcLib.FullName  $LibPath }
 }
 
-Copy-Item -Force $SrcHeader.FullName $HeaderPath
-Copy-Item -Force $SrcDll.FullName    $DllPath
-if ($SrcLibA) { Copy-Item -Force $SrcLibA.FullName $LibAPath }
-if ($SrcLib)  { Copy-Item -Force $SrcLib.FullName  $LibPath }
+if (-not (Test-Path $LibAPath) -and (Test-Path $DllPath)) {
+    Write-Host "==> Erzeuge libvosk.dll.a aus libvosk.dll"
+    $genDefCmd = Get-Command gendef -ErrorAction SilentlyContinue
+    $dllToolCmd = Get-Command dlltool -ErrorAction SilentlyContinue
+    $objdumpCmd = Get-Command objdump -ErrorAction SilentlyContinue
+
+    if ($dllToolCmd) {
+        $DefPath = Join-Path $TmpDir "libvosk.def"
+        if (Test-Path $DefPath) { Remove-Item -Force $DefPath }
+
+        if ($genDefCmd) {
+            & $genDefCmd.Path $DllPath | Out-Null
+            $DefCandidates = @(
+                $DefPath,
+                (Join-Path (Split-Path -Parent $DllPath) "libvosk.def"),
+                (Join-Path $RepoRoot "libvosk.def")
+            )
+            $GeneratedDef = $DefCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+            if ($LASTEXITCODE -ne 0 -or -not $GeneratedDef) {
+                throw "Konnte Definition nicht aus libvosk.dll erzeugen (gendef fehlgeschlagen)."
+            }
+
+            if ($GeneratedDef -ne $DefPath) {
+                Copy-Item -Force $GeneratedDef $DefPath
+            }
+        } elseif ($objdumpCmd) {
+            $objdumpLines = & $objdumpCmd.Path -p $DllPath
+            $exports = @()
+            foreach ($line in $objdumpLines) {
+                if ($line -match '^\s*\[\d+\].+\s(vosk_[A-Za-z0-9_]+)$') {
+                    $exports += $matches[1]
+                }
+            }
+            $exports = $exports | Sort-Object -Unique
+            if (-not $exports -or $exports.Count -eq 0) {
+                throw "Konnte keine vosk_* Exporte in libvosk.dll finden (objdump)."
+            }
+            @("LIBRARY libvosk.dll", "EXPORTS") + $exports | Set-Content -LiteralPath $DefPath -Encoding Ascii
+        } else {
+            & $dllToolCmd.Path -z $DefPath --export-all-symbols $DllPath
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $DefPath)) {
+                throw "Konnte Definition nicht aus libvosk.dll erzeugen (dlltool -z fehlgeschlagen)."
+            }
+        }
+
+        & $dllToolCmd.Path -d $DefPath -D "libvosk.dll" -l $LibAPath
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $LibAPath)) {
+            throw "Konnte Import-Library libvosk.dll.a nicht erzeugen (dlltool fehlgeschlagen)."
+        }
+    } elseif (-not (Test-Path $LibPath)) {
+        throw "Fehlt: MinGW Import-Library libvosk.dll.a (und gendef/dlltool sind nicht verfuegbar)."
+    }
+}
+
+if (-not (Test-Path $LibAPath)) {
+    Write-Warning "libvosk.dll.a fehlt. Build mit GCC/CGO kann mit .lib fehlschlagen. Installiere mindestens dlltool + objdump (MSYS2: mingw-w64-ucrt-x86_64-tools)."
+}
 
 foreach ($dep in @("libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll")) {
     $srcDep = Get-ChildItem -Path $ExtractRoot -Recurse -File -Filter $dep | Select-Object -First 1
@@ -126,7 +239,7 @@ $env:CC           = "gcc"
 $env:CXX          = "g++"
 $env:CGO_CFLAGS   = "-I$IncludeDir -Wno-error"
 $env:CGO_CPPFLAGS = "-I$IncludeDir -Wno-error"
-$env:CGO_LDFLAGS  = "-L$LibDir -lvosk"
+$env:LIBRARY_PATH = $LibDir
 $env:Path         = "$BinDir;$env:Path"
 
 Write-Host "==> Build startet"
@@ -169,10 +282,10 @@ Write-Host "  LibDir: $LibDir"
 
 # Laufzeit-DLLs neben die EXE kopieren
 $runtimeDlls = @(
-    Join-Path $BinDir "libvosk.dll",
-    Join-Path $BinDir "libstdc++-6.dll",
-    Join-Path $BinDir "libgcc_s_seh-1.dll",
-    Join-Path $BinDir "libwinpthread-1.dll"
+    (Join-Path $BinDir "libvosk.dll"),
+    (Join-Path $BinDir "libstdc++-6.dll"),
+    (Join-Path $BinDir "libgcc_s_seh-1.dll"),
+    (Join-Path $BinDir "libwinpthread-1.dll")
 )
 
 foreach ($dll in $runtimeDlls) {
@@ -184,4 +297,16 @@ foreach ($dll in $runtimeDlls) {
 if ($Run) {
     Write-Host "==> Starte $OutExe"
     & $OutExe
+}
+
+function Test-UrlExists {
+    param(
+        [Parameter(Mandatory = $true)][string]$Url
+    )
+    try {
+        Invoke-WebRequest -Uri $Url -Method Head -UseBasicParsing | Out-Null
+        return $true
+    } catch {
+        return $false
+    }
 }
