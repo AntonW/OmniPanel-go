@@ -22,8 +22,8 @@
 //  6. Build HTTP router with all routes registered
 //  7. Start server in a goroutine
 //  8. Block until SIGINT or SIGTERM, then gracefully shut down HTTP server
-//     and release all subsystem resources (virtual input devices, STT engine,
-//     audio capture devices)
+//     (with diagnostic logging to identify hangs) and release all subsystem
+//     resources (virtual input devices, STT engine, audio capture devices)
 //
 // See docs/tutorials/ for a guided tour of the codebase.
 package main

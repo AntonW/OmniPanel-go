@@ -43,6 +43,14 @@ func NewRouter(s *state.AppState) *fiber.App {
     app.Get("/editor", serveEditorUI) // Panel editor
 
     // Static files (JS, CSS, assets served directly from static/ directory)
+    // Disable browser caching for JS/CSS so changes are always picked up
+    noCacheStaticMiddleware := func(c *fiber.Ctx) error {
+        if strings.HasSuffix(c.Path(), ".js") || strings.HasSuffix(c.Path(), ".css") {
+            c.Set("Cache-Control", "no-cache, no-store, must-revalidate")
+        }
+        return c.Next()
+    }
+    app.Use(noCacheStaticMiddleware)
     app.Static("/", s.StaticDir)
 
     app.Get("/ws", ws.New(func(c *ws.Conn) {
@@ -67,6 +75,12 @@ Routes are organized into three groups:
 
 > **Concept: `app.Static`**
 > Fiber's `app.Static(prefix, root)` maps a URL prefix to a filesystem directory. A request to `/client/client.js` serves `static/client/client.js`. Content-Type is set automatically based on file extension. This eliminates the need for individual handler functions for each JS/CSS file.
+
+> **Concept: Cache-busting middleware**
+> Browsers aggressively cache `.js` and `.css` files. During development this means code changes won't appear until you do a hard refresh (Ctrl+Shift+R). The `noCacheStaticMiddleware` runs before `app.Static` and checks if the request path ends with `.js` or `.css`. If so, it sets `Cache-Control: no-cache, no-store, must-revalidate` — telling the browser to always fetch a fresh copy. Images, fonts, and other assets are unaffected and cache normally.
+
+> **Key Pattern: Targeted middleware**
+> Instead of disabling caching for all static files (which would hurt performance for images/fonts), the middleware uses `strings.HasSuffix` to target only the file types that change frequently. This is a common pattern: inspect the request path and apply headers conditionally.
 
 ## Serving Static Files
 
@@ -326,6 +340,7 @@ Allows external systems to push metrics into the DataBus via HTTP POST. These me
 - Fiber provides Express.js-style routing for Go
 - Middleware + `c.Locals` shares `AppState` across all handlers
 - `app.Static` serves entire directories with automatic Content-Type detection
+- A targeted middleware sets `Cache-Control: no-cache, no-store, must-revalidate` for `.js`/`.css` files so changes are always picked up
 - HTML pages use friendly URLs (`/`, `/panel`, `/editor`) with custom handlers
 - The start page (`/`) combines panel list, editor link, host controls, and live connection log in a single page
 - JS/CSS assets are served directly via `app.Static` — no individual handlers needed

@@ -34,6 +34,16 @@ func NewRouter(s *state.AppState) *fiber.App {
 	app.Get("/editor", serveEditorUI)
 
 	// Static files (JS, CSS, assets served directly from static/ directory)
+	// noCacheStaticMiddleware disables browser caching for JavaScript and CSS files
+	// so that code changes are always picked up without requiring a hard refresh.
+	// Images, fonts, and other static assets cache normally.
+	noCacheStaticMiddleware := func(c *fiber.Ctx) error {
+		if strings.HasSuffix(c.Path(), ".js") || strings.HasSuffix(c.Path(), ".css") {
+			c.Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		}
+		return c.Next()
+	}
+	app.Use(noCacheStaticMiddleware)
 	app.Static("/", s.StaticDir)
 
 	app.Get("/ws", ws.New(func(c *ws.Conn) {

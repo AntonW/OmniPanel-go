@@ -231,7 +231,8 @@ func (s *AppState) broadcastToClient(clientID uint64, msg map[string]any) {
 	}
 }
 
-// Close cleans up all virtual input devices.
+// Close cleans up all virtual input devices and subsystems.
+// Logs each subsystem shutdown to help identify hangs during graceful exit.
 // Called via defer in main.go to ensure cleanup on exit.
 func (s *AppState) Close() {
 	slog.Info("Closing joystick manager...")
