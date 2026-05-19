@@ -9,5 +9,6 @@
 /.idea
 /user/speech-models/*
 /bin/
+/third_party/
 omnipanel-go
 omnipanel-go.exe
