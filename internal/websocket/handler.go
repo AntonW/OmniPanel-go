@@ -131,11 +131,22 @@ func parseStringField(data json.RawMessage, field string) string {
 }
 
 // handleButton routes a button press/release to the joystick manager.
+// If js or id are empty strings (unconfigured button), the event is ignored
+// to prevent sending spurious input on joystick 0, button 0.
 func handleButton(s *state.AppState, data json.RawMessage) {
-	js := int(parseUintField(data, "js"))
-	id := int(parseUintField(data, "id"))
+	jsRaw := parseStringField(data, "js")
+	idRaw := parseStringField(data, "id")
 	state := uint8(parseUintField(data, "state"))
 
+	if jsRaw == "" || idRaw == "" {
+		slog.Debug("Button event ignored (no joystick/button configured)")
+		return
+	}
+
+	js := int(parseUintField(data, "js"))
+	id := int(parseUintField(data, "id"))
+
+	slog.Info("Button event", "js", js, "id", id, "state", state)
 	s.JoystickManager.Send(devices.Command{
 		Type:  devices.ButtonType,
 		Js:    js,
@@ -145,10 +156,20 @@ func handleButton(s *state.AppState, data json.RawMessage) {
 }
 
 // handleSlider routes a slider value change to the joystick manager as an axis event.
+// If js or id are empty strings (unconfigured slider), the event is ignored
+// to prevent sending spurious input on joystick 0, axis 0.
 func handleSlider(s *state.AppState, data json.RawMessage) {
+	jsRaw := parseStringField(data, "js")
+	idRaw := parseStringField(data, "id")
+	value := uint8(parseUintField(data, "value"))
+
+	if jsRaw == "" || idRaw == "" {
+		slog.Debug("Slider event ignored (no joystick/axis configured)")
+		return
+	}
+
 	js := int(parseUintField(data, "js"))
 	id := int(parseUintField(data, "id"))
-	value := uint8(parseUintField(data, "value"))
 
 	s.JoystickManager.Send(devices.Command{
 		Type:  devices.AxisType,
@@ -160,7 +181,17 @@ func handleSlider(s *state.AppState, data json.RawMessage) {
 
 // handleJoystick routes a 2-axis joystick movement.
 // Splits the {x, y} value into two separate axis commands (id for X, id+1 for Y).
+// If js or id are empty strings (unconfigured joystick), the event is ignored
+// to prevent sending spurious input on joystick 0.
 func handleJoystick(s *state.AppState, data json.RawMessage) {
+	jsRaw := parseStringField(data, "js")
+	idRaw := parseStringField(data, "id")
+
+	if jsRaw == "" || idRaw == "" {
+		slog.Debug("Joystick event ignored (no joystick/axis configured)")
+		return
+	}
+
 	js := int(parseUintField(data, "js"))
 	id := int(parseUintField(data, "id"))
 
@@ -246,6 +277,7 @@ func handleMousebtn(s *state.AppState, data json.RawMessage) {
 }
 
 // handleKeyboard routes keyboard key/combo press/release to the keyboard manager.
+// The data field uses "keyboard_index" (not "js") to select the virtual keyboard device.
 // Supports single keys ("a", "w", "ctrl") and combinations ("ctrl+a", "ctrl+shift+a").
 // Key names are matched case-insensitively against devices.KeyNameToCode.
 //
@@ -255,7 +287,7 @@ func handleMousebtn(s *state.AppState, data json.RawMessage) {
 // for each WASD key, then state=0 for ctrl — allowing the game to receive
 // the full combination as if the user held Ctrl and tapped WASD keys.
 func handleKeyboard(s *state.AppState, data json.RawMessage) {
-	js := int(parseUintField(data, "js"))
+	kbIndex := int(parseUintField(data, "keyboard_index"))
 	key := parseStringField(data, "key")
 	keyState := uint8(parseUintField(data, "state"))
 
@@ -284,11 +316,11 @@ func handleKeyboard(s *state.AppState, data json.RawMessage) {
 	}
 
 	if len(codes) == 1 {
-		slog.Info("Keyboard key event", "js", js, "key", key, "state", keyState)
-		s.KeyboardManager.SendKey(js, codes[0], keyState)
+		slog.Info("Keyboard key event", "keyboard_index", kbIndex, "key", key, "state", keyState)
+		s.KeyboardManager.SendKey(kbIndex, codes[0], keyState)
 	} else {
-		slog.Info("Keyboard combo event", "js", js, "keys", key, "state", keyState)
-		s.KeyboardManager.SendCombo(js, codes, keyState)
+		slog.Info("Keyboard combo event", "keyboard_index", kbIndex, "keys", key, "state", keyState)
+		s.KeyboardManager.SendCombo(kbIndex, codes, keyState)
 	}
 }
 

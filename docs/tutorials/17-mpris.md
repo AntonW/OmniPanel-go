@@ -414,7 +414,7 @@ if (controlMode === 'mpris') {
 } else {
     socket.send(JSON.stringify({
         type: 'simulate-keyboard',
-        data: { key: 'MediaPlayPause', state: 1 }
+        data: { keyboard_index: 0, key: 'MediaPlayPause', state: 1 }
     }));
 }
 ```

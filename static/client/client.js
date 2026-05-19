@@ -1402,7 +1402,7 @@ function enableInputs() {
                         socket.send(JSON.stringify({
                             type: 'simulate-keyboard',
                             data: {
-                                js: parseInt(kbIndex),
+                                keyboard_index: parseInt(kbIndex),
                                 key: normalizedKey,
                                 state: newState ? 1 : 0
                             }
@@ -1441,7 +1441,7 @@ function enableInputs() {
                         socket.send(JSON.stringify({
                             type: 'simulate-keyboard',
                             data: {
-                                js: parseInt(kbIndex),
+                                keyboard_index: parseInt(kbIndex),
                                 key: normalizedKey,
                                 state: 1
                             }
@@ -1450,7 +1450,7 @@ function enableInputs() {
                             socket.send(JSON.stringify({
                                 type: 'simulate-keyboard',
                                 data: {
-                                    js: parseInt(kbIndex),
+                                    keyboard_index: parseInt(kbIndex),
                                     key: normalizedKey,
                                     state: 0
                                 }
@@ -1647,7 +1647,7 @@ function enableInputs() {
                     socket.send(JSON.stringify({
                         type: 'simulate-keyboard',
                         data: {
-                            js: parseInt(keyboardIndex),
+                            keyboard_index: parseInt(keyboardIndex),
                             key: keyboardKey,
                             state: 1
                         }
@@ -1657,7 +1657,7 @@ function enableInputs() {
                         socket.send(JSON.stringify({
                             type: 'simulate-keyboard',
                             data: {
-                                js: parseInt(keyboardIndex),
+                                keyboard_index: parseInt(keyboardIndex),
                                 key: keyboardKey,
                                 state: 0
                             }
@@ -1751,7 +1751,7 @@ function executeSequence(btn) {
     socket.send(JSON.stringify({
         type: 'simulate-keyboard',
         data: {
-            js: keyboardIndex,
+            keyboard_index: keyboardIndex,
             key: 'ctrl',
             state: 1
         }
@@ -1765,7 +1765,7 @@ function executeSequence(btn) {
                 socket.send(JSON.stringify({
                     type: 'simulate-keyboard',
                     data: {
-                        js: keyboardIndex,
+                        keyboard_index: keyboardIndex,
                         key: 'ctrl',
                         state: 0
                     }
@@ -1781,7 +1781,7 @@ function executeSequence(btn) {
         socket.send(JSON.stringify({
             type: 'simulate-keyboard',
             data: {
-                js: keyboardIndex,
+                keyboard_index: keyboardIndex,
                 key: key,
                 state: 1
             }
@@ -1792,7 +1792,7 @@ function executeSequence(btn) {
             socket.send(JSON.stringify({
                 type: 'simulate-keyboard',
                 data: {
-                    js: keyboardIndex,
+                    keyboard_index: keyboardIndex,
                     key: key,
                     state: 0
                 }
@@ -2423,7 +2423,7 @@ function enableKeyboardShortcuts() {
             socket.send(JSON.stringify({
                 type: 'simulate-keyboard',
                 data: {
-                    js: parseInt(shortcut.keyboardIndex),
+                    keyboard_index: parseInt(shortcut.keyboardIndex),
                     key: keyStr,
                     state: 1
                 }
@@ -2462,7 +2462,7 @@ function enableKeyboardShortcuts() {
             socket.send(JSON.stringify({
                 type: 'simulate-keyboard',
                 data: {
-                    js: parseInt(shortcut.keyboardIndex),
+                    keyboard_index: parseInt(shortcut.keyboardIndex),
                     key: keyStr,
                     state: 0
                 }

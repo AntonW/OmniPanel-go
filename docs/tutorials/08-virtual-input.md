@@ -576,7 +576,10 @@ The WebSocket handler parses key strings like `"ctrl+a"` and looks up each part 
 ```go
 // internal/websocket/handler.go
 func handleKeyboard(s *state.AppState, data json.RawMessage) {
+    kbIndex := int(parseUintField(data, "keyboard_index"))
     key := parseStringField(data, "key") // e.g., "ctrl+a"
+    keyState := uint8(parseUintField(data, "state"))
+
     parts := strings.Split(strings.ToLower(key), "+")
     codes := make([]int, 0, len(parts))
     for _, part := range parts {
@@ -585,9 +588,9 @@ func handleKeyboard(s *state.AppState, data json.RawMessage) {
         codes = append(codes, code)
     }
     if len(codes) == 1 {
-        s.KeyboardManager.SendKey(js, codes[0], keyState)
+        s.KeyboardManager.SendKey(kbIndex, codes[0], keyState)
     } else {
-        s.KeyboardManager.SendCombo(js, codes, keyState)
+        s.KeyboardManager.SendCombo(kbIndex, codes, keyState)
     }
 }
 ```
@@ -605,20 +608,21 @@ The client-side JavaScript (`static/client/client.js`, function `executeSequence
 // static/client/client.js
 function executeSequence(btn) {
     const keys = btn.dataset.sequenceCode.split(','); // e.g., ["d","d","w","s","a"]
+    const keyboardIndex = parseInt(btn.dataset.keyboardIndex) || 0;
 
     // 1. Press and hold Ctrl
-    socket.send({ type: 'simulate-keyboard', data: { key: 'ctrl', state: 1 } });
+    socket.send({ type: 'simulate-keyboard', data: { keyboard_index: keyboardIndex, key: 'ctrl', state: 1 } });
 
     // 2. Tap each key in sequence (press → 50ms → release → delay → next)
     for (const key of keys) {
-        socket.send({ type: 'simulate-keyboard', data: { key: key, state: 1 } });
+        socket.send({ type: 'simulate-keyboard', data: { keyboard_index: keyboardIndex, key: key, state: 1 } });
         setTimeout(() => {
-            socket.send({ type: 'simulate-keyboard', data: { key: key, state: 0 } });
+            socket.send({ type: 'simulate-keyboard', data: { keyboard_index: keyboardIndex, key: key, state: 0 } });
         }, 50);
     }
 
     // 3. Release Ctrl after all keys are done
-    socket.send({ type: 'simulate-keyboard', data: { key: 'ctrl', state: 0 } });
+    socket.send({ type: 'simulate-keyboard', data: { keyboard_index: keyboardIndex, key: 'ctrl', state: 0 } });
 }
 ```
 

@@ -263,10 +263,19 @@ Extracts a string field from a JSON object. Used by keyboard and mouse button ha
 
 ```go
 func handleButton(s *state.AppState, data json.RawMessage) {
-    js := int(parseUintField(data, "js"))
-    id := int(parseUintField(data, "id"))
+    jsRaw := parseStringField(data, "js")
+    idRaw := parseStringField(data, "id")
     state := uint8(parseUintField(data, "state"))
 
+    if jsRaw == "" || idRaw == "" {
+        slog.Debug("Button event ignored (no joystick/button configured)")
+        return
+    }
+
+    js := int(parseUintField(data, "js"))
+    id := int(parseUintField(data, "id"))
+
+    slog.Info("Button event", "js", js, "id", id, "state", state)
     s.JoystickManager.Send(devices.Command{
         Type:  devices.ButtonType,
         Js:    js,
@@ -276,12 +285,20 @@ func handleButton(s *state.AppState, data json.RawMessage) {
 }
 ```
 
-Receives `{js: 0, id: 2, state: 1}` and sends a button-press command to virtual joystick #0, button #2.
+Receives `{js: 0, id: 2, state: 1}` and sends a button-press command to virtual joystick #0, button #2. If `js` or `id` are empty strings (meaning the button has no joystick/button configured), the event is silently ignored to prevent sending spurious input.
 
 ### Joystick (2-axis)
 
 ```go
 func handleJoystick(s *state.AppState, data json.RawMessage) {
+    jsRaw := parseStringField(data, "js")
+    idRaw := parseStringField(data, "id")
+
+    if jsRaw == "" || idRaw == "" {
+        slog.Debug("Joystick event ignored (no joystick/axis configured)")
+        return
+    }
+
     js := int(parseUintField(data, "js"))
     id := int(parseUintField(data, "id"))
 
@@ -317,9 +334,17 @@ A joystick has two axes (X and Y). The client sends them as `{value: {x: 128, y:
 
 ```go
 func handleSlider(s *state.AppState, data json.RawMessage) {
+    jsRaw := parseStringField(data, "js")
+    idRaw := parseStringField(data, "id")
+    value := uint8(parseUintField(data, "value"))
+
+    if jsRaw == "" || idRaw == "" {
+        slog.Debug("Slider event ignored (no joystick/axis configured)")
+        return
+    }
+
     js := int(parseUintField(data, "js"))
     id := int(parseUintField(data, "id"))
-    value := uint8(parseUintField(data, "value"))
 
     s.JoystickManager.Send(devices.Command{
         Type:  devices.AxisType,
@@ -399,7 +424,7 @@ Maps human-readable button names (`"left"`, `"right"`, `"middle"`) to platform-a
 
 ```go
 func handleKeyboard(s *state.AppState, data json.RawMessage) {
-    js := int(parseUintField(data, "js"))
+    kbIndex := int(parseUintField(data, "keyboard_index"))
     key := parseStringField(data, "key")
     keyState := uint8(parseUintField(data, "state"))
 
@@ -423,9 +448,11 @@ func handleKeyboard(s *state.AppState, data json.RawMessage) {
     }
 
     if len(codes) == 1 {
-        s.KeyboardManager.SendKey(js, codes[0], keyState)
+        slog.Info("Keyboard key event", "keyboard_index", kbIndex, "key", key, "state", keyState)
+        s.KeyboardManager.SendKey(kbIndex, codes[0], keyState)
     } else {
-        s.KeyboardManager.SendCombo(js, codes, keyState)
+        slog.Info("Keyboard combo event", "keyboard_index", kbIndex, "keys", key, "state", keyState)
+        s.KeyboardManager.SendCombo(kbIndex, codes, keyState)
     }
 }
 ```
@@ -745,7 +772,7 @@ The response includes a `"location"` field so clients know whether to stream aud
 | `simulate-mousepad` | `{ "js": 0, "value": { "x": 10, "y": -5 } }` | Relative mouse movement |
 | `simulate-mousewheel` | `{ "js": 0, "delta": 120 }` | Scroll wheel (signed delta) |
 | `simulate-mousebtn` | `{ "js": 0, "btn": "left", "state": 1 }` | Mouse button press/release |
-| `simulate-keyboard` | `{ "js": 0, "key": "ctrl+a", "state": 1 }` | Key or combo press/release |
+| `simulate-keyboard` | `{ "keyboard_index": 0, "key": "ctrl+a", "state": 1 }` | Key or combo press/release |
 | `save-joystick-count` | `4` | Change virtual joystick count (plain number) |
 | `execute-command` | `{ "block_id": "...", "command_type": "shell", ... }` | Execute command |
 | `push-data` | `{ "key": "...", "value": ... }` | Push data to DataBus |
