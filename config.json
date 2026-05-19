@@ -9,6 +9,7 @@
         "wake_word_listen_sec": 2,
         "stt_engine": "vosk",
         "vosk_model_path": "",
+        "vosk_runtime_url": "",
         "llama_cpp_url": "http://localhost:8080",
         "llama_cpp_api_key": "",
         "llama_cpp_api_mode": "transcriptions",
@@ -18,7 +19,7 @@
         "speech_allowlist": []
     },
     "mpris": {
-        "enabled": true,
+        "enabled": false,
         "poll_interval": 1000
     }
 }

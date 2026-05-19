@@ -35,6 +35,8 @@ let activeKeyboardKeys = new Set();
 
 // Speech configuration received from server on connect.
 // Controls recording behavior, trigger mode, and TTS.
+// Runtime-specific settings like speech.vosk_runtime_url stay server-side and
+// are not exposed to the browser.
 let speechConfig = {
     enabled: false,
     recordingLocation: 'client',

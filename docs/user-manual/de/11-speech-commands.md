@@ -115,7 +115,8 @@ Vosk läuft komplett auf deinem PC — keine Internetverbindung nötig. Es nutzt
 **Einrichtung:**
 1. Setze in `config.json` `"stt_engine": "vosk"`
 2. Lass `vosk_model_path` leer, um das Modell automatisch herunterzuladen
-3. Oder setze `vosk_model_path` auf ein Modell, das du bereits heruntergeladen hast
+3. Unter Windows: Lass `vosk_runtime_url` leer, damit fehlende Runtime-DLLs automatisch heruntergeladen werden
+4. Oder setze `vosk_model_path` auf ein Modell, das du bereits heruntergeladen hast
 
 ### llama-cpp-server (AI-Server)
 
@@ -154,6 +155,8 @@ Nutzt eine bestehende llama-cpp-server-Instanz für Spracherkennung. Das unterst
     "wake_word": "omnipanel-go",
     "wake_word_listen_sec": 8,
     "stt_engine": "vosk",
+    "vosk_model_path": "",
+    "vosk_runtime_url": "",
     "tts_enabled": true,
     "speech_allowlist": []
   }
@@ -169,6 +172,7 @@ Nutzt eine bestehende llama-cpp-server-Instanz für Spracherkennung. Das unterst
 | `wake_word_listen_sec` | Zahl | Sekunden, die nach Wake-Word-Erkennung zugehört wird (nur Host-Modus, Standard: 8) |
 | `stt_engine` | `"vosk"` oder `"llama-cpp"` | Welche Spracherkennungs-Engine genutzt werden soll |
 | `vosk_model_path` | Dateipfad | Pfad zum Vosk-Modell (leer lassen für automatisches Herunterladen) |
+| `vosk_runtime_url` | URL | Nur Windows: Eigene Vosk-Runtime-ZIP-URL. Leer = eingebaute Fallback-URL |
 | `llama_cpp_url` | URL | Adresse deines llama-cpp-Servers |
 | `llama_cpp_api_key` | Text | API-Key für llama-cpp-server (falls erforderlich) |
 | `llama_cpp_api_mode` | `"transcriptions"` oder `"chat"` | API-Modus für llama-cpp-server |
@@ -176,6 +180,17 @@ Nutzt eine bestehende llama-cpp-server-Instanz für Spracherkennung. Das unterst
 | `llama_cpp_prompt` | Text | Anweisungen für die KI im Chat-Modus |
 | `tts_enabled` | `true` oder `false` | Sprachbestätigungen aktivieren (Text-zu-Sprache) |
 | `speech_allowlist` | Liste von Mustern | Erlaubte Sprachbefehle (leer = alle erlaubt) |
+
+### Windows-Hinweis zur Vosk-Runtime
+
+Wenn du Vosk unter Windows nutzt, lädt OmniPanel-go fehlende Runtime-DLLs automatisch herunter:
+
+- `libvosk.dll`
+- `libstdc++-6.dll`
+
+Standardmäßig wird die eingebaute offizielle Vosk-URL verwendet. Wenn GitHub in deinem Netzwerk blockiert ist, setze `speech.vosk_runtime_url` auf deine eigene ZIP-Mirror-URL.
+
+Die ZIP-Datei muss beide DLL-Dateien enthalten.
 
 ### Schritt 2: Sprachbefehle definieren
 

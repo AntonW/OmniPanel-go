@@ -115,7 +115,8 @@ Vosk runs entirely on your PC — no internet connection required. It uses **gra
 **Setup:**
 1. In `config.json`, set `"stt_engine": "vosk"`
 2. Leave `vosk_model_path` empty to auto-download the model
-3. Or set `vosk_model_path` to a model you've already downloaded
+3. On Windows, leave `vosk_runtime_url` empty to auto-download required runtime DLLs if missing
+4. Or set `vosk_model_path` to a model you've already downloaded
 
 ### llama-cpp-server (AI Server)
 
@@ -154,6 +155,8 @@ Open `config.json` and find the `speech` section:
     "wake_word": "omnipanel-go",
     "wake_word_listen_sec": 8,
     "stt_engine": "vosk",
+    "vosk_model_path": "",
+    "vosk_runtime_url": "",
     "tts_enabled": true,
     "speech_allowlist": []
   }
@@ -169,6 +172,7 @@ Open `config.json` and find the `speech` section:
 | `wake_word_listen_sec` | Number | Seconds to listen for speech after wake word detection (host mode only, default: 8) |
 | `stt_engine` | `"vosk"` or `"llama-cpp"` | Which speech recognition engine to use |
 | `vosk_model_path` | File path | Path to Vosk model (leave empty to auto-download) |
+| `vosk_runtime_url` | URL | Windows only: custom Vosk runtime ZIP URL. Leave empty to use the built-in fallback URL |
 | `llama_cpp_url` | URL | Address of your llama-cpp-server |
 | `llama_cpp_api_key` | Text | API key for llama-cpp-server (if required) |
 | `llama_cpp_api_mode` | `"transcriptions"` or `"chat"` | API mode for llama-cpp-server |
@@ -176,6 +180,19 @@ Open `config.json` and find the `speech` section:
 | `llama_cpp_prompt` | Text | Instructions for the AI in chat mode |
 | `tts_enabled` | `true` or `false` | Enable voice confirmations (text-to-speech) |
 | `speech_allowlist` | List of patterns | Allowed voice commands (empty = all allowed) |
+
+### Step 2: Define Speech Commands
+
+### Windows runtime note (Vosk)
+
+If you use Vosk on Windows, OmniPanel-go now downloads missing runtime DLLs automatically:
+
+- `libvosk.dll`
+- `libstdc++-6.dll`
+
+By default, it uses the built-in official Vosk release URL. If your setup blocks GitHub, set `speech.vosk_runtime_url` to your own ZIP mirror.
+
+This ZIP should contain both DLL files.
 
 ### Step 2: Define Speech Commands
 

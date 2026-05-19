@@ -38,6 +38,39 @@ func EnsureVoskModel(modelPath string, userPath string) (string, error) {
 > **Concept: Fallback with validation**
 > `isValidVoskModel` checks for required subdirectories (`am`, `conf`, `ivector`, `graph`). This prevents partially downloaded or corrupted models from being used. The download-extract-validate pattern is common for auto-provisioned resources.
 
+On Windows, the app also auto-provisions the native Vosk DLL runtime if missing:
+
+```go
+// internal/speech/vosk_runtime_windows.go
+func ensureVoskWindowsRuntime(userPath string, runtimeURL string) error {
+    if strings.TrimSpace(runtimeURL) == "" {
+        runtimeURL = defaultVoskRuntimeURL
+    }
+
+    if hasVoskWindowsRuntime(userPath) {
+        return ensureVoskRuntimeOnPath(userPath)
+    }
+
+    runtimeDir := filepath.Join(userPath, "speech-runtime", "vosk")
+    zipPath := filepath.Join(runtimeDir, "vosk-win64.zip")
+    if err := downloadFile(runtimeURL, zipPath); err != nil {
+        return err
+    }
+
+    if err := extractSelectedVoskWindowsFiles(zipPath, runtimeDir); err != nil {
+        return err
+    }
+
+    return ensureVoskRuntimeOnPath(userPath)
+}
+```
+
+> **Key Pattern: Config override with default fallback (Go)**
+> `runtimeURL` is read from `speech.vosk_runtime_url`. If it is empty, the code falls back to a safe built-in URL (`defaultVoskRuntimeURL`). This keeps first-run setup beginner-friendly while still allowing advanced deployments to host their own ZIP.
+
+> **Concept: Runtime PATH bootstrapping (Go)**
+> `ensureVoskRuntimeOnPath` prepends the extracted runtime directory to `PATH` at startup. This lets CGO-loaded libraries resolve `libvosk.dll` and `libstdc++-6.dll` without requiring users to manually copy files next to the EXE.
+
 ### Grammar-Constrained Recognition
 
 Vosk supports **grammar-constrained recognition**, which restricts the recognizer to only output phrases from a predefined list. This dramatically improves accuracy for command-based use cases.
@@ -264,10 +297,23 @@ The engine is chosen at startup based on config. Once initialized, the rest of t
 ```json
 {
   "stt_engine": "vosk",
-  "vosk_model_path": ""
+  "vosk_model_path": "",
+  "vosk_runtime_url": ""
 }
 ```
-Model auto-downloads to `user/speech-models/vosk-model-small-en-us-0.15/`. Grammar is built automatically from speech commands.
+Model auto-downloads to `user/speech-models/vosk-model-small-en-us-0.15/`. On Windows, runtime DLLs auto-download to `user/speech-runtime/vosk/` when missing. Grammar is built automatically from speech commands.
+
+You can override the Windows runtime source URL:
+
+```json
+{
+  "stt_engine": "vosk",
+  "vosk_runtime_url": "https://example.com/vosk-win64-0.3.45.zip"
+}
+```
+
+> **Key Pattern: Cross-platform guard (Go + JS mindset)**
+> Runtime download logic lives in `internal/speech/vosk_runtime_windows.go` (Windows build tag) with a no-op stub in `internal/speech/vosk_runtime_stub.go` for non-Windows builds. This is similar to frontend feature detection in JavaScript: platform-specific logic is isolated so the rest of the app can call one common function.
 
 **llama-cpp with Whisper:**
 ```json

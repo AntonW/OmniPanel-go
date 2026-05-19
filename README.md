@@ -148,6 +148,7 @@ Edit `config.json` to change server settings:
     "wake_word": "omnipanel-go",
     "stt_engine": "vosk",
     "vosk_model_path": "",
+    "vosk_runtime_url": "",
     "llama_cpp_url": "http://localhost:8080",
     "llama_cpp_api_key": "",
     "llama_cpp_api_mode": "transcriptions",
@@ -192,6 +193,7 @@ LOG_FORMAT=color ./omnipanel-go      # Colored terminal output (default)
 | `speech.wake_word_listen_sec` | number | `8` | Seconds to listen for speech after wake word detection (host mode only) |
 | `speech.stt_engine` | string | `"vosk"` | STT backend: `"vosk"` (offline) or `"llama-cpp"` (HTTP API) |
 | `speech.vosk_model_path` | string | `""` | Path to Vosk model (auto-downloaded if empty) |
+| `speech.vosk_runtime_url` | string | `""` | Windows-only Vosk runtime ZIP URL override. Empty uses built-in fallback URL |
 | `speech.llama_cpp_url` | string | `"http://localhost:8080"` | llama-cpp-server endpoint |
 | `speech.llama_cpp_api_key` | string | `""` | API key for llama-cpp-server |
 | `speech.llama_cpp_api_mode` | string | `"transcriptions"` | API mode: `"transcriptions"` (Whisper-compatible) or `"chat"` (multimodal) |
@@ -925,11 +927,19 @@ OmniPanel-go uses Forgejo Actions for continuous integration and deployment:
 ### CI Workflow (`.forgejo/workflows/ci.yml`)
 Triggers on every push and pull request to `main`:
 - **Linux**: Builds binary and runs `go test ./...`
-- **Windows**: Builds with CGO enabled (requires MinGW-w64) and runs tests
+- **Windows**: Linux-to-Windows CGO cross-compile is currently not reliable and should not be treated as a working path
+
+For a native Windows build (same behavior used by contributors locally), use the maintained script in `scripts/build-with-vosk.ps1`:
+
+```powershell
+.\scripts\build-with-vosk.ps1
+```
+
+The script handles Vosk asset discovery/download, MinGW-friendly import library generation, runtime DLL staging, and build logs (`bin/build.stdout.log`, `bin/build.stderr.log`).
 
 ### Release Workflow (`.forgejo/workflows/release.yml`)
 Triggers on version tags (`v*`, e.g., `v1.0.0`):
-- Builds Linux and Windows (CGO) binaries
+- Builds Linux release artifacts in CI. Windows artifacts should be produced with the native Windows script path.
 - Creates a Forgejo release
 - Uploads binaries to the release page (visible in project's **Releases** section)
 

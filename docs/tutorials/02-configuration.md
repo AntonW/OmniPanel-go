@@ -15,6 +15,7 @@ type SpeechConfig struct {
     WakeWord           string   `mapstructure:"wake_word" json:"wake_word"`
     STTEngine          string   `mapstructure:"stt_engine" json:"stt_engine"`
     VoskModelPath      string   `mapstructure:"vosk_model_path" json:"vosk_model_path"`
+    VoskRuntimeURL     string   `mapstructure:"vosk_runtime_url" json:"vosk_runtime_url"`
     LlamaCppURL        string   `mapstructure:"llama_cpp_url" json:"llama_cpp_url"`
     LlamaCppAPIKey     string   `mapstructure:"llama_cpp_api_key" json:"llama_cpp_api_key"`
     LlamaCppAPIMode    string   `mapstructure:"llama_cpp_api_mode" json:"llama_cpp_api_mode"`
@@ -123,6 +124,7 @@ Here's what `config.json` looks like with all features:
         "wake_word": "omnipanel-go",
         "stt_engine": "vosk",
         "vosk_model_path": "",
+        "vosk_runtime_url": "",
         "llama_cpp_url": "http://localhost:8080",
         "llama_cpp_api_key": "",
         "llama_cpp_api_mode": "transcriptions",
@@ -144,6 +146,7 @@ Here's what `config.json` looks like with all features:
 | `wake_word` | string | `"omnipanel-go"` | Phrase to activate continuous listening |
 | `stt_engine` | string | `"vosk"` | Backend: `"vosk"` (offline) or `"llama-cpp"` (HTTP API) |
 | `vosk_model_path` | string | `""` | Path to Vosk model (auto-downloaded if empty) |
+| `vosk_runtime_url` | string | `""` | Windows-only override URL for Vosk runtime ZIP. Empty uses built-in fallback URL |
 | `llama_cpp_url` | string | `"http://localhost:8080"` | llama-cpp-server endpoint |
 | `llama_cpp_api_key` | string | `""` | API key for authentication |
 | `llama_cpp_api_mode` | string | `"transcriptions"` | API mode: `"transcriptions"` or `"chat"` |

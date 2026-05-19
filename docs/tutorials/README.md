@@ -54,6 +54,7 @@ A guided tour through the OmniPanel-go codebase, written for developers who are 
 |---------|-------|------|
 | [17](17-mpris.md) | MPRIS Media Player Integration (Linux D-Bus) | `internal/mpris/mpris.go`, `internal/routes/mpris.go` |
 | [18](18-rss-feed.md) | RSS Feed Integration (Polling, WebSocket Push, Host URL Opening) | `internal/rssfeed/`, `static/client/client.js` |
+| [19](19-windows-build-and-ci.md) | Windows Build Script and CI Alignment | `scripts/build-with-vosk.ps1`, `.forgejo/workflows/ci.yml` |
 
 ## How to Use These Tutorials
 

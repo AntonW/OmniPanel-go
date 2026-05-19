@@ -240,9 +240,15 @@ func (sm *SpeechManager) initEngine() error {
 }
 
 // initVosk initializes the Vosk STT engine with grammar-constrained recognition.
-// It downloads the model if needed, builds a grammar from loaded commands and
-// the wake word, and creates the recognizer.
+// On Windows it also ensures required Vosk runtime DLLs are available,
+// downloading and extracting them if needed. It then downloads the model if
+// needed, builds a grammar from loaded commands and the wake word, and creates
+// the recognizer.
 func (sm *SpeechManager) initVosk() error {
+	if err := ensureVoskWindowsRuntime(sm.userPath, sm.config.VoskRuntimeURL); err != nil {
+		return fmt.Errorf("ensure vosk runtime: %w", err)
+	}
+
 	modelPath, err := EnsureVoskModel(sm.config.VoskModelPath, sm.userPath)
 	if err != nil {
 		return fmt.Errorf("ensure vosk model: %w", err)

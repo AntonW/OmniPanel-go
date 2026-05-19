@@ -1,6 +1,6 @@
 // Package config handles loading, saving, and discovering the application's
 // configuration file (config.json). It uses Viper for configuration management,
-// which automatically supports environment variables with the OMNIPANEL_ prefix.
+// including OMNIPANEL_* environment variable support.
 //
 // Configuration precedence: environment variables > config file > defaults.
 //
@@ -22,20 +22,37 @@ import (
 
 // SpeechConfig holds speech recognition settings.
 type SpeechConfig struct {
-	Enabled           bool     `mapstructure:"enabled" json:"enabled"`
-	RecordingLoc      string   `mapstructure:"recording_location" json:"recording_location"`
-	TriggerMode       string   `mapstructure:"trigger_mode" json:"trigger_mode"`
-	WakeWord          string   `mapstructure:"wake_word" json:"wake_word"`
-	WakeWordListenSec int      `mapstructure:"wake_word_listen_sec" json:"wake_word_listen_sec"`
-	STTEngine         string   `mapstructure:"stt_engine" json:"stt_engine"`
-	VoskModelPath     string   `mapstructure:"vosk_model_path" json:"vosk_model_path"`
-	LlamaCppURL       string   `mapstructure:"llama_cpp_url" json:"llama_cpp_url"`
-	LlamaCppAPIKey    string   `mapstructure:"llama_cpp_api_key" json:"llama_cpp_api_key"`
-	LlamaCppAPIMode   string   `mapstructure:"llama_cpp_api_mode" json:"llama_cpp_api_mode"`
-	LlamaCppModel     string   `mapstructure:"llama_cpp_model" json:"llama_cpp_model"`
-	LlamaCppPrompt    string   `mapstructure:"llama_cpp_prompt" json:"llama_cpp_prompt"`
-	TTSEnabled        bool     `mapstructure:"tts_enabled" json:"tts_enabled"`
-	SpeechAllowlist   []string `mapstructure:"speech_allowlist" json:"speech_allowlist"`
+	// Enabled turns speech recognition on or off.
+	Enabled bool `mapstructure:"enabled" json:"enabled"`
+	// RecordingLoc selects where audio is captured: "client" or "host".
+	RecordingLoc string `mapstructure:"recording_location" json:"recording_location"`
+	// TriggerMode selects activation mode: "push-to-talk" or "wake-word".
+	TriggerMode string `mapstructure:"trigger_mode" json:"trigger_mode"`
+	// WakeWord is the phrase used to activate wake-word mode.
+	WakeWord string `mapstructure:"wake_word" json:"wake_word"`
+	// WakeWordListenSec is host-side follow-up listen duration after wake-word detection.
+	WakeWordListenSec int `mapstructure:"wake_word_listen_sec" json:"wake_word_listen_sec"`
+	// STTEngine selects speech-to-text backend, for example "vosk" or "llama-cpp".
+	STTEngine string `mapstructure:"stt_engine" json:"stt_engine"`
+	// VoskModelPath points to a Vosk model directory. Empty enables auto-download.
+	VoskModelPath string `mapstructure:"vosk_model_path" json:"vosk_model_path"`
+	// VoskRuntimeURL overrides the Windows Vosk runtime ZIP download URL.
+	// If empty, the built-in default release URL is used.
+	VoskRuntimeURL string `mapstructure:"vosk_runtime_url" json:"vosk_runtime_url"`
+	// LlamaCppURL is the base URL of the llama-cpp server.
+	LlamaCppURL string `mapstructure:"llama_cpp_url" json:"llama_cpp_url"`
+	// LlamaCppAPIKey is an optional API key for llama-cpp requests.
+	LlamaCppAPIKey string `mapstructure:"llama_cpp_api_key" json:"llama_cpp_api_key"`
+	// LlamaCppAPIMode selects llama-cpp API mode: "transcriptions" or "chat".
+	LlamaCppAPIMode string `mapstructure:"llama_cpp_api_mode" json:"llama_cpp_api_mode"`
+	// LlamaCppModel selects the model name used in chat mode.
+	LlamaCppModel string `mapstructure:"llama_cpp_model" json:"llama_cpp_model"`
+	// LlamaCppPrompt provides system instructions used in chat mode.
+	LlamaCppPrompt string `mapstructure:"llama_cpp_prompt" json:"llama_cpp_prompt"`
+	// TTSEnabled toggles text-to-speech confirmations.
+	TTSEnabled bool `mapstructure:"tts_enabled" json:"tts_enabled"`
+	// SpeechAllowlist restricts allowed speech phrases and patterns.
+	SpeechAllowlist []string `mapstructure:"speech_allowlist" json:"speech_allowlist"`
 }
 
 // MPRISConfig holds media player integration settings.
@@ -48,8 +65,7 @@ type MPRISConfig struct {
 }
 
 // Config holds the application's runtime settings.
-// Environment variables (OMNIPANEL_PANEL, OMNIPANEL_PORT, OMNIPANEL_NUMJOYSTICKS)
-// override values from the config file.
+// Environment values override matching keys from config.json.
 type Config struct {
 	Port         uint16       `mapstructure:"port"`
 	NumJoysticks uint8        `mapstructure:"numJoysticks"`
@@ -58,9 +74,12 @@ type Config struct {
 	MPRIS MPRISConfig `mapstructure:"mpris"`
 }
 
-// Load reads configuration using viper from the given path.
-// Viper automatically binds environment variables with the OMNIPANEL_ prefix.
-// Environment variables take precedence over config file values.
+// Load reads configuration from the given path and applies OMNIPANEL_*
+// environment overrides.
+//
+// Explicit env bindings are currently defined for:
+// - OMNIPANEL_PORT
+// - OMNIPANEL_NUMJOYSTICKS
 func Load(path string) (*Config, error) {
 	v := viper.New()
 
@@ -88,8 +107,8 @@ func Load(path string) (*Config, error) {
 	return &cfg, nil
 }
 
-// Save writes the config to a JSON file with 4-space indentation.
-// The file is created with permissions 0644 (owner rw, group/others r).
+// Save writes the config to a JSON file if it does not already exist.
+// The file write is delegated to Viper's SafeWriteConfig behavior.
 func (c *Config) Save(path string) error {
 	v := viper.New()
 	v.SetConfigFile(path)
