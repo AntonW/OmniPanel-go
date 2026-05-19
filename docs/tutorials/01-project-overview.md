@@ -231,17 +231,30 @@ The server listens on `0.0.0.0` (all network interfaces) so devices on the same 
 
 ```go
     quit := make(chan os.Signal, 1)
-    signal.Notify(quit, os.Interrupt)
+    signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
     <-quit
 
     slog.Info("Shutting down...")
+
+    slog.Info("Closing HTTP server...")
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    if err := app.ShutdownWithContext(ctx); err != nil {
+        slog.Error("Server shutdown error", "error", err)
+    }
+    slog.Info("HTTP server closed")
+
+    slog.Info("Closing app state...")
 }
 ```
 
 > **Concept: Channels**
 > A channel is a communication pipe between goroutines. `make(chan os.Signal, 1)` creates a buffered channel (capacity 1). `signal.Notify` tells the OS to send interrupt signals into this channel. `<-quit` **receives** from the channel — it blocks until a signal arrives.
 
-When you press Ctrl+C (or the system sends an interrupt signal), the program unblocks, logs "Shutting down...", and exits. The `defer appState.Close()` runs automatically, cleaning up virtual devices.
+When you press Ctrl+C (or the system sends SIGTERM), the program unblocks, logs "Shutting down...", and begins graceful shutdown. The HTTP server gets a 5-second deadline to finish active connections (WebSocket clients, in-flight requests). After the server closes, `defer appState.Close()` runs automatically, cleaning up each subsystem with diagnostic logging to identify which step hangs if shutdown stalls.
+
+> **Key Pattern: Diagnostic shutdown logging**
+> Each shutdown phase logs before and after (`"Closing HTTP server..."` → `"HTTP server closed"` → `"Closing app state..."`). If the logs pause between two messages, you know exactly which subsystem is blocking. The `Close()` method in `state.go` follows the same pattern, logging each subsystem (joystick, mousepad, keyboard, speech, MPRIS, RSS) individually.
 
 > **Cross-Platform Note:** Earlier versions used `syscall.SIGINT` and `syscall.SIGTERM`, which don't exist on Windows. Using `os.Interrupt` works on all platforms — it maps to SIGINT/SIGTERM on Unix and Ctrl+C/Close events on Windows.
 
@@ -252,5 +265,6 @@ When you press Ctrl+C (or the system sends an interrupt signal), the program unb
 - `defer` ensures cleanup happens even if the program exits early
 - Structured logging with `slog` supports color, text, and JSON output via the `logger` package
 - Command-line flags (`flag` package) and environment variables provide flexible configuration
+- Graceful shutdown uses a 5-second context timeout and diagnostic logging to identify hangs
 
 [Next: Chapter 2 — Configuration System →](02-configuration.md)

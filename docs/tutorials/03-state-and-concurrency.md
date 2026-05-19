@@ -9,23 +9,29 @@
 ```go
 // internal/state/state.go
 type AppState struct {
-    mu             sync.RWMutex
-    Config         *config.Config
-    ConfigPath     string
-    UserPath       string
-    StaticDir      string
+    mu              sync.RWMutex
+    Config          *config.Config
+    ConfigPath      string
+    UserPath        string
+    StaticDir       string
     JoystickManager *devices.JoystickManager
     MousepadManager *devices.MousepadManager
-    DataBus        *databus.DataBus
+    KeyboardManager *devices.KeyboardManager
+    DataBus         *databus.DataBus
+    SpeechManager   *speech.SpeechManager
+    MPRISWatcher    *mpris.Watcher
+    RSSManager      *rssfeed.Manager
 
-    broadcastMu sync.RWMutex
-    clients     map[chan []byte]struct{}
+    broadcastMu  sync.RWMutex
+    clients      map[chan []byte]struct{}
+    nextClientID uint64
+    clientIDs    map[chan []byte]uint64
 }
 ```
 
 Two separate mutexes protect two different concerns:
 - `mu` protects the `Config` (read/written by HTTP handlers)
-- `broadcastMu` protects the `clients` map (read/written by WebSocket handlers)
+- `broadcastMu` protects the `clients` map and client ID tracking (read/written by WebSocket handlers)
 
 > **Concept: `sync.RWMutex`**
 > A read-write mutex allows **multiple concurrent readers** OR **one exclusive writer**. Use `RLock()`/`RUnlock()` for reads and `Lock()`/`Unlock()` for writes. This is more efficient than a regular `sync.Mutex` when reads are frequent (which they are here — every WebSocket tick reads all clients).
@@ -40,44 +46,75 @@ func New(cfg *config.Config, configPath, userPath, baseDir string) *AppState {
     staticDir := filepath.Join(baseDir, "static")
     jsMgr := devices.New(cfg.NumJoysticks)
     mpMgr := devices.NewMousepad(cfg.NumJoysticks)
+    kbMgr := devices.NewKeyboard(cfg.NumJoysticks)
     db := databus.New()
 
     app := &AppState{
-        Config:        cfg,
-        ConfigPath:    configPath,
-        UserPath:      userPath,
-        StaticDir:     staticDir,
+        Config:          cfg,
+        ConfigPath:      configPath,
+        UserPath:        userPath,
+        StaticDir:       staticDir,
         JoystickManager: jsMgr,
         MousepadManager: mpMgr,
-        DataBus:       db,
-        clients:       make(map[chan []byte]struct{}),
+        KeyboardManager: kbMgr,
+        DataBus:         db,
+        clients:         make(map[chan []byte]struct{}),
+        clientIDs:       make(map[chan []byte]uint64),
     }
 
+    sm := speech.New(&cfg.Speech, app, jsMgr, userPath)
+    app.SpeechManager = sm
+
+    mprisWatcher := mpris.New(&cfg.MPRIS, db, slog.Default())
+    if mprisWatcher != nil {
+        if err := mprisWatcher.Start(); err != nil {
+            slog.Warn("MPRIS watcher failed to start", "error", err)
+        }
+    }
+    app.MPRISWatcher = mprisWatcher
+
+    app.RSSManager = rssfeed.New(func(clientID uint64, blockID string, entries []rssfeed.EntryWithNew) {
+        app.broadcastToClient(clientID, map[string]any{
+            "type": "rss-update",
+            "data": map[string]any{
+                "block_id": blockID,
+                "entries":  entries,
+            },
+        })
+    })
+    app.RSSManager.Start()
+
     app.StartDataBroadcast()
+
     return app
 }
 ```
 
-All subsystems are created here. `StartDataBroadcast()` kicks off the background goroutine that pushes metrics to all connected clients.
+All subsystems are created here: joystick/mousepad/keyboard managers, databus, speech manager, MPRIS watcher, and RSS feed manager. `StartDataBroadcast()` kicks off the background goroutine that pushes metrics to all connected clients.
 
 ## Client Registration
 
 ```go
-func (s *AppState) RegisterClient(ch chan []byte) {
+func (s *AppState) RegisterClient(ch chan []byte) uint64 {
     s.broadcastMu.Lock()
     defer s.broadcastMu.Unlock()
+    s.nextClientID++
+    clientID := s.nextClientID
     s.clients[ch] = struct{}{}
+    s.clientIDs[ch] = clientID
+    return clientID
 }
 
 func (s *AppState) UnregisterClient(ch chan []byte) {
     s.broadcastMu.Lock()
     defer s.broadcastMu.Unlock()
     delete(s.clients, ch)
+    delete(s.clientIDs, ch)
     close(ch)
 }
 ```
 
-When a WebSocket connects, it creates a channel and registers it. When it disconnects, the channel is removed from the map and closed (so the write goroutine knows to stop).
+When a WebSocket connects, it creates a channel and registers it. A unique `uint64` client ID is assigned and returned — used for targeted message delivery (e.g., RSS updates sent to specific clients). When it disconnects, the channel is removed from both maps and closed (so the write goroutine knows to stop).
 
 > **Key Pattern: defer with mutex**
 > `defer s.broadcastMu.Unlock()` right after `Lock()` ensures the mutex is always released, even if the function panics or returns early. This is the standard Go pattern for mutex usage.
@@ -122,22 +159,12 @@ func (s *AppState) UpdateJoystickCount(count uint8) {
 
     _ = s.Config.Save(s.ConfigPath)
 }
-
-func (s *AppState) UpdatePanel(panel string) {
-    s.mu.Lock()
-    s.Config.Panel = panel
-    s.mu.Unlock()
-
-    _ = s.Config.Save(s.ConfigPath)
-    s.BroadcastJSON(map[string]any{"type": "force-reload"})
-}
 ```
 
-When the user changes settings via the web UI:
+When the user changes the joystick count via the web UI:
 1. Update the in-memory config (under mutex)
-2. Apply the change to the relevant subsystem
+2. Apply the change to the joystick manager
 3. Persist to disk
-4. For panel changes: broadcast `force-reload` so all clients refresh
 
 ## The Data Broadcast Loop
 
@@ -188,16 +215,55 @@ func (s *AppState) LoadPanelJSON(panelName string) ([]byte, error) {
 
 Reads a panel definition from `user/panels/<name>.json`. Used when a WebSocket client connects to send them the current panel.
 
+## Targeted Client Broadcasting
+
+```go
+func (s *AppState) broadcastToClient(clientID uint64, msg map[string]any) {
+    data, err := json.Marshal(msg)
+    if err != nil {
+        slog.Warn("Failed to marshal RSS update", "error", err)
+        return
+    }
+
+    s.broadcastMu.RLock()
+    defer s.broadcastMu.RUnlock()
+    for ch, id := range s.clientIDs {
+        if id == clientID {
+            select {
+            case ch <- data:
+            default:
+            }
+            return
+        }
+    }
+}
+```
+
+Unlike `Broadcast` which sends to all clients, `broadcastToClient` finds a specific client by ID and sends only to them. Uses the same non-blocking `select` + `default` pattern. This is used by the RSS manager to deliver per-client updates (e.g., new feed entries that only this client hasn't seen yet).
+
 ## Cleanup
 
 ```go
 func (s *AppState) Close() {
+    slog.Info("Closing joystick manager...")
     s.JoystickManager.Close()
+    slog.Info("Closing mousepad manager...")
     s.MousepadManager.Close()
+    slog.Info("Closing keyboard manager...")
+    s.KeyboardManager.Close()
+    slog.Info("Closing speech manager...")
+    s.SpeechManager.Close()
+    slog.Info("Closing MPRIS watcher...")
+    if s.MPRISWatcher != nil {
+        s.MPRISWatcher.Close()
+    }
+    slog.Info("Closing RSS manager...")
+    s.RSSManager.Close()
+    slog.Info("All subsystems closed")
 }
 ```
 
-Called via `defer` in `main.go`. Destroys all virtual input devices so they don't linger after the program exits.
+Called via `defer` in `main.go`. Each subsystem is closed with a log message before and after, so if shutdown hangs you can see exactly which subsystem is blocking. Virtual input devices are destroyed so they don't linger after the program exits.
 
 ## Key Takeaways
 
@@ -207,5 +273,7 @@ Called via `defer` in `main.go`. Destroys all virtual input devices so they don'
 - Non-blocking channel sends (`select` + `default`) prevent slow consumers from blocking producers
 - `time.Ticker` is the right tool for periodic background work
 - `defer` with `Unlock()` ensures mutexes are always released
+- Each subsystem logs during `Close()` so shutdown hangs are easy to diagnose
+- Client IDs enable targeted per-client message delivery (used by RSS manager)
 
 [← Back: Chapter 2](02-configuration.md) · [Next: Chapter 4 →](04-databus.md)
