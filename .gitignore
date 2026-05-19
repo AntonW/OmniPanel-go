@@ -8,5 +8,6 @@
 /.vscode
 /.idea
 /user/speech-models/*
+/bin/
 omnipanel-go
 omnipanel-go.exe
