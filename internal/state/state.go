@@ -234,12 +234,19 @@ func (s *AppState) broadcastToClient(clientID uint64, msg map[string]any) {
 // Close cleans up all virtual input devices.
 // Called via defer in main.go to ensure cleanup on exit.
 func (s *AppState) Close() {
+	slog.Info("Closing joystick manager...")
 	s.JoystickManager.Close()
+	slog.Info("Closing mousepad manager...")
 	s.MousepadManager.Close()
+	slog.Info("Closing keyboard manager...")
 	s.KeyboardManager.Close()
+	slog.Info("Closing speech manager...")
 	s.SpeechManager.Close()
+	slog.Info("Closing MPRIS watcher...")
 	if s.MPRISWatcher != nil {
 		s.MPRISWatcher.Close()
 	}
+	slog.Info("Closing RSS manager...")
 	s.RSSManager.Close()
+	slog.Info("All subsystems closed")
 }

@@ -106,9 +106,13 @@ func main() {
 
 	slog.Info("Shutting down...")
 
+	slog.Info("Closing HTTP server...")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := app.ShutdownWithContext(ctx); err != nil {
 		slog.Error("Server shutdown error", "error", err)
 	}
+	slog.Info("HTTP server closed")
+
+	slog.Info("Closing app state...")
 }
