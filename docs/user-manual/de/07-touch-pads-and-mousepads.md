@@ -165,7 +165,7 @@ Du kannst zwischen Panels wechseln, ohne zur Startseite zurückzugehen, indem du
 
 - Stelle sicher, dass du **genau drei Finger** benutzt — ein oder zwei Finger funktionieren nicht
 - Wische **horizontal** — vertikale Wischgesten lösen keinen Panel-Wechsel aus
-- Die Geste funktioniert überall auf dem Bildschirm **außer** auf Touch Pad-, Mousepad- oder Push-to-Talk-Blöcken
+- Die Geste funktioniert **überall auf dem Bildschirm, einschließlich auf Touch Pad-, Mousepad- und Push-to-Talk-Blöcken** — wenn du drei Finger auflegst, hat die Wischgeste Vorrang und Block-Interaktionen werden vorübergehend unterdrückt
 - Wenn das Panel nicht wechselt, versuche etwas schneller oder mit mehr Distanz zu wischen
 - Pinch-to-Zoom ist auf dem Client deaktiviert, also musst du nicht befürchten, versehentlich zu zoomen
 

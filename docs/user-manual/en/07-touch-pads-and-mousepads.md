@@ -165,7 +165,7 @@ You can switch between panels without going back to the start page by swiping wi
 
 - Make sure you're using **exactly three fingers** — one or two fingers won't work
 - Swipe **horizontally** — vertical swipes won't trigger panel switching
-- The gesture works anywhere on the screen **except** on Touch Pad, Mousepad, or Push-to-Talk blocks
+- The gesture works **anywhere on the screen, including on Touch Pad, Mousepad, and Push-to-Talk blocks** — when you place three fingers down, the swipe gesture takes priority and block interactions are temporarily suppressed
 - If the panel doesn't switch, try swiping a bit faster or with more distance
 - Pinch-to-zoom is disabled on the client, so you don't need to worry about accidentally zooming
 

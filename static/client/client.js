@@ -509,6 +509,9 @@ function initJoystick(blockWrapper) {
     hitbox.style.touchAction = "none";
 
     function handlePointerStart(e) {
+        // Suppress joystick interaction when 3-finger swipe gesture is active
+        if (isSwipeGestureActive) return;
+        
         e.stopPropagation();
         e.preventDefault();
 
@@ -525,6 +528,8 @@ function initJoystick(blockWrapper) {
     }
 
     function handlePointerMove(e) {
+        // Suppress joystick interaction when 3-finger swipe gesture is active
+        if (isSwipeGestureActive) return;
         if (!active || e.pointerId !== activePointerId) return;
         e.preventDefault();
 
@@ -600,6 +605,9 @@ function initMousepad(blockWrapper) {
     hitbox.style.touchAction = "none";
 
     function handlePointerStart(e) {
+        // Suppress mousepad interaction when 3-finger swipe gesture is active
+        if (isSwipeGestureActive) return;
+        
         e.stopPropagation();
         e.preventDefault();
 
@@ -613,6 +621,8 @@ function initMousepad(blockWrapper) {
     }
 
     function handlePointerMove(e) {
+        // Suppress mousepad interaction when 3-finger swipe gesture is active
+        if (isSwipeGestureActive) return;
         if (!active || e.pointerId !== activePointerId) return;
         e.preventDefault();
 
@@ -727,6 +737,9 @@ function initMousepad(blockWrapper) {
 
 function initPushToTalk(pttBlock) {
     pttBlock.addEventListener('pointerdown', (e) => {
+        // Suppress push-to-talk interaction when 3-finger swipe gesture is active
+        if (isSwipeGestureActive) return;
+        
         e.preventDefault();
         e.stopPropagation();
         if (speechConfig.enabled && !isRecording && !(speechConfig.triggerMode === 'wake-word' && recordingLocation === 'host')) {
@@ -2501,6 +2514,13 @@ let swipeState = {
 };
 
 /**
+ * Flag indicating whether a 3-finger swipe gesture is currently active.
+ * When true, block interactions (joystick, mousepad, push-to-talk) are suppressed
+ * to allow the swipe gesture to take priority over individual block handlers.
+ */
+let isSwipeGestureActive = false;
+
+/**
  * Minimum horizontal distance (in pixels) required to trigger a panel switch.
  * Prevents accidental switches from small movements.
  */
@@ -2653,7 +2673,8 @@ function showToast(message, type = 'info') {
  * that fades in proportionally to swipe distance, showing the target
  * panel name before the switch completes.
  * 
- * Exclusions: Does not activate on joystick, mousepad, or push-to-talk blocks.
+ * When 3 fingers are detected, block interactions (joystick, mousepad, push-to-talk)
+ * are suppressed to allow the swipe gesture to take priority.
  */
 function enableThreeFingerSwipe() {
     loadPanelList();
@@ -2662,12 +2683,11 @@ function enableThreeFingerSwipe() {
     let lastCenterX = 0;
     
     document.addEventListener('pointerdown', (e) => {
-        if (e.target.closest('.joy-hitbox, .mousepad-hitbox, .push-to-talk-btn')) return;
-        
         swipeState.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
         
         if (swipeState.activePointers.size === 3 && !swipeState.isTracking) {
             swipeState.isTracking = true;
+            isSwipeGestureActive = true;
             cumulativeDeltaX = 0;
             const pointers = Array.from(swipeState.activePointers.values());
             lastCenterX = pointers.reduce((sum, p) => sum + p.x, 0) / 3;
@@ -2718,6 +2738,7 @@ function enableThreeFingerSwipe() {
             }
             
             swipeState.isTracking = false;
+            isSwipeGestureActive = false;
             swipeState.activePointers.clear();
             cumulativeDeltaX = 0;
         }

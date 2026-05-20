@@ -393,6 +393,7 @@ let swipeState = {
     isTracking: false,
     lastSwitchTime: 0,
 };
+let isSwipeGestureActive = false;
 
 const SWIPE_THRESHOLD = 100;
 const SWIPE_COOLDOWN = 500;
@@ -409,12 +410,11 @@ function enableThreeFingerSwipe() {
     let lastCenterX = 0;
     
     document.addEventListener('pointerdown', (e) => {
-        if (e.target.closest('.joy-hitbox, .mousepad-hitbox, .push-to-talk-btn')) return;
-        
         swipeState.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
         
         if (swipeState.activePointers.size === 3 && !swipeState.isTracking) {
             swipeState.isTracking = true;
+            isSwipeGestureActive = true;
             cumulativeDeltaX = 0;
             const pointers = Array.from(swipeState.activePointers.values());
             lastCenterX = pointers.reduce((sum, p) => sum + p.x, 0) / 3;
@@ -427,7 +427,7 @@ The gesture system:
 1. Tracks all active pointers in a `Map` keyed by `pointerId`
 2. Activates when exactly 3 fingers are on screen
 3. Calculates the center point of all 3 fingers by averaging their X coordinates
-4. Ignores touches on joystick, mousepad, or push-to-talk blocks
+4. Sets `isSwipeGestureActive = true` when 3-finger tracking starts, which suppresses block interactions (joystick, mousepad, push-to-talk) to allow the swipe gesture to take priority
 
 ```javascript
     document.addEventListener('pointermove', (e) => {
@@ -478,6 +478,7 @@ The gesture system:
             }
             
             swipeState.isTracking = false;
+            isSwipeGestureActive = false;
             swipeState.activePointers.clear();
             cumulativeDeltaX = 0;
         }
