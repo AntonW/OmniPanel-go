@@ -49,77 +49,40 @@ jobs:
           path: omnipanel-go-linux-amd64-${{ env.VERSION }}.zip
 
   build-windows:
-    runs-on: docker  # (ubuntu-latest für GitHub)
+    runs-on: windows-latest
     steps:
       - name: Checkout code
-        uses: https://code.forgejo.org/actions/checkout@v4  # (actions/checkout@v4 für GitHub)
+        uses: actions/checkout@v4
 
-      - name: Setup Go 1.24
-        uses: https://code.forgejo.org/actions/setup-go@v5  # (actions/setup-go@v5 für GitHub)
+      - name: Setup Go 1.26
+        uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.26"
 
-      - name: Install MinGW and zip
-        run: apt-get update && apt-get install -y gcc-mingw-w64 zip
+      - name: Extract version from tag
+        run: echo "VERSION=${{ github.ref_name }}" >> $env:GITHUB_ENV
+        shell: pwsh
 
-      - name: Install Vosk library (Windows)
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          path-fallback: true
+          install: >-
+            mingw-w64-ucrt-x86_64 gcc
+            mingw-w64-ucrt-x86_64 make
+            mingw-w64-ucrt-x86_64 pkgconf
+
+      - name: Build Windows release
         run: |
-          VOSK_LIB_VERSION="0.3.45"
-          wget -q "https://github.com/alphacep/vosk-api/releases/download/v${VOSK_LIB_VERSION}/vosk-win64-${VOSK_LIB_VERSION}.zip" -O /tmp/libvosk-win.zip
-          unzip -q /tmp/libvosk-win.zip -d /tmp/libvosk-win
-          
-          mkdir -p $GITHUB_WORKSPACE/vosk-win
-          find /tmp/libvosk-win -name "*.dll" -exec cp {} $GITHUB_WORKSPACE/vosk-win/ \;
-          find /tmp/libvosk-win -name "vosk_api.h" -exec cp {} $GITHUB_WORKSPACE/vosk-win/ \;
-          
-          if [ -f "$GITHUB_WORKSPACE/vosk-win/vosk.dll" ] && [ ! -f "$GITHUB_WORKSPACE/vosk-win/libvosk.dll" ]; then
-            cp $GITHUB_WORKSPACE/vosk-win/vosk.dll $GITHUB_WORKSPACE/vosk-win/libvosk.dll
-          fi
-
-      - name: Build Windows binary (CGO Cross-compile)
-        run: go build -o omnipanel-go-windows-amd64.exe .
-        env:
-          CGO_ENABLED: 1
-          GOOS: windows
-          GOARCH: amd64
-          CC: x86_64-w64-mingw32-gcc
-          CGO_CFLAGS: "-I${{ github.workspace }}/vosk-win"
-          CGO_LDFLAGS: "-L${{ github.workspace }}/vosk-win -lvosk"
-
-      - name: Collect MinGW runtime DLLs
-        run: |
-          # MinGW runtime DLLs die die .exe zur Laufzeit benötigt
-          MINGW_LIB_PATH=$(x86_64-w64-mingw32-gcc --print-file-name=libgcc_s_seh-1.dll)
-          MINGW_LIB_DIR=$(dirname $MINGW_LIB_PATH)
-          
-          cp $MINGW_LIB_DIR/libgcc_s_seh-1.dll . 2>/dev/null || true
-          cp $MINGW_LIB_DIR/libwinpthread-1.dll . 2>/dev/null || true
-          cp $MINGW_LIB_DIR/libstdc++-6.dll     . 2>/dev/null || true
-          
-          echo "Collected DLLs:"
-          ls -lh *.dll 2>/dev/null || true
-
-      - name: Package Windows ZIP
-        run: |
-          cp $GITHUB_WORKSPACE/vosk-win/libvosk.dll .
-          # Alle DLLs + Binary + user-Daten einpacken
-          zip -r omnipanel-go-windows-amd64-${VERSION}.zip \
-            omnipanel-go-windows-amd64.exe \
-            user config.json \
-            libvosk.dll \
-            libgcc_s_seh-1.dll \
-            libwinpthread-1.dll \
-            libstdc++-6.dll 2>/dev/null || \
-          zip -r omnipanel-go-windows-amd64-${VERSION}.zip \
-            omnipanel-go-windows-amd64.exe \
-            user config.json \
-            libvosk.dll
+          ./scripts/build-release-windows.ps1 -ReleaseZipDir "${{ github.workspace }}"
+        shell: pwsh
 
       - name: Upload Windows artifact
-        uses: https://code.forgejo.org/actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: omnipanel-go-windows-archive
-          path: omnipanel-go-windows-amd64-${{ env.GIT_HASH }}.zip
+          path: OmniPanel-go-windows-amd64-*.zip
 
   create-release:
     runs-on: ubuntu-latest
