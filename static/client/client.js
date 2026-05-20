@@ -16,9 +16,11 @@ let socket;
 let reconnectInterval;
 let commandHoldIntervals = {};
 /**
- * Global map tracking which RSS entry GUIDs each client has seen.
+ * Global map tracking which RSS entry GUIDs have been acknowledged (no longer new).
  * Keys are block IDs, values are Sets of entry GUIDs.
- * Used to determine which entries should be highlighted as "new".
+ * Entries are added to this set only when the server marks them as no longer new
+ * (is_new=false), meaning a newer entry has arrived. The newest entry always
+ * stays highlighted as "new" until superseded by an even newer entry.
  */
 let rssSeenEntries = {};
 
@@ -2264,11 +2266,14 @@ function initRSSFeed(blockWrapper) {
 
 /**
  * Processes rss-update WebSocket messages and renders feed entries into the DOM.
- * Determines which entries are "new" by comparing entry GUIDs against the
- * client's seen-entry set (rssSeenEntries). New entries receive the "new-entry"
- * CSS class for highlighting. Entry metadata (feed label, date) and description
- * are rendered based on block settings (show_feed_label, show_date, show_description).
- * Descriptions are stripped of HTML tags and truncated to description_max_length.
+ * Determines which entries are "new" using a dual check: the server's is_new flag
+ * must be true AND the entry GUID must not be in the client's acknowledged set.
+ * The newest entry always remains new until a newer entry arrives; older entries
+ * are added to the acknowledged set when the server marks them as no longer new.
+ * New entries receive the "new-entry" CSS class for highlighting. Entry metadata
+ * (feed label, date) and description are rendered based on block settings
+ * (show_feed_label, show_date, show_description). Descriptions are stripped of
+ * HTML tags and truncated to description_max_length.
  * @param {Object} data - RSS update payload with block_id and entries array.
  * Each entry has: guid, title, link, published, description, feed_label, is_new.
  */
@@ -2291,7 +2296,6 @@ function handleRSSUpdate(data) {
         rssSeenEntries[blockId] = new Set();
     }
 
-    const currentGUIDs = new Set();
     let html = '';
 
     if (entries.length === 0) {
@@ -2299,7 +2303,10 @@ function handleRSSUpdate(data) {
     } else {
         entries.forEach(entry => {
             const isNew = entry.is_new && !rssSeenEntries[blockId].has(entry.guid);
-            currentGUIDs.add(entry.guid);
+            // Only add to seen set if server says it's not new anymore
+            if (!entry.is_new) {
+                rssSeenEntries[blockId].add(entry.guid);
+            }
 
             let metaHtml = '';
             const metaParts = [];
@@ -2334,8 +2341,6 @@ function handleRSSUpdate(data) {
     }
 
     entriesList.innerHTML = html;
-
-    rssSeenEntries[blockId] = currentGUIDs;
 }
 
 /**

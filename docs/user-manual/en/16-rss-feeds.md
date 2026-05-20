@@ -78,7 +78,8 @@ Each device that opens your panel tracks which entries it has seen independently
 
 - **Your tablet** might see 5 new entries highlighted
 - **Your phone** might see 8 new entries highlighted (if it opened the panel later)
-- When newer entries arrive, the old highlights fade — only the newest unseen entries stay highlighted
+
+The newest entry (most recent article/video) always stays highlighted as "new" — it won't lose the highlight when the feed refreshes. Only when an even newer entry arrives does the previous one lose its "new" status. This way, you always have a visible indicator of the latest content, and you won't miss anything between feed refreshes.
 
 This is per-device tracking, so you always know what's new on each screen.
 

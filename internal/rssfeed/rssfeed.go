@@ -5,10 +5,11 @@
 // all configured sources, deduplicates by GUID, sorts by publication date, and pushes
 // updates to connected clients via targeted WebSocket messages.
 //
-// Per-client seen-entry tracking determines which entries are "new". When a client
-// connects, it receives all current entries with is_new=true. On subsequent updates,
-// only entries the client hasn't seen before are marked as new. This allows each client
-// to highlight new entries independently.
+// Per-client seen-entry tracking determines which entries are "new". The newest entry
+// (most recent by publication date) always remains marked as new until an even newer
+// entry arrives. Older entries are marked as seen after their first delivery, so the
+// "new" highlight persists across polling cycles until superseded. This allows each
+// client to independently track which entries it has acknowledged.
 //
 // Feed URLs support an optional display label using the format "URL|Label". If no label
 // is provided, the feed's own title from the RSS metadata is used. The label is included
@@ -65,8 +66,9 @@ type EntryWithNew struct {
 // It maintains a map of block configurations, fetched entries, and per-client
 // seen-entry tracking. When feeds are polled, entries are merged from all sources,
 // deduplicated by GUID, sorted by publication date (newest first), and limited
-// to MaxEntries. Each client receives entries with an is_new flag based on its
-// own seen-entry history.
+// to MaxEntries. The newest entry always remains marked as new (is_new=true) until
+// a newer entry arrives. Older entries are marked as seen after first delivery.
+// Each client receives entries with an is_new flag based on its own seen-entry history.
 type Manager struct {
 	mu            sync.RWMutex
 	configs       map[string]FeedConfig
@@ -195,7 +197,8 @@ func (m *Manager) GetEntries(blockID string) []FeedEntry {
 // RegisterClient adds a client for per-client seen-entry tracking.
 //
 // Called when a WebSocket connection is established. The client will receive
-// entries with is_new=true for all entries it hasn't seen before.
+// entries with is_new=true for all entries it hasn't seen before. The newest
+// entry in each block always remains marked as new until superseded.
 func (m *Manager) RegisterClient(clientID uint64) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -238,8 +241,11 @@ func (m *Manager) Close() {
 // For each feed source, entries are fetched using gofeed. The feed label is
 // set to the source's configured label, or falls back to the feed's own title.
 // Entries are sorted by publication date (newest first), deduplicated by GUID,
-// and limited to MaxEntries. Each client receives entries with an is_new flag
-// based on its own seen-entry history.
+// and limited to MaxEntries. The newest entry (index 0) always remains marked
+// as new (is_new=true) until a newer entry arrives. Older entries are marked
+// as seen after their first delivery, so the "new" highlight persists across
+// polling cycles until superseded. Each client receives entries with an is_new
+// flag based on its own seen-entry history.
 func (m *Manager) fetchFeed(blockID string) {
 	m.mu.RLock()
 	config, exists := m.configs[blockID]
@@ -327,11 +333,15 @@ func (m *Manager) fetchFeed(blockID string) {
 	for clientID, clientSeen := range seenMap {
 		// Build entries with is_new flag
 		var entriesWithNew []EntryWithNew
-		for _, e := range deduped {
+		for i, e := range deduped {
+			// Only mark as seen (not new) if this is NOT the newest entry
+			// The newest entry (index 0) stays "new" until a newer one arrives
 			isNew := !clientSeen[e.GUID]
 			entriesWithNew = append(entriesWithNew, EntryWithNew{FeedEntry: e, IsNew: isNew})
-			// Update client's seen set
-			clientSeen[e.GUID] = true
+			// Only mark as seen if this is not the newest entry
+			if i > 0 {
+				clientSeen[e.GUID] = true
+			}
 		}
 
 		// Broadcast to this specific client

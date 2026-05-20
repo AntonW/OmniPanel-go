@@ -9,7 +9,8 @@ The RSS feed block allows users to display live entries from one or more RSS/Ato
 ### Key Features
 
 - **Server-side polling**: The server fetches feeds, avoiding CORS issues and allowing access to internal networks
-- **Per-client seen tracking**: Each client maintains its own set of seen entry GUIDs
+- **Per-client seen tracking**: Each client maintains its own set of acknowledged entry GUIDs
+- **Persistent new-entry highlighting**: The newest entry stays highlighted as "new" until a newer entry arrives — it does not lose the highlight after one polling cycle
 - **Feed labels**: Each feed URL can have an optional display label (`URL|Label` format)
 - **Configurable URL opening**: Clicking an entry opens the URL on the host or client device based on the `open_url_location` setting
 
@@ -180,10 +181,14 @@ func (m *Manager) fetchFeed(blockID string) {
     // Broadcast to each client with per-client is_new flags
     for clientID, clientSeen := range seenMap {
         var entriesWithNew []EntryWithNew
-        for _, e := range deduped {
+        for i, e := range deduped {
             isNew := !clientSeen[e.GUID]
             entriesWithNew = append(entriesWithNew, EntryWithNew{FeedEntry: e, IsNew: isNew})
-            clientSeen[e.GUID] = true
+            // Only mark as seen if this is not the newest entry (index 0)
+            // The newest entry stays "new" until a newer one arrives
+            if i > 0 {
+                clientSeen[e.GUID] = true
+            }
         }
         if m.broadcast != nil {
             m.broadcast(clientID, blockID, entriesWithNew)
@@ -197,6 +202,9 @@ func (m *Manager) fetchFeed(blockID string) {
 
 > **Key Pattern: Per-Client State Without Client Reference**
 > The Manager doesn't hold references to WebSocket connections. Instead, it tracks clients by their `uint64` ID and calls a `broadcast` callback. The `state` package owns the actual client channels and handles the delivery. This keeps the RSS package testable and decoupled from WebSocket internals.
+
+> **Key Pattern: Newest Entry Stays New Until Superseded**
+> The server only marks an entry as "seen" (no longer new) if it is NOT the newest entry (`i > 0`). This means the most recent entry always arrives with `is_new=true` on every polling cycle, keeping the "new" highlight visible until an even newer entry arrives. Older entries are marked as seen after their first delivery, so they lose the highlight. This prevents the confusing behavior where entries would flash between "new" and "normal" on every refresh.
 
 ## WebSocket Integration
 
@@ -339,7 +347,7 @@ function initRSSFeed(blockWrapper) {
 When the server pushes an `rss-update` message, `handleRSSUpdate` renders the entries:
 
 ```javascript
-// static/client/client.js:1885-1949
+// static/client/client.js:2275-2340
 function handleRSSUpdate(data) {
     const blockId = data.block_id;
     const entries = data.entries || [];
@@ -359,15 +367,19 @@ function handleRSSUpdate(data) {
         rssSeenEntries[blockId] = new Set();
     }
 
-    const currentGUIDs = new Set();
     let html = '';
 
     if (entries.length === 0) {
         html = '<div class="rss-empty-state">No entries found</div>';
     } else {
         entries.forEach(entry => {
+            // Dual check: server says it's new AND client hasn't acknowledged it
             const isNew = entry.is_new && !rssSeenEntries[blockId].has(entry.guid);
-            currentGUIDs.add(entry.guid);
+            // Only add to seen set when server says it's no longer new
+            // This means a newer entry has arrived, so this one is "acknowledged"
+            if (!entry.is_new) {
+                rssSeenEntries[blockId].add(entry.guid);
+            }
 
             let metaHtml = '';
             const metaParts = [];
@@ -394,12 +406,14 @@ function handleRSSUpdate(data) {
     }
 
     entriesList.innerHTML = html;
-    rssSeenEntries[blockId] = currentGUIDs;
 }
 ```
 
 > **Key Pattern: Event Delegation for Dynamic Content**
 > RSS entries are created dynamically via `innerHTML`, so individual event listeners can't be attached during `enableInputs()`. Instead, a single `document.addEventListener('click', ...)` at the document level uses `e.target.closest('.rss-entry')` to catch clicks on any entry, even ones created after the listener was registered. This is more efficient and works regardless of when entries are rendered.
+
+> **Key Pattern: Incremental Seen Set (Not Replacement)**
+> The client uses `rssSeenEntries[blockId].add(entry.guid)` to incrementally add GUIDs to the existing Set, rather than replacing the entire Set on every update (`rssSeenEntries[blockId] = currentGUIDs`). GUIDs are only added when `entry.is_new` is false — meaning the server has determined a newer entry has arrived and this one is no longer the newest. This ensures the "new" highlight persists across polling cycles until explicitly superseded, rather than being lost on the next `rss-update` message.
 
 ### Click Handler
 
@@ -484,6 +498,6 @@ addFeed(block) {
 3. **Client registered** → requesting client added to `seenPerClient[blockID]` for per-client tracking
 4. **Immediate fetch** → `fetchFeed()` parses all feed URLs with gofeed
 5. **Entries merged** → sorted by date, deduplicated by GUID, limited to max
-6. **Per-client push** → `broadcast(clientID, blockID, entriesWithNew)` → `broadcastToClient()` → client channel
-7. **Client receives** → `handleRSSUpdate()` renders entries, marks new ones
+6. **Per-client push** → newest entry stays `is_new=true`, older entries marked as seen → `broadcast(clientID, blockID, entriesWithNew)` → `broadcastToClient()` → client channel
+7. **Client receives** → `handleRSSUpdate()` renders entries, adds GUIDs to seen set only when `is_new=false`
 8. **User clicks entry** → checks `open_url_location`: `"host"` sends `open-url` WebSocket → `handleOpenURL()` → `xdg-open` / `start`; `"client"` → `window.open()` in panel browser

@@ -78,7 +78,8 @@ Jedes Gerät, das dein Panel öffnet, verfolgt unabhängig, welche Einträge es 
 
 - **Dein Tablet** könnte 5 neue hervorgehobene Einträge sehen
 - **Dein Handy** könnte 8 neue hervorgehobene Einträge sehen (wenn es das Panel später geöffnet hat)
-- Wenn neuere Einträge eintreffen, verblassen die alten Hervorhebungen — nur die neuesten ungesehenen Einträge bleiben hervorgehoben
+
+Der neueste Eintrag (der aktuellste Artikel/das neueste Video) bleibt immer als „neu" hervorgehoben — er verliert die Hervorhebung nicht, wenn der Feed aktualisiert wird. Erst wenn ein noch neuerer Eintrag eintrifft, verliert der vorherige seinen „neu"-Status. So hast du immer einen sichtbaren Hinweis auf die neuesten Inhalte und verpasst nichts zwischen den Feed-Aktualisierungen.
 
 Dies ist eine gerätespezifische Verfolgung, sodass du auf jedem Bildschirm siehst, was neu ist.
 
