@@ -14,6 +14,10 @@
 // targeted message delivery (e.g., RSS updates are sent to specific clients
 // based on their per-client seen-entry tracking).
 //
+// AppStateInterface defines the methods required by the websocket handler.
+// Both AppState (default mode) and Agent (connect mode) implement this interface,
+// allowing the same message handling code to work in both deployment modes.
+//
 // See docs/tutorials/03-state-and-concurrency.md for a detailed walkthrough.
 package state
 
@@ -32,6 +36,27 @@ import (
 	"omnipanel-go/internal/rssfeed"
 	"omnipanel-go/internal/speech"
 )
+
+// AppStateInterface defines the methods required by the websocket handler.
+// Both AppState (default mode) and Agent (connect mode) implement this interface.
+type AppStateInterface interface {
+	RegisterClient(ch chan []byte) uint64
+	UnregisterClient(ch chan []byte)
+	Broadcast(msg []byte)
+	BroadcastJSON(msg map[string]any)
+	UpdateJoystickCount(count uint8)
+	GetConfig() *config.Config
+	LoadPanelJSON(panelName string) ([]byte, error)
+	StartDataBroadcast()
+	PushData(key string, value any, unit string)
+	GetJoystickManager() *devices.JoystickManager
+	GetMousepadManager() *devices.MousepadManager
+	GetKeyboardManager() *devices.KeyboardManager
+	GetDataBus() *databus.DataBus
+	GetSpeechManager() *speech.SpeechManager
+	GetMPRISWatcher() *mpris.Watcher
+	GetRSSManager() *rssfeed.Manager
+}
 
 // AppState is the central hub of the application.
 // It holds references to all subsystems and manages WebSocket client connections.
@@ -250,4 +275,39 @@ func (s *AppState) Close() {
 	slog.Info("Closing RSS manager...")
 	s.RSSManager.Close()
 	slog.Info("All subsystems closed")
+}
+
+// GetJoystickManager returns the joystick manager.
+func (s *AppState) GetJoystickManager() *devices.JoystickManager {
+	return s.JoystickManager
+}
+
+// GetMousepadManager returns the mousepad manager.
+func (s *AppState) GetMousepadManager() *devices.MousepadManager {
+	return s.MousepadManager
+}
+
+// GetKeyboardManager returns the keyboard manager.
+func (s *AppState) GetKeyboardManager() *devices.KeyboardManager {
+	return s.KeyboardManager
+}
+
+// GetDataBus returns the databus.
+func (s *AppState) GetDataBus() *databus.DataBus {
+	return s.DataBus
+}
+
+// GetSpeechManager returns the speech manager.
+func (s *AppState) GetSpeechManager() *speech.SpeechManager {
+	return s.SpeechManager
+}
+
+// GetMPRISWatcher returns the MPRIS watcher.
+func (s *AppState) GetMPRISWatcher() *mpris.Watcher {
+	return s.MPRISWatcher
+}
+
+// GetRSSManager returns the RSS manager.
+func (s *AppState) GetRSSManager() *rssfeed.Manager {
+	return s.RSSManager
 }

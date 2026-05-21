@@ -4,6 +4,8 @@
 
 `AppState` is the central hub of the application. It holds references to every subsystem (config, joystick managers, databus) and manages WebSocket client connections. It's the glue that ties everything together.
 
+For distributed deployment, the `AppStateInterface` defines the methods required by the WebSocket handler. Both `AppState` (default mode) and `Agent` (connect mode) implement this interface, allowing the same message handling code to work in both deployment modes.
+
 ## The AppState Struct
 
 ```go

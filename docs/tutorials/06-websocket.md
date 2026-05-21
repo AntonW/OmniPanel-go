@@ -101,9 +101,11 @@ func handleWS(c *ws.Conn, s *state.AppState) {
 
 ## Message Routing (websocket/handler.go)
 
+The handler accepts an `AppStateInterface` instead of a concrete `*state.AppState`. This allows it to work with both `AppState` (default mode) and `Agent` (connect mode):
+
 ```go
 // internal/websocket/handler.go
-func HandleMessage(s *state.AppState, clientID uint64, raw string) {
+func HandleMessage(s state.AppStateInterface, clientID uint64, raw string) {
     var parsed map[string]json.RawMessage
     if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
         slog.Warn("Failed to parse WS message", "error", err)
@@ -118,6 +120,10 @@ func HandleMessage(s *state.AppState, clientID uint64, raw string) {
     data := parsed["data"]
 
     switch msgType {
+    case "host-register":
+        slog.Info("Host agent registered")
+    case "heartbeat":
+        s.BroadcastJSON(map[string]any{"type": "heartbeat-ack"})
     case "simulate-button":
         handleButton(s, data)
     case "simulate-slider":
@@ -128,6 +134,9 @@ func HandleMessage(s *state.AppState, clientID uint64, raw string) {
     }
 }
 ```
+
+> **Concept: `AppStateInterface`**
+> The WebSocket handler uses an interface instead of a concrete type. In Go, interfaces are satisfied implicitly — any type that implements the required methods automatically satisfies the interface. This lets the same handler code work with `AppState` (default mode, with HTTP server) and `Agent` (connect mode, WebSocket client only).
 
 > **Concept: `json.RawMessage`**
 > `json.RawMessage` is a `[]byte` that defers JSON parsing. We parse the top-level object to get `"type"` and `"data"`, but leave `"data"` as raw bytes. Each handler then parses only the fields it needs. This is more efficient than unmarshaling everything into a full struct.
@@ -784,12 +793,14 @@ The response includes a `"location"` field so clients know whether to stream aud
 | `open-url` | `{ "url": "https://..." }` | Open URL in host's default browser |
 | `enter-fullscreen` | — | Request fullscreen on all clients |
 | `exit-fullscreen` | — | Exit fullscreen on all clients |
+| `host-register` | — | Host agent registration (distributed deployment) |
+| `heartbeat` | — | Host agent keepalive (distributed deployment, every 15s) |
 
 **Server → Client:**
 | Type | Data | Description |
 |------|------|-------------|
 | `load-panel` | `{ ...panel JSON... }` | Panel definition sent on connect |
-| `log-event` | `{ "timestamp": "...", "data": "Client connected: ..." }` | Connect/disconnect log |
+| `log-event` | `{ "timestamp": "...", "data": "Client connected: ..." }` | Connect/disconnect log (also host connect/disconnect) |
 | `speech-config-init` | `{ "enabled": true, "recordingLocation": "client", "triggerMode": "...", "wakeWord": "...", "wakeWordListenSec": 3, "ttsEnabled": true }` | Speech settings sent on connect |
 | `data-update` | `{ "key": { "value": ..., "unit": "..." } }` | DataBus snapshot |
 | `command-result` | `{ "block_id": "...", "success": true }` | Command execution result |
@@ -802,6 +813,7 @@ The response includes a `"location"` field so clients know whether to stream aud
 | `rss-update` | `{ "block_id": "...", "entries": [{ "guid": "...", "title": "...", "is_new": true, ... }] }` | RSS feed entries with per-client new flags |
 | `enter-fullscreen` | — | Broadcast fullscreen request |
 | `exit-fullscreen` | — | Broadcast exit fullscreen |
+| `heartbeat-ack` | — | Acknowledge host agent heartbeat (distributed deployment) |
 
 ## Key Takeaways
 
@@ -823,5 +835,8 @@ The response includes a `"location"` field so clients know whether to stream aud
 - Keyboard handler supports combos via `+` separator (`"ctrl+shift+a"`)
 - `clientID` is passed through `HandleMessage` to handlers that need per-client tracking (e.g., RSS configuration)
 - RSS `rss-configure` and `open-url` messages extend the WebSocket protocol for feed integration
+- `AppStateInterface` allows the same handler code to work in both default and distributed deployment modes
+- `host-register` and `heartbeat`/`heartbeat-ack` messages support distributed deployment
+- Log events now include host connect/disconnect messages in addition to client connect/disconnect
 
 [← Back: Chapter 5](05-http-routing.md) · [Next: Chapter 7 →](07-commands.md)

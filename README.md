@@ -40,6 +40,7 @@ Many existing solutions are proprietary, require accounts, or are too bloated. O
 
 ## ✨ Key Features
 * **Local Hosting:** Host your own designs directly on your network.
+* **Distributed Deployment:** Split into a central relay server (WebUI) and host agent (input simulation) for machines behind firewalls. Single binary with `serve` and `connect` subcommands.
 * **Fast Input Detection:** Instant communication between touch events and virtual joysticks.
 * **3-Finger Swipe Navigation:** Switch between panels instantly with a three-finger swipe gesture on touch devices.
 * **Extreme Customization:** Drag and drop blocks your dream cockpit. Advanced users can even create their own blocks using HTML and CSS.
@@ -61,6 +62,8 @@ OmniPanel-go v3 is a Go application that serves as:
 |-----------|-------------|
 | **HTTP Server** | Fiber-based server serving all UI and static assets |
 | **WebSocket** | Real-time communication on `/ws` for button/slider/joystick/keyboard events + binary audio frames |
+| **Relay Server** | Central server mode (`serve` subcommand) — serves WebUI and relays WebSocket messages between browsers and a single host agent |
+| **Host Agent** | Distributed mode (`connect` subcommand) — WebSocket client with all subsystems, auto-reconnects with exponential backoff |
 | **Virtual Joystick** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: vJoy driver (CGO, requires `vJoyInterface.dll`) |
 | **Virtual Mouse** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: SendInput API (CGO) |
 | **Virtual Keyboard** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: SendInput API (CGO) |
@@ -96,7 +99,12 @@ omnipanel-go/
 └── internal/
     ├── config/          # Configuration loading and path discovery
     ├── logger/          # Structured logging (color, text, JSON)
-    ├── state/           # Application state with broadcast channels
+    ├── state/           # Application state with broadcast channels + AppStateInterface
+    ├── agent/           # Host agent for distributed deployment (connect mode)
+    │   └── agent.go     # WebSocket client, auto-reconnect, all subsystems
+    ├── relay/           # Central relay server for distributed deployment (serve mode)
+    │   ├── server.go    # Fiber HTTP server + WebSocket hub
+    │   └── handler.go   # WebSocket message routing (browser ↔ host)
     ├── devices/           # Virtual input device managers
     │   ├── virtual_input.go # Platform-agnostic interfaces and managers
     │   ├── linux.go       # Linux uinput joystick (+build linux)
@@ -107,7 +115,7 @@ omnipanel-go/
     │   ├── keyboard_windows.go # Windows SendInput keyboard (+build windows)
     │   └── stub.go        # No-op stub for unsupported platforms
     ├── routes/          # HTTP route handlers (Fiber)
-    ├── websocket/       # WebSocket message handling
+    ├── websocket/       # WebSocket message handling (works with AppStateInterface)
     ├── commands/        # Shell and HTTP command execution
     ├── speech/          # Speech recognition and command execution
     │   ├── speech.go    # SpeechManager, STTEngine interface
@@ -141,6 +149,7 @@ Edit `config.json` to change server settings:
 {
   "port": 3000,
   "numJoysticks": 5,
+  "server_address": "",
   "speech": {
     "enabled": false,
     "recording_location": "client",
@@ -168,6 +177,7 @@ Edit `config.json` to change server settings:
 |-------|------|---------|-------------|
 | `port` | number | `3000` | HTTP/WebSocket port |
 | `numJoysticks` | number | `5` | Number of virtual joysticks to create |
+| `server_address` | string | `""` | Relay server address for distributed deployment (e.g., `"10.0.0.1:3000"`) |
 
 ### Logging
 
@@ -181,6 +191,20 @@ Logging is configured via command-line flag or environment variable (not in `con
 ./omnipanel-go --log-format=json     # JSON output for log aggregation
 LOG_FORMAT=color ./omnipanel-go      # Colored terminal output (default)
 ```
+
+### Distributed Deployment
+
+OmniPanel-go supports a split deployment model with subcommands:
+
+| Command | Description |
+|---------|-------------|
+| `./omnipanel-go` | Default mode: HTTP server + subsystems on one machine |
+| `./omnipanel-go serve` | Relay server: serves WebUI, relays WebSocket messages |
+| `./omnipanel-go connect <addr>` | Host agent: connects to relay server, runs subsystems |
+
+The host agent address can be set via CLI argument, `server_address` in `config.json`, or `OMNIPANEL_SERVER_ADDRESS` environment variable. The host auto-reconnects with exponential backoff if the server is unreachable.
+
+See [docs/tutorials/20-distributed-deployment.md](docs/tutorials/20-distributed-deployment.md) for the full developer walkthrough.
 
 ### Speech Configuration
 
@@ -758,6 +782,13 @@ The server broadcasts all Data Bus values to every connected client every 500ms:
 
 Connect to `ws://<host>:<port>/ws` (or `wss://` behind a reverse proxy).
 
+**Connection types:**
+
+| Query Param | Type | Description |
+|-------------|------|-------------|
+| (none) | Browser | WebUI client (multiple allowed) |
+| `?type=host` | Host Agent | Distributed deployment host (1:1, second host rejected) |
+
 **Server → Client messages:**
 
 | Type | Data | Description |
@@ -767,12 +798,13 @@ Connect to `ws://<host>:<port>/ws` (or `wss://` behind a reverse proxy).
 | `exit-fullscreen` | — | Request client to exit fullscreen |
 | `data-update` | `{ "key": { "value": ..., "unit": "...", "source": "..." } }` | Data Bus snapshot broadcast (every 500ms). MPRIS keys: `mpris_title`, `mpris_artist`, `mpris_album`, `mpris_cover_url`, `mpris_progress` (0-100%), `mpris_volume` (0-100%), `mpris_playback_status` ("Playing"/"Paused"/"Stopped"), `mpris_player_name`, `mpris_identity`, `mpris_can_play`, `mpris_can_pause`, `mpris_can_go_next`, `mpris_can_go_previous`, `mpris_can_control`, `mpris_available_players` (JSON array of `{name, identity}` objects for multi-player selection) |
 | `rss-update` | `{ "block_id": "...", "entries": [{ "guid": "...", "title": "...", "link": "...", "published": "...", "description": "...", "feed_label": "...", "is_new": true }] }` | Per-client RSS feed update. `is_new` is true for entries the client hasn't seen yet |
-| `log-event` | `{ "timestamp": "...", "data": "..." }` | Connection log event (client connect/disconnect) |
+| `log-event` | `{ "timestamp": "...", "data": "..." }` | Connection log event (client connect/disconnect, host connect/disconnect) |
 | `speech-result` | `{ "text": "...", "matched": true, "speak": "..." }` | Speech transcription result |
 | `speech-error` | `{ "error": "..." }` | Speech processing error |
 | `recording-status` | `{ "state": "listening" }` | Recording state change |
 | `speech-button-trigger` | `{ "block_id": "..." }` | Speech-triggered button press |
 | `speech-slider-trigger` | `{ "block_id": "...", "value": "..." }` | Speech-triggered slider change |
+| `heartbeat-ack` | — | Acknowledge host agent heartbeat (distributed deployment) |
 
 **Client → Server messages:**
 
@@ -790,6 +822,8 @@ Connect to `ws://<host>:<port>/ws` (or `wss://` behind a reverse proxy).
 | `register-speech-trigger` | `{ "block_id": "...", "phrase": "...", "aliases": [...], "type": "button", "joystick_index": 0, "button_id": 3, "axis_id": 0 }` | Register speech trigger for block with hardware IDs |
 | `rss-configure` | `{ "block_id": "...", "feed_urls": ["URL|Label", "..."], "refresh_interval": 60, "max_entries": 20 }` | Configure RSS feed polling for a block. Feed URLs support optional labels via `URL|Label` format |
 | `open-url` | `{ "url": "https://..." }` | Open a URL in the host's default browser (triggered by clicking RSS entries when `open_url_location` is "host") |
+| `host-register` | — | Host agent registration (distributed deployment) |
+| `heartbeat` | — | Host agent keepalive (distributed deployment, every 15s) |
 
 **Binary WebSocket frames:**
 
@@ -958,7 +992,7 @@ A comprehensive, beginner-friendly user manual is available in two languages:
 * **[English](docs/user-manual/en/README.md)** — 16 chapters covering everything from first launch to RSS feeds
 * **[German](docs/user-manual/de/README.md)** — Vollständige deutsche Übersetzung mit 16 Kapiteln
 
-Written for gamers with no technical expertise.
+Written for gamers with no technical expertise. For distributed deployment setup, see the [developer tutorials](docs/tutorials/20-distributed-deployment.md).
 
 ---
 
@@ -973,7 +1007,7 @@ The [tutorials](docs/tutorials/README.md) are a guided tour through the OmniPane
 | **C** | Platform-Specific Code | Virtual input devices (Linux/Windows) |
 | **D** | Speech Recognition | Overview, STT engines, phrase matching, audio recording |
 | **E** | Web Frontend | Panel UI, Editor UI, Start Page |
-| **F** | Architecture & Data Flow | End-to-end data flow |
+| **F** | Architecture & Data Flow | End-to-end data flow, distributed deployment |
 | **G** | Platform Integrations | MPRIS media player, RSS feed polling, WebSocket push, host URL opening |
 
 - Read chapters in order — each builds on concepts from the previous ones

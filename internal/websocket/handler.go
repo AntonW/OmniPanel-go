@@ -11,9 +11,14 @@
 //   - enter/exit-fullscreen: fullscreen control broadcast
 //   - rss-configure: set up RSS feed polling for a block
 //   - open-url: open a URL in the host's default browser (when block's open_url_location is "host")
+//   - host-register: host agent registration (distributed deployment)
+//   - heartbeat/heartbeat-ack: keepalive for distributed deployment
 //
 // Binary WebSocket frames (audio data) are routed to HandleAudioChunk,
 // while text frames (JSON) are routed to HandleMessage.
+//
+// The handler accepts an AppStateInterface, allowing it to work with both
+// AppState (default mode) and Agent (connect mode) implementations.
 //
 // See docs/tutorials/06-websocket.md for a detailed walkthrough.
 package websocket
@@ -34,7 +39,7 @@ import (
 // HandleMessage routes incoming WebSocket messages to the appropriate handler.
 // The clientID is passed for handlers that need per-client tracking (e.g., RSS configuration).
 // Uses json.RawMessage to defer parsing of the "data" field until the specific handler needs it.
-func HandleMessage(s *state.AppState, clientID uint64, raw string) {
+func HandleMessage(s state.AppStateInterface, clientID uint64, raw string) {
 	var parsed map[string]json.RawMessage
 	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
 		slog.Warn("Failed to parse WS message", "error", err)
@@ -51,6 +56,10 @@ func HandleMessage(s *state.AppState, clientID uint64, raw string) {
 	slog.Info("WS event received", "type", msgType, "data", string(data))
 
 	switch msgType {
+	case "host-register":
+		slog.Info("Host agent registered")
+	case "heartbeat":
+		s.BroadcastJSON(map[string]any{"type": "heartbeat-ack"})
 	case "simulate-button":
 		handleButton(s, data)
 	case "simulate-slider":
@@ -133,7 +142,7 @@ func parseStringField(data json.RawMessage, field string) string {
 // handleButton routes a button press/release to the joystick manager.
 // If js or id are empty strings (unconfigured button), the event is ignored
 // to prevent sending spurious input on joystick 0, button 0.
-func handleButton(s *state.AppState, data json.RawMessage) {
+func handleButton(s state.AppStateInterface, data json.RawMessage) {
 	jsRaw := parseStringField(data, "js")
 	idRaw := parseStringField(data, "id")
 	state := uint8(parseUintField(data, "state"))
@@ -147,7 +156,7 @@ func handleButton(s *state.AppState, data json.RawMessage) {
 	id := int(parseUintField(data, "id"))
 
 	slog.Info("Button event", "js", js, "id", id, "state", state)
-	s.JoystickManager.Send(devices.Command{
+	s.GetJoystickManager().Send(devices.Command{
 		Type:  devices.ButtonType,
 		Js:    js,
 		Id:    id,
@@ -158,7 +167,7 @@ func handleButton(s *state.AppState, data json.RawMessage) {
 // handleSlider routes a slider value change to the joystick manager as an axis event.
 // If js or id are empty strings (unconfigured slider), the event is ignored
 // to prevent sending spurious input on joystick 0, axis 0.
-func handleSlider(s *state.AppState, data json.RawMessage) {
+func handleSlider(s state.AppStateInterface, data json.RawMessage) {
 	jsRaw := parseStringField(data, "js")
 	idRaw := parseStringField(data, "id")
 	value := uint8(parseUintField(data, "value"))
@@ -171,7 +180,7 @@ func handleSlider(s *state.AppState, data json.RawMessage) {
 	js := int(parseUintField(data, "js"))
 	id := int(parseUintField(data, "id"))
 
-	s.JoystickManager.Send(devices.Command{
+	s.GetJoystickManager().Send(devices.Command{
 		Type:  devices.AxisType,
 		Js:    js,
 		Id:    id,
@@ -183,7 +192,7 @@ func handleSlider(s *state.AppState, data json.RawMessage) {
 // Splits the {x, y} value into two separate axis commands (id for X, id+1 for Y).
 // If js or id are empty strings (unconfigured joystick), the event is ignored
 // to prevent sending spurious input on joystick 0.
-func handleJoystick(s *state.AppState, data json.RawMessage) {
+func handleJoystick(s state.AppStateInterface, data json.RawMessage) {
 	jsRaw := parseStringField(data, "js")
 	idRaw := parseStringField(data, "id")
 
@@ -206,13 +215,13 @@ func handleJoystick(s *state.AppState, data json.RawMessage) {
 		y = v["y"]
 	}
 
-	s.JoystickManager.Send(devices.Command{
+	s.GetJoystickManager().Send(devices.Command{
 		Type:  devices.AxisType,
 		Js:    js,
 		Id:    id,
 		Value: uint8(x),
 	})
-	s.JoystickManager.Send(devices.Command{
+	s.GetJoystickManager().Send(devices.Command{
 		Type:  devices.AxisType,
 		Js:    js,
 		Id:    id + 1,
@@ -221,14 +230,14 @@ func handleJoystick(s *state.AppState, data json.RawMessage) {
 }
 
 // handleJoystickCount updates the number of virtual joysticks at runtime.
-func handleJoystickCount(s *state.AppState, data json.RawMessage) {
+func handleJoystickCount(s state.AppStateInterface, data json.RawMessage) {
 	var count uint64
 	json.Unmarshal(data, &count)
 	s.UpdateJoystickCount(uint8(count))
 }
 
 // handleMousepad routes relative mouse movement to the mousepad manager.
-func handleMousepad(s *state.AppState, data json.RawMessage) {
+func handleMousepad(s state.AppStateInterface, data json.RawMessage) {
 	js := int(parseUintField(data, "js"))
 
 	var valueObj map[string]json.RawMessage
@@ -243,20 +252,20 @@ func handleMousepad(s *state.AppState, data json.RawMessage) {
 	}
 
 	slog.Info("Mousepad move", "js", js, "dx", dx, "dy", dy)
-	s.MousepadManager.SendMove(js, dx, dy)
+	s.GetMousepadManager().SendMove(js, dx, dy)
 }
 
 // handleMousewheel routes scroll wheel events to the mousepad manager.
-func handleMousewheel(s *state.AppState, data json.RawMessage) {
+func handleMousewheel(s state.AppStateInterface, data json.RawMessage) {
 	js := int(parseUintField(data, "js"))
 	delta := int32(parseUintField(data, "delta"))
 
-	s.MousepadManager.SendWheel(js, delta)
+	s.GetMousepadManager().SendWheel(js, delta)
 }
 
 // handleMousebtn routes mouse button press/release to the mousepad manager.
 // Maps button names ("left", "right", "middle") to platform-agnostic constants.
-func handleMousebtn(s *state.AppState, data json.RawMessage) {
+func handleMousebtn(s state.AppStateInterface, data json.RawMessage) {
 	js := int(parseUintField(data, "js"))
 	btnName := parseStringField(data, "btn")
 	state := uint8(parseUintField(data, "state"))
@@ -273,7 +282,7 @@ func handleMousebtn(s *state.AppState, data json.RawMessage) {
 		btn = devices.MouseBtnLeft
 	}
 
-	s.MousepadManager.SendButton(js, btn, state)
+	s.GetMousepadManager().SendButton(js, btn, state)
 }
 
 // handleKeyboard routes keyboard key/combo press/release to the keyboard manager.
@@ -286,7 +295,7 @@ func handleMousebtn(s *state.AppState, data json.RawMessage) {
 // handler sends each as a separate event — state=1 for ctrl, then state=1/0
 // for each WASD key, then state=0 for ctrl — allowing the game to receive
 // the full combination as if the user held Ctrl and tapped WASD keys.
-func handleKeyboard(s *state.AppState, data json.RawMessage) {
+func handleKeyboard(s state.AppStateInterface, data json.RawMessage) {
 	kbIndex := int(parseUintField(data, "keyboard_index"))
 	key := parseStringField(data, "key")
 	keyState := uint8(parseUintField(data, "state"))
@@ -317,16 +326,16 @@ func handleKeyboard(s *state.AppState, data json.RawMessage) {
 
 	if len(codes) == 1 {
 		slog.Info("Keyboard key event", "keyboard_index", kbIndex, "key", key, "state", keyState)
-		s.KeyboardManager.SendKey(kbIndex, codes[0], keyState)
+		s.GetKeyboardManager().SendKey(kbIndex, codes[0], keyState)
 	} else {
 		slog.Info("Keyboard combo event", "keyboard_index", kbIndex, "keys", key, "state", keyState)
-		s.KeyboardManager.SendCombo(kbIndex, codes, keyState)
+		s.GetKeyboardManager().SendCombo(kbIndex, codes, keyState)
 	}
 }
 
 // handleCommand executes a shell or HTTP command and broadcasts the result.
 // Supports parameter substitution ({key} placeholders).
-func handleCommand(s *state.AppState, parsed map[string]json.RawMessage) {
+func handleCommand(s state.AppStateInterface, parsed map[string]json.RawMessage) {
 	data := parsed["data"]
 
 	var cmdObj map[string]json.RawMessage
@@ -391,7 +400,7 @@ func handleCommand(s *state.AppState, parsed map[string]json.RawMessage) {
 }
 
 // handlePushData adds a custom metric to the DataBus from a client message.
-func handlePushData(s *state.AppState, data json.RawMessage) {
+func handlePushData(s state.AppStateInterface, data json.RawMessage) {
 	var obj map[string]json.RawMessage
 	if err := json.Unmarshal(data, &obj); err != nil {
 		slog.Warn("Failed to parse push-data", "error", err)
@@ -420,17 +429,17 @@ func handlePushData(s *state.AppState, data json.RawMessage) {
 	}
 
 	if source != "" {
-		s.DataBus.SetSource(key, value, unit, source)
+		s.GetDataBus().SetSource(key, value, unit, source)
 	} else {
-		s.DataBus.Set(key, value, unit)
+		s.GetDataBus().Set(key, value, unit)
 	}
 
 	slog.Info("Data pushed via WebSocket", "key", key, "value", value, "unit", unit, "source", source)
 }
 
 // handleStartRecording starts audio recording based on configured location.
-func handleStartRecording(s *state.AppState, data json.RawMessage) {
-	if s.SpeechManager == nil {
+func handleStartRecording(s state.AppStateInterface, data json.RawMessage) {
+	if s.GetSpeechManager() == nil {
 		slog.Warn("Speech manager not available")
 		return
 	}
@@ -446,18 +455,18 @@ func handleStartRecording(s *state.AppState, data json.RawMessage) {
 		json.Unmarshal(raw, &mode)
 	}
 
-	cfg := s.SpeechManager.GetConfig()
+	cfg := s.GetSpeechManager().GetConfig()
 	recordingLoc := "client"
 	if cfg != nil {
 		recordingLoc = cfg.RecordingLoc
 	}
 
 	if recordingLoc == "host" {
-		if s.SpeechManager.IsHostRecording() {
+		if s.GetSpeechManager().IsHostRecording() {
 			slog.Info("Host already recording (wake word mode active)")
 			return
 		}
-		if err := s.SpeechManager.StartHostRecording(); err != nil {
+		if err := s.GetSpeechManager().StartHostRecording(); err != nil {
 			slog.Error("Failed to start host recording", "error", err)
 			s.BroadcastJSON(map[string]any{
 				"type": "speech-error",
@@ -483,8 +492,8 @@ func handleStartRecording(s *state.AppState, data json.RawMessage) {
 }
 
 // handleStopRecording stops recording and processes the audio.
-func handleStopRecording(s *state.AppState) {
-	if s.SpeechManager == nil {
+func handleStopRecording(s state.AppStateInterface) {
+	if s.GetSpeechManager() == nil {
 		slog.Warn("Speech manager not available")
 		return
 	}
@@ -496,10 +505,10 @@ func handleStopRecording(s *state.AppState) {
 		},
 	})
 
-	cfg := s.SpeechManager.GetConfig()
+	cfg := s.GetSpeechManager().GetConfig()
 	if cfg != nil && cfg.RecordingLoc == "host" {
 		go func() {
-			text, matched, speakText, err := s.SpeechManager.StopHostRecording()
+			text, matched, speakText, err := s.GetSpeechManager().StopHostRecording()
 			if err != nil {
 				slog.Error("Host recording processing failed", "error", err)
 				s.BroadcastJSON(map[string]any{
@@ -530,7 +539,7 @@ func handleStopRecording(s *state.AppState) {
 }
 
 // handleSpeechConfig updates speech settings from the client.
-func handleSpeechConfig(s *state.AppState, data json.RawMessage) {
+func handleSpeechConfig(s state.AppStateInterface, data json.RawMessage) {
 	var obj map[string]json.RawMessage
 	if err := json.Unmarshal(data, &obj); err != nil {
 		slog.Warn("Failed to parse speech-config", "error", err)
@@ -553,12 +562,12 @@ func handleSpeechConfig(s *state.AppState, data json.RawMessage) {
 }
 
 // HandleAudioChunk processes incoming binary audio data from a client.
-func HandleAudioChunk(s *state.AppState, audioData []byte) {
-	if s.SpeechManager == nil {
+func HandleAudioChunk(s state.AppStateInterface, audioData []byte) {
+	if s.GetSpeechManager() == nil {
 		return
 	}
 
-	cfg := s.SpeechManager.GetConfig()
+	cfg := s.GetSpeechManager().GetConfig()
 	if cfg != nil && cfg.RecordingLoc == "host" {
 		return
 	}
@@ -581,7 +590,7 @@ func HandleAudioChunk(s *state.AppState, audioData []byte) {
 		}
 	}
 
-	text, matched, speakText, err := s.SpeechManager.Process(pcm)
+	text, matched, speakText, err := s.GetSpeechManager().Process(pcm)
 	if err != nil {
 		slog.Error("Speech processing failed", "error", err)
 		s.BroadcastJSON(map[string]any{
@@ -613,7 +622,7 @@ func HandleAudioChunk(s *state.AppState, audioData []byte) {
 // SpeechManager.RegisterBlockTrigger. The joystick index, button ID, and
 // axis ID enable direct server-side execution without requiring the client
 // to send a follow-up simulate-button/slider message.
-func handleRegisterSpeechTrigger(s *state.AppState, data json.RawMessage) {
+func handleRegisterSpeechTrigger(s state.AppStateInterface, data json.RawMessage) {
 	var obj map[string]json.RawMessage
 	if err := json.Unmarshal(data, &obj); err != nil {
 		slog.Warn("Failed to parse register-speech-trigger", "error", err)
@@ -655,8 +664,8 @@ func handleRegisterSpeechTrigger(s *state.AppState, data json.RawMessage) {
 		triggerType = "button"
 	}
 
-	if s.SpeechManager != nil {
-		s.SpeechManager.RegisterBlockTrigger(blockID, phrase, aliases, triggerType, joystickIndex, buttonID, axisID)
+	if s.GetSpeechManager() != nil {
+		s.GetSpeechManager().RegisterBlockTrigger(blockID, phrase, aliases, triggerType, joystickIndex, buttonID, axisID)
 		slog.Info("Registered speech trigger", "block_id", blockID, "phrase", phrase, "type", triggerType, "joystick_index", joystickIndex)
 	}
 }
@@ -666,7 +675,7 @@ func handleRegisterSpeechTrigger(s *state.AppState, data json.RawMessage) {
 // and max_entries from the WebSocket message and passes them to the RSS manager
 // along with the clientID for per-client seen-entry tracking.
 // The manager starts an immediate fetch and schedules periodic polling.
-func handleRSSConfigure(s *state.AppState, clientID uint64, data json.RawMessage) {
+func handleRSSConfigure(s state.AppStateInterface, clientID uint64, data json.RawMessage) {
 	var obj map[string]json.RawMessage
 	if err := json.Unmarshal(data, &obj); err != nil {
 		slog.Warn("Failed to parse rss-configure", "error", err)
@@ -691,8 +700,8 @@ func handleRSSConfigure(s *state.AppState, clientID uint64, data json.RawMessage
 		return
 	}
 
-	if s.RSSManager != nil {
-		s.RSSManager.Configure(blockID, clientID, feedURLs, refreshInterval, maxEntries)
+	if s.GetRSSManager() != nil {
+		s.GetRSSManager().Configure(blockID, clientID, feedURLs, refreshInterval, maxEntries)
 	}
 }
 
@@ -701,7 +710,7 @@ func handleRSSConfigure(s *state.AppState, clientID uint64, data json.RawMessage
 // Called when a user clicks an RSS feed entry and the block's
 // open_url_location setting is "host". When set to "client",
 // the URL is opened directly in the panel browser via window.open.
-func handleOpenURL(s *state.AppState, data json.RawMessage) {
+func handleOpenURL(s state.AppStateInterface, data json.RawMessage) {
 	url := parseStringField(data, "url")
 	if url == "" {
 		slog.Warn("open-url missing url")

@@ -2,16 +2,30 @@
 
 This chapter walks you through running OmniPanel-go for the first time and accessing it from your tablet or phone.
 
+## Running Modes
+
+OmniPanel-go can run in three different ways depending on your setup:
+
+| Mode | When to use | Command |
+|------|-------------|---------|
+| **Default** | Everything on one PC | `./omnipanel-go` |
+| **Server** | WebUI on a central PC, host behind firewall | `./omnipanel-go serve` |
+| **Host Agent** | Connect to a central server | `./omnipanel-go connect <IP>:<PORT>` |
+
+Most users should use the **Default** mode — it's the simplest and works great on a local network.
+
+The **Server** and **Host Agent** modes are for advanced setups where you want the WebUI on one machine (always-on server) and the actual input simulation on another machine (possibly behind a firewall). See [Chapter 14: Tips and Troubleshooting](14-tips-and-troubleshooting.md) for more details.
+
 ## Step 1: Run OmniPanel-go on Your PC
 
-### On Windows
+### On Windows (Default Mode)
 
 1. Find the `omnipanel-go.exe` file in your OmniPanel-go folder
 2. Double-click it to run
 3. A command window will open — **leave it open** while you're using OmniPanel-go
 4. You should see a message saying the server is running on port 3000
 
-### On Linux
+### On Linux (Default Mode)
 
 1. Open a terminal
 2. Navigate to your OmniPanel-go folder
