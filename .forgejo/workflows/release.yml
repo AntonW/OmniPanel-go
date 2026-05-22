@@ -143,3 +143,25 @@ jobs:
           files: |
             artifacts/omnipanel-go-linux-archive/omnipanel-go-linux-amd64-*.zip
             artifacts/omnipanel-go-windows-archive/omnipanel-go-windows-amd64-*.zip
+
+  build-container:
+    runs-on: docker
+    needs: [build-linux]
+    steps:
+      - name: Checkout code
+        uses: https://code.forgejo.org/actions/checkout@v4
+
+      - name: Setup Go 1.26
+        uses: https://code.forgejo.org/actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - name: Install ko
+        run: |
+          KO_VERSION=$(curl -s https://api.github.com/repos/ko-build/ko/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/')
+          curl -sSL "https://github.com/ko-build/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz" | tar xz -C /usr/local/bin ko
+
+      - name: Build and push container image
+        run: make build
+        env:
+          CONTAINER_VERSION: ${{ env.VERSION }}

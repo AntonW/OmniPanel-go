@@ -18,7 +18,6 @@ build-dev:
 build:
 	@echo "Build OmniPanel-go serve"
 	rm -rf kodata/ starter/ && \
-	rm -rf kodata/ starter/ && \
 	mkdir -p starter kodata && \
 	cp -rav user/ starter/ && \
 	cp -rav static/ kodata/static && \
