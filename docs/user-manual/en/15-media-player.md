@@ -172,3 +172,7 @@ Any application that implements the MPRIS2 D-Bus interface will work. Common one
 | Rhythmbox | Yes | Full | GNOME default |
 | Audacious | Yes | Full | Lightweight player |
 | Clementine | Yes | Full | Feature-rich player |
+
+---
+
+[← Back: Tips and Troubleshooting](14-tips-and-troubleshooting.md) · [Next: RSS Feeds →](16-rss-feeds.md)

@@ -16,6 +16,19 @@ Most users should use the **Default** mode — it's the simplest and works great
 
 The **Server** and **Host Agent** modes are for advanced setups where you want the WebUI on one machine (always-on server) and the actual input simulation on another machine (possibly behind a firewall). See [Chapter 14: Tips and Troubleshooting](14-tips-and-troubleshooting.md) for more details.
 
+### Docker Container (Server Mode)
+
+For users comfortable with Docker, the server mode can also run as a container:
+
+```bash
+docker run --rm -p 3000:3000 \
+  -v $(pwd)/user:/var/run/ko/user \
+  -w /var/run/ko \
+  omnipanel-go:latest serve
+```
+
+The container automatically copies default panels, blocks, and themes into your `user/` folder on first run. Your customizations persist across container restarts. Speech recognition via Vosk is not available in the container — use llama-cpp-server (HTTP API) instead.
+
 ## Step 1: Run OmniPanel-go on Your PC
 
 ### On Windows (Default Mode)

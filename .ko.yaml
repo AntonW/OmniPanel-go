@@ -1,0 +1,10 @@
+defaultBaseImage: gcr.io/distroless/static-debian12
+builds:
+  - id: omnipanel-go
+    main: .
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w

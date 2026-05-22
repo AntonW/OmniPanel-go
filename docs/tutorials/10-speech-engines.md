@@ -76,7 +76,7 @@ func ensureVoskWindowsRuntime(userPath string, runtimeURL string) error {
 Vosk supports **grammar-constrained recognition**, which restricts the recognizer to only output phrases from a predefined list. This dramatically improves accuracy for command-based use cases.
 
 ```go
-// internal/speech/vosk.go
+// internal/speech/vosk.go (+build cgo)
 func newVoskEngine(cfg *config.SpeechConfig, grammar string) (*voskEngine, error) {
     modelPath := cfg.VoskModelPath
     if modelPath == "" {
@@ -189,7 +189,7 @@ func (e *voskEngine) Recognize(pcm []byte) (string, error) {
 ```
 
 > **Concept: CGO and C libraries**
-> Vosk is a C library. Go calls it through CGO — the `import "C"` block and `C.vosk_recognizer_accept_waveform()` calls. The Vosk Go bindings (`github.com/alphacep/vosk-api/go`) wrap the raw C API into Go-friendly methods. CGO requires a C compiler (GCC/Clang) at build time, which is why the build process needs MinGW on Windows.
+> Vosk is a C library. Go calls it through CGO — the `import "C"` block and `C.vosk_recognizer_accept_waveform()` calls. The Vosk Go bindings (`github.com/alphacep/vosk-api/go`) wrap the raw C API into Go-friendly methods. CGO requires a C compiler (GCC/Clang) at build time, which is why the build process needs MinGW on Windows. The file `vosk.go` has `//go:build cgo` at the top, and a companion `vosk_stub.go` with `//go:build !cgo` provides a stub for non-CGO builds (e.g., Docker containers).
 
 The `AcceptWaveform` method returns non-zero when a complete utterance is detected (usually after silence). `Result()` returns the final transcription, while `FinalResult()` returns text without waiting for silence. The recognizer is reset before each recognition to clear any previous state.
 

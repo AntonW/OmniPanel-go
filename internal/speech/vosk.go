@@ -1,4 +1,4 @@
-//go:build linux || windows || darwin
+//go:build cgo
 
 // Vosk STT engine implementation using grammar-constrained recognition.
 // Uses CGO to call the Vosk C library for offline speech recognition.

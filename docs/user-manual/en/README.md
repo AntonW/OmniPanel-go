@@ -29,14 +29,10 @@ Turn any tablet, phone, or old laptop into a custom control panel for your games
 | [10. Live Data Display](10-live-data-display.md) | Show CPU, RAM, and custom data on your panel |
 | [11. Speech Commands](11-speech-commands.md) | Control your panel with your voice |
 | [12. Virtual Joysticks](12-virtual-joysticks.md) | How games see your panel inputs |
-| [15. Media Player](15-media-player.md) | Display and control music/video playback |
-| [16. RSS Feeds](16-rss-feeds.md) | Display live news, blogs, and podcasts |
-
-### Customization
-| Chapter | Topic |
-|---------|-------|
 | [13. Custom Blocks](13-custom-blocks.md) | Create your own block designs |
 | [14. Tips and Troubleshooting](14-tips-and-troubleshooting.md) | Best practices and common fixes |
+| [15. Media Player](15-media-player.md) | Display and control music/video playback |
+| [16. RSS Feeds](16-rss-feeds.md) | Display live news, blogs, and podcasts |
 
 ---
 

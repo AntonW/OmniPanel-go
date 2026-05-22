@@ -149,3 +149,7 @@ This would show the latest stories from all four sources in one block, sorted by
 - **Set a higher refresh interval** (like 300 seconds) for feeds that update rarely
 - **Limit max entries** to keep the block from getting too long on small screens
 - **Turn off descriptions** if you only want headlines for a compact view
+
+---
+
+[← Back: Media Player](15-media-player.md)

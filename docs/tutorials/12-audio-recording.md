@@ -143,7 +143,7 @@ When `recording_location` is `"host"`, the server captures audio from the PC's m
 ### The HostRecorder
 
 ```go
-// internal/speech/recorder.go
+// internal/speech/recorder.go (+build cgo)
 type HostRecorder struct {
     device    *malgo.Device
     context   *malgo.AllocatedContext
@@ -155,8 +155,8 @@ type HostRecorder struct {
 
 The `HostRecorder` uses [malgo](https://github.com/gen2brain/malgo), a Go binding for miniaudio — a cross-platform audio library that works on Linux (PulseAudio/ALSA), Windows (WASAPI), and macOS (CoreAudio).
 
-> **Concept: Cross-platform audio**
-> Audio APIs differ across operating systems. Instead of writing platform-specific code with build tags, malgo abstracts all of this behind a single Go API. This is why `recorder.go` has no `//go:build` directive — it works everywhere.
+> **Concept: CGO build tags**
+> `recorder.go` has `//go:build cgo` at the top, meaning it is only compiled when CGO is enabled. A companion file `recorder_stub.go` with `//go:build !cgo` provides a stub implementation that returns errors. This allows the project to build as a fully static binary (e.g., for Docker containers) while keeping the same public interface. When CGO is unavailable, host recording simply fails with a clear error message.
 
 ### Starting Recording
 
@@ -586,11 +586,12 @@ window.addEventListener('speech-result-' + blockId, (e) => {
 
 | Platform | Audio Backend | Notes |
 |----------|--------------|-------|
-| Linux | PulseAudio / ALSA | Usually pre-installed |
-| Windows | WASAPI | Built into Windows Vista+ |
-| macOS | CoreAudio | Built into macOS |
+| Linux | PulseAudio / ALSA | Requires CGO (`libasound2-dev`) |
+| Windows | WASAPI | Requires CGO (MinGW-w64) |
+| macOS | CoreAudio | Requires CGO |
+| Container (CGO disabled) | — | Not available — use client recording or llama-cpp-server |
 
-No additional drivers or libraries are needed — malgo bundles everything.
+No additional drivers or libraries are needed beyond the C compiler — malgo bundles everything.
 
 ## Key Takeaways
 

@@ -61,6 +61,8 @@ Distributed deployment solves this by separating concerns:
 
 The default mode is unchanged — everything runs on one machine as before.
 
+The serve mode can also run as a Docker container built with [ko](21-container-build.md). The container embeds the WebUI and starter files, and populates an empty mounted `user/` volume on first run.
+
 ## Using Serve Mode
 
 ```bash
@@ -331,5 +333,6 @@ On reconnection, the host agent sends `host-register` again. The server resets i
 - `AppStateInterface` allows the same WebSocket handler to work in both modes
 - Server address configurable via CLI arg, config file, or environment variable
 - Panel files, themes, and blocks live on the central server
+- The relay server can run as a Docker container — see [Chapter 21](21-container-build.md) for the ko-based container build
 
-[← Back: Chapter 19](19-windows-build-and-ci.md) · [Next: Chapter 7 →](07-commands.md)
+[← Back: Chapter 19](19-windows-build-and-ci.md) · [Next: Chapter 21 →](21-container-build.md)

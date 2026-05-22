@@ -172,3 +172,7 @@ Jede Anwendung die das MPRIS2 D-Bus-Interface implementiert funktioniert. Üblic
 | Rhythmbox | Ja | Vollständig | GNOME Standard |
 | Audacious | Ja | Vollständig | Leichtgewichtiger Player |
 | Clementine | Ja | Vollständig | Funktionsreicher Player |
+
+---
+
+[← Zurück: Tipps und Fehlerbehebung](14-tips-and-troubleshooting.md) · [Weiter: RSS-Feeds →](16-rss-feeds.md)

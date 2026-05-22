@@ -79,4 +79,4 @@ Even after build, runtime DLLs may be missing on user machines. The app now hand
 - Windows runtime DLL bootstrap in app startup reduces end-user setup friction
 - `speech.vosk_runtime_url` enables enterprise/mirrored deployment flows
 
-[← Back: Chapter 18](18-rss-feed.md)
+[← Back: Chapter 18](18-rss-feed.md) · [Next: Chapter 20 →](20-distributed-deployment.md)

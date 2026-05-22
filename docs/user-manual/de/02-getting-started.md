@@ -16,6 +16,19 @@ Die meisten Nutzer sollten den **Standard**-Modus verwenden — er ist am einfac
 
 Die Modi **Server** und **Host-Agent** sind für fortgeschrittene Setups, bei denen du die WebUI auf einem Rechner (immer eingeschalteter Server) und die eigentliche Eingabesimulation auf einem anderen Rechner (möglicherweise hinter einer Firewall) betreiben möchtest. Siehe [Kapitel 14: Tipps und Fehlerbehebung](14-tips-and-troubleshooting.md) für weitere Details.
 
+### Docker-Container (Server-Modus)
+
+Für Nutzer, die mit Docker vertraut sind, kann der Server-Modus auch als Container laufen:
+
+```bash
+docker run --rm -p 3000:3000 \
+  -v $(pwd)/user:/var/run/ko/user \
+  -w /var/run/ko \
+  omnipanel-go:latest serve
+```
+
+Der Container kopiert beim ersten Start automatisch Standard-Panels, Blöcke und Themes in deinen `user/`-Ordner. Deine Anpassungen bleiben über Container-Neustarts hinweg erhalten. Spracherkennung über Vosk ist im Container nicht verfügbar — verwende stattdessen llama-cpp-server (HTTP-API).
+
 ## Schritt 1: OmniPanel-go auf deinem PC starten
 
 ### Unter Windows (Standard-Modus)

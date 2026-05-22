@@ -1,3 +1,5 @@
+//go:build cgo
+
 // Host microphone recording using malgo (cross-platform audio capture).
 // Works on Linux (PulseAudio/ALSA), Windows (WASAPI), and macOS (CoreAudio)
 // without platform-specific build tags.

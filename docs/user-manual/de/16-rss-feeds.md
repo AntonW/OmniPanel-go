@@ -149,3 +149,7 @@ Dies würde die neuesten Geschichten aus allen vier Quellen in einem Block anzei
 - **Stelle ein höheres Aktualisierungsintervall** ein (z. B. 300 Sekunden) für Feeds, die sich selten aktualisieren
 - **Begrenze die max. Einträge**, um zu verhindern, dass der Block auf kleinen Bildschirmen zu lang wird
 - **Schalte Beschreibungen aus**, wenn du nur Überschriften für eine kompakte Ansicht möchtest
+
+---
+
+[← Zurück: Medienwiedergabe](15-media-player.md)

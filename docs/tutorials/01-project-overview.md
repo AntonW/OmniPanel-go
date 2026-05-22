@@ -24,6 +24,9 @@ OmniPanel-go is a web-based control panel system that runs on Linux or Windows. 
 | Speech Recognition (Vosk) | Yes (CGO) | Yes (CGO, DLL required) | Yes (CGO, dylib required) |
 | Speech Recognition (llama-cpp) | Yes | Yes | Yes |
 | Client Audio Recording | Yes | Yes | Yes |
+| Host Audio Recording | Yes (CGO) | Yes (CGO) | Yes (CGO) |
+
+> **CGO note:** Speech features (Vosk STT and host microphone recording) require CGO. The core server, virtual input devices (Linux), and client recording work without CGO. Container builds use `CGO_ENABLED=0` for fully static binaries — speech is unavailable in container images.
 
 > **Windows Requirements:** Virtual joystick simulation requires the [vJoy driver](https://github.com/BrunnerInnovation/vJoy/releases) (v2.2.2.0 or later) to be installed. Virtual mouse uses the built-in Windows SendInput API and requires no additional drivers.
 
@@ -103,10 +106,13 @@ The distributed mode enables deploying the WebUI on a central server (always-on 
 OmniPanel-go/
 ├── main.go                      # Application entry point (3 modes: default, serve, connect)
 ├── config.json                  # Runtime configuration
+├── Makefile                     # Container build targets (ko)
+├── .ko.yaml                     # ko build configuration
 ├── internal/
 │   ├── config/config.go         # Config loading/saving
 │   ├── logger/logger.go         # Structured logging (color, text, JSON)
 │   ├── state/state.go           # Central application state + AppStateInterface
+│   ├── starter/starter.go       # Starter file initialization for Docker containers
 │   ├── agent/agent.go           # Host agent for distributed deployment (connect mode)
 │   ├── relay/                   # Central relay server for distributed deployment (serve mode)
 │   │   ├── server.go            # Fiber HTTP server + WebSocket hub
@@ -120,10 +126,12 @@ OmniPanel-go/
 │   ├── commands/commands.go     # Shell & HTTP command execution
 │   ├── speech/                  # Speech recognition system
 │   │   ├── speech.go            # SpeechManager, STTEngine interface
-│   │   ├── vosk.go              # Offline Vosk STT backend
+│   │   ├── vosk.go              # Offline Vosk STT backend (+build cgo)
+│   │   ├── vosk_stub.go         # Vosk stub for non-CGO builds (+build !cgo)
 │   │   ├── llama.go             # llama-cpp-server HTTP client
 │   │   ├── matcher.go           # Phrase matching + allowlist
-│   │   ├── recorder.go          # Host microphone recording
+│   │   ├── recorder.go          # Host microphone recording (+build cgo)
+│   │   ├── recorder_stub.go     # Recorder stub for non-CGO builds (+build !cgo)
 │   │   ├── decoder.go           # Audio format conversion
 │   │   └── download.go          # Vosk model auto-download
 │   └── devices/                 # Virtual input device creation
@@ -136,11 +144,18 @@ OmniPanel-go/
 ├── static/                      # Web frontend files
 │   ├── client/                  # Panel display UI
 │   └── editor/                  # Panel editor UI
-└── user/                        # User-created content
-    ├── panels/                  # Saved panel JSON definitions
-    ├── blocks/                  # Reusable HTML block components
-    ├── assets/                  # Images and other assets
-    └── speech_commands.json     # Voice command definitions
+├── user/                        # User-created content (runtime)
+│   ├── panels/                  # Saved panel JSON definitions
+│   ├── blocks/                  # Reusable HTML block components
+│   ├── assets/                  # Images and other assets
+│   ├── themes/                  # Theme CSS files
+│   └── speech_commands.json     # Voice command definitions
+└── starter/                     # Starter files for Docker containers (build-time copy of user/)
+    ├── panels/                  # Default panels for first-run setup
+    ├── blocks/                  # Default block templates
+    ├── assets/                  # Default assets
+    ├── themes/                  # Default themes
+    └── speech_commands.json     # Default speech commands
 ```
 
 ## The Entry Point: `main.go`
@@ -173,11 +188,12 @@ import (
     "omnipanel-go/internal/logger"
     "omnipanel-go/internal/relay"
     "omnipanel-go/internal/routes"
+    "omnipanel-go/internal/starter"
     "omnipanel-go/internal/state"
 )
 ```
 
-Every Go program starts with a `package` declaration. The `main` package is special — it produces an executable. The `import` block lists external and internal dependencies. The new `agent` and `relay` packages support distributed deployment.
+Every Go program starts with a `package` declaration. The `main` package is special — it produces an executable. The `import` block lists external and internal dependencies. The new `agent` and `relay` packages support distributed deployment, and `starter` handles first-run file initialization for Docker containers.
 
 > **Concept: Go imports**
 > Go imports are paths, not names. `"omnipanel-go/internal/config"` maps to the directory `internal/config/`. The package name used in code (`config`) comes from the `package config` declaration inside that directory's `.go` files.
@@ -313,6 +329,10 @@ This is the traditional mode: HTTP server + all subsystems on the same machine.
 
 ```go
 func runServe(cfg *config.Config, userPath, baseDir string) {
+    slog.Info("Starting OmniPanel-go relay server", "port", cfg.Port)
+
+    starter.Init(userPath)
+
     srv := relay.New(cfg, userPath, baseDir)
 
     addr := fmt.Sprintf("0.0.0.0:%d", cfg.Port)
@@ -333,6 +353,11 @@ func runServe(cfg *config.Config, userPath, baseDir string) {
     srv.Shutdown(ctx)
 }
 ```
+
+The `starter.Init(userPath)` call copies default user content (blocks, panels, themes, assets) into the mounted volume if it is empty. This enables a zero-config first run for Docker containers. On subsequent runs, when the volume already contains user files, `Init` does nothing.
+
+> **Key Pattern: First-run initialization**
+> `starter.Init` checks if the target directory exists and is empty. If it doesn't exist, it creates it. If it's empty, it copies all starter files. If it already has content, it returns immediately. This pattern is common for containerized applications that need to seed a persistent volume with default data without overwriting user changes.
 
 The relay server serves the WebUI and manages WebSocket connections between browsers and a single host agent. No subsystems are created — the server only relays messages.
 
@@ -374,6 +399,8 @@ The host agent creates all subsystems (joystick, speech, MPRIS, RSS, etc.) but n
 - Graceful shutdown uses a 5-second context timeout and diagnostic logging to identify hangs
 - The `agent` package runs all subsystems without an HTTP server, connecting via WebSocket
 - The `relay` package serves the WebUI and relays messages between browsers and a single host
+- The `starter` package copies default user content into an empty volume on first run (Docker containers)
 - `AppStateInterface` allows the same WebSocket handler code to work in both default and connect modes
+- Speech features (Vosk STT, host recording) require CGO and are excluded from container builds
 
 [Next: Chapter 2 — Configuration System →](02-configuration.md)

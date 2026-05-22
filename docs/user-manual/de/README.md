@@ -29,14 +29,10 @@ Verwandle jedes Tablet, Handy oder alte Laptop in ein individuelles Bedienfeld f
 | [10. Live-Datenanzeige](10-live-data-display.md) | CPU, RAM und eigene Daten auf deinem Panel anzeigen |
 | [11. Sprachbefehle](11-speech-commands.md) | Steuere dein Panel mit deiner Stimme |
 | [12. Virtuelle Joysticks](12-virtual-joysticks.md) | Wie Spiele deine Panel-Eingaben sehen |
-| [15. Medienwiedergabe](15-media-player.md) | Musik- und Videowiedergabe anzeigen und steuern |
-| [16. RSS-Feeds](16-rss-feeds.md) | Live-Nachrichten, Blogs und Podcasts anzeigen |
-
-### Anpassung
-| Kapitel | Thema |
-|---------|-------|
 | [13. Eigene Blöcke](13-custom-blocks.md) | Erstelle deine eigenen Block-Designs |
 | [14. Tipps und Fehlerbehebung](14-tips-and-troubleshooting.md) | Best Practices und häufige Lösungen |
+| [15. Medienwiedergabe](15-media-player.md) | Musik- und Videowiedergabe anzeigen und steuern |
+| [16. RSS-Feeds](16-rss-feeds.md) | Live-Nachrichten, Blogs und Podcasts anzeigen |
 
 ---
 

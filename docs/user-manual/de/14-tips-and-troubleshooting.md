@@ -266,7 +266,11 @@ Du hast das OmniPanel-go-Benutzerhandbuch abgeschlossen. Du weißt jetzt, wie du
 - Panels mit Seiten und Bereichen organisierst
 - Live-Daten anzeigst
 - Dein Panel mit Sprachbefehlen steuerst
+- Musikwiedergabe mit dem Medienwiedergabe-Block steuerst
+- Live-Nachrichten und Blogs mit RSS-Feeds anzeigst
 - Eigene Blöcke erstellst
 - Häufige Probleme behebst
 
 Jetzt baue ein paar großartige Bedienpanels und genieße deine Spiele mit einem individuellen Cockpit-Dashboard!
+
+Weiter zu [Medienwiedergabe](15-media-player.md) zum Anzeigen und Steuern von Musik/Videos, oder schau dir [RSS-Feeds](16-rss-feeds.md) für Live-Nachrichten und Blogs an.

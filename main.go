@@ -48,6 +48,7 @@ import (
 	"omnipanel-go/internal/logger"
 	"omnipanel-go/internal/relay"
 	"omnipanel-go/internal/routes"
+	"omnipanel-go/internal/starter"
 	"omnipanel-go/internal/state"
 )
 
@@ -132,6 +133,8 @@ func runDefault(cfg *config.Config, configPath, userPath, baseDir string) {
 
 func runServe(cfg *config.Config, userPath, baseDir string) {
 	slog.Info("Starting OmniPanel-go relay server", "port", cfg.Port)
+
+	starter.Init(userPath)
 
 	srv := relay.New(cfg, userPath, baseDir)
 

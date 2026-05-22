@@ -434,3 +434,5 @@ if (controlMode === 'mpris') {
 |-------|------|---------|-------------|
 | `enabled` | bool | false | Enable MPRIS D-Bus monitoring |
 | `poll_interval` | int | 1000 | Polling frequency in milliseconds (min 500) |
+
+[← Back: Chapter 21](21-container-build.md) · [Next: Chapter 18 →](18-rss-feed.md)

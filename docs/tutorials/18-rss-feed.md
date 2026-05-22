@@ -501,3 +501,5 @@ addFeed(block) {
 6. **Per-client push** → newest entry stays `is_new=true`, older entries marked as seen → `broadcast(clientID, blockID, entriesWithNew)` → `broadcastToClient()` → client channel
 7. **Client receives** → `handleRSSUpdate()` renders entries, adds GUIDs to seen set only when `is_new=false`
 8. **User clicks entry** → checks `open_url_location`: `"host"` sends `open-url` WebSocket → `handleOpenURL()` → `xdg-open` / `start`; `"client"` → `window.open()` in panel browser
+
+[← Back: Chapter 17](17-mpris.md) · [Next: Chapter 19 →](19-windows-build-and-ci.md)

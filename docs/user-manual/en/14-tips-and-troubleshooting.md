@@ -267,7 +267,11 @@ You've completed the OmniPanel-go User Manual. You now know how to:
 - Organize panels with pages and sections
 - Display live data
 - Control your panel with voice commands
+- Control media playback with the Media Player block
+- Display live news and blogs with RSS Feeds
 - Create custom blocks
 - Troubleshoot common issues
 
 Now go build some awesome control panels and enjoy your games with a custom cockpit dashboard!
+
+Continue reading about [Media Player](15-media-player.md) to display and control music/video playback, or check out [RSS Feeds](16-rss-feeds.md) for live news and blogs.

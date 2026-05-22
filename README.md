@@ -64,13 +64,14 @@ OmniPanel-go v3 is a Go application that serves as:
 | **WebSocket** | Real-time communication on `/ws` for button/slider/joystick/keyboard events + binary audio frames |
 | **Relay Server** | Central server mode (`serve` subcommand) — serves WebUI and relays WebSocket messages between browsers and a single host agent |
 | **Host Agent** | Distributed mode (`connect` subcommand) — WebSocket client with all subsystems, auto-reconnects with exponential backoff |
+| **Starter Init** | Copies default user content (blocks, panels, themes, assets) into an empty volume on first run (Docker containers) |
 | **Virtual Joystick** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: vJoy driver (CGO, requires `vJoyInterface.dll`) |
 | **Virtual Mouse** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: SendInput API (CGO) |
 | **Virtual Keyboard** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: SendInput API (CGO) |
 | **Speech Engine** | Vosk (offline, CGO, requires `libvosk` shared library) or llama-cpp-server (HTTP, no CGO) |
 | **MPRIS Watcher** | Linux D-Bus session bus monitoring for media players (Spotify, VLC, Firefox). Auto-discovers players, polls state, publishes to DataBus |
 | **RSS Feed Manager** | Server-side RSS/Atom feed polling with per-client seen-entry tracking. Pushes updates via WebSocket, opens URLs on host browser on click |
-| **Host Recording** | Uses miniaudio-go (CGO) for host microphone capture |
+| **Host Recording** | Uses miniaudio-go (CGO) for host microphone capture — unavailable in container builds |
 | **Start Page** | Served at `/` — panel list, editor link, host controls, and live connection log |
 | **Panel Client** | Served at `/panel?name=X` — the MFD display shown on your touch device |
 | **Panel Editor** | Served at `/editor` — drag-and-drop workspace for building panels |
@@ -87,7 +88,8 @@ omnipanel-go/
 │   ├── panels/          # Saved panel layouts (.json files)
 │   └── speech_commands.json  # Voice command definitions
 ├── user/speech-models/  # Downloaded Vosk models (auto-created)
-└── omnipanel-go            # The compiled binary
+├── starter/             # Starter files for Docker containers (build-time copy of user/)
+└── omnipanel-go         # The compiled binary
 ```
 
 ### Project Structure
@@ -96,9 +98,13 @@ omnipanel-go/
 ├── main.go
 ├── go.mod
 ├── go.sum
+├── Makefile                 # Container build targets (ko)
+├── .ko.yaml                 # ko build configuration
 └── internal/
     ├── config/          # Configuration loading and path discovery
     ├── logger/          # Structured logging (color, text, JSON)
+    ├── starter/         # Starter file initialization for Docker containers
+    │   └── starter.go   # Copies default user content into empty volume on first run
     ├── state/           # Application state with broadcast channels + AppStateInterface
     ├── agent/           # Host agent for distributed deployment (connect mode)
     │   └── agent.go     # WebSocket client, auto-reconnect, all subsystems
@@ -119,10 +125,12 @@ omnipanel-go/
     ├── commands/        # Shell and HTTP command execution
     ├── speech/          # Speech recognition and command execution
     │   ├── speech.go    # SpeechManager, STTEngine interface
-    │   ├── vosk.go      # Offline Vosk STT backend (+build)
+    │   ├── vosk.go      # Offline Vosk STT backend (+build cgo)
+    │   ├── vosk_stub.go # Vosk stub for non-CGO builds (+build !cgo)
     │   ├── llama.go     # llama-cpp-server HTTP client
     │   ├── matcher.go   # Phrase matching + allowlist
-    │   ├── recorder.go  # Host microphone recording (malgo)
+    │   ├── recorder.go  # Host microphone recording (+build cgo)
+    │   ├── recorder_stub.go # Recorder stub for non-CGO builds (+build !cgo)
     │   ├── decoder.go   # Audio format conversion (pion/opus)
     │   └── download.go  # Vosk model auto-download
     ├── mpris/           # MPRIS D-Bus media player monitoring (Linux only)
@@ -879,6 +887,28 @@ go build -o omnipanel-go.exe .
 omnipanel-go.exe
 ```
 
+### Container Build (serve mode)
+
+Requires [ko](https://github.com/ko-build/ko) and Docker.
+
+```bash
+# Build and load into local Docker daemon
+make build-dev
+
+# Build and push to a registry
+CONTAINER_REGISTRY=your.registry.io/omnipanel/ CONTAINER_VERSION=1.0.0 make build
+
+# Run the container
+docker run --rm -p 3000:3000 \
+  -v $(pwd)/user:/var/run/ko/user \
+  -w /var/run/ko \
+  ko.local/omnipanel-go:latest serve
+```
+
+The container uses `CGO_ENABLED=0` for a fully static binary on a distroless base image (~2MB). Speech features (Vosk STT, host recording) are unavailable — use llama-cpp-server (HTTP API) for speech recognition. User data (panels, blocks, themes, assets) persists via the mounted volume and is auto-populated with starter files on first run.
+
+See [docs/tutorials/21-container-build.md](docs/tutorials/21-container-build.md) for details.
+
 ### 🐧 Linux Setup
 
 Linux uses the native `uinput` kernel module for high-performance virtual input.
@@ -939,18 +969,18 @@ Windows uses [vJoy](https://github.com/BrunnerInnovation/vJoy) for virtual joyst
 
 ### Platform Support
 
-| Feature | Linux | Windows | macOS/BSD |
-|---------|-------|---------|-----------|
-| Web Server | Yes (pure Go) | Yes (pure Go) | Yes (pure Go) |
-| Virtual Joystick | Yes (uinput, pure Go) | Yes (vJoy, CGO + `vJoyInterface.dll`) | No |
-| Virtual Mouse | Yes (uinput, pure Go) | Yes (SendInput, CGO) | No |
-| Virtual Keyboard | Yes (uinput, pure Go) | Yes (SendInput, CGO) | No |
-| System Metrics | Full (pure Go) | Disk only (pure Go) | No |
-| Speech (Vosk) | Yes (CGO + `libvosk.so`) | Yes (CGO + `vosk.dll`) | Yes (CGO + `libvosk.dylib`) |
-| Speech (llama-cpp) | Yes (HTTP, no CGO) | Yes (HTTP, no CGO) | Yes (HTTP, no CGO) |
-| Host Recording | PulseAudio/ALSA (CGO) | WASAPI (CGO) | CoreAudio (CGO) |
-| Client Recording | Yes | Yes | Yes |
-| Client Wake Word | Chrome/Edge | Chrome/Edge | Safari/Chrome |
+| Feature | Linux | Windows | macOS/BSD | Container |
+|---------|-------|---------|-----------|-----------|
+| Web Server | Yes (pure Go) | Yes (pure Go) | Yes (pure Go) | Yes (distroless) |
+| Virtual Joystick | Yes (uinput, pure Go) | Yes (vJoy, CGO + `vJoyInterface.dll`) | No | No |
+| Virtual Mouse | Yes (uinput, pure Go) | Yes (SendInput, CGO) | No | No |
+| Virtual Keyboard | Yes (uinput, pure Go) | Yes (SendInput, CGO) | No | No |
+| System Metrics | Full (pure Go) | Disk only (pure Go) | No | Full (pure Go) |
+| Speech (Vosk) | Yes (CGO + `libvosk.so`) | Yes (CGO + `vosk.dll`) | Yes (CGO + `libvosk.dylib`) | No (CGO required) |
+| Speech (llama-cpp) | Yes (HTTP, no CGO) | Yes (HTTP, no CGO) | Yes (HTTP, no CGO) | Yes (HTTP, no CGO) |
+| Host Recording | PulseAudio/ALSA (CGO) | WASAPI (CGO) | CoreAudio (CGO) | No (CGO required) |
+| Client Recording | Yes | Yes | Yes | Yes |
+| Client Wake Word | Chrome/Edge | Chrome/Edge | Safari/Chrome | Chrome/Edge |
 
 ---
 
@@ -1007,7 +1037,7 @@ The [tutorials](docs/tutorials/README.md) are a guided tour through the OmniPane
 | **C** | Platform-Specific Code | Virtual input devices (Linux/Windows) |
 | **D** | Speech Recognition | Overview, STT engines, phrase matching, audio recording |
 | **E** | Web Frontend | Panel UI, Editor UI, Start Page |
-| **F** | Architecture & Data Flow | End-to-end data flow, distributed deployment |
+| **F** | Architecture & Data Flow | End-to-end data flow, distributed deployment, container build |
 | **G** | Platform Integrations | MPRIS media player, RSS feed polling, WebSocket push, host URL opening |
 
 - Read chapters in order — each builds on concepts from the previous ones

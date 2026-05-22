@@ -48,6 +48,7 @@ A guided tour through the OmniPanel-go codebase, written for developers who are 
 |---------|-------|
 | [16](16-data-flow.md) | End-to-End Data Flow |
 | [20](20-distributed-deployment.md) | Distributed Deployment (Server + Host Agent) |
+| [21](21-container-build.md) | Container Build with ko (serve mode) |
 
 ## Part G: Platform Integrations
 

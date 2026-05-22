@@ -12,3 +12,5 @@
 /third_party/
 omnipanel-go
 omnipanel-go.exe
+/kodata/
+/starter/
