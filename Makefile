@@ -5,9 +5,6 @@ CONTAINER_REGISTRY ?= docker.repo.org/atwi/
 
 .PHONY: build-dev build clean login
 
-login:
-	ko login $(CONTAINER_REGISTRY)
-
 build-dev:
 	@echo "Build OmniPanel-go serve (dev)"
 	rm -rf kodata/ starter/ && \
