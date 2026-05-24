@@ -4,15 +4,19 @@ CONTAINER_VERSION ?= latest
 CONTAINER_REGISTRY ?= docker.repo.org/atwi/
 CONTAINER_REGISTRY_HOST = $(shell echo $(CONTAINER_REGISTRY) | cut -d/ -f1)
 
-build:
+.PHONY: build-dev build clean login
+
+login:
 	@if [ -n "$(REGISTRY_USERNAME)" ] && [ -n "$(REGISTRY_TOKEN)" ]; then \
-		echo "Try to login to $(CONTAINER_REGISTRY_HOST)"
+		echo "Try to login to $(CONTAINER_REGISTRY_HOST)" && \
 		echo "$(REGISTRY_TOKEN)" | ko login $(CONTAINER_REGISTRY_HOST) -u "$(REGISTRY_USERNAME)" --password-stdin; \
 	fi
+
+build: login
+	@echo "Build OmniPanel-go serve"
 	rm -rf kodata/ starter/ && \
 	mkdir -p starter kodata && \
 	cp -rav user/ starter/ && \
-	@echo "Build OmniPanel-go serve"
 	cp -rav static/ kodata/static && \
 	cp config.json kodata/config.json && \
 	cp -rav starter/ kodata/starter && \
