@@ -1,7 +1,7 @@
 CONTAINER_DATE = $(shell date --rfc-3339=date)
 CONTAINER_GIT = 000000
 CONTAINER_VERSION ?= latest
-CONTAINER_REGISTRY ?= prj-dtons-docker.artifacts.mms-at-work.de/caseramp/omnipanel-go/
+CONTAINER_REGISTRY ?= git.antonsblog.org/atwi/
 
 .PHONY: build-dev build clean
 
