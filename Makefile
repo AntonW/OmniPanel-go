@@ -8,8 +8,11 @@ CONTAINER_REGISTRY_HOST = $(shell echo $(CONTAINER_REGISTRY) | cut -d/ -f1)
 
 login:
 	@if [ -n "$(REGISTRY_USERNAME)" ] && [ -n "$(REGISTRY_TOKEN)" ]; then \
-		echo "Try to login to $(CONTAINER_REGISTRY_HOST)" && \
-		echo "$(REGISTRY_TOKEN)" | ko login $(CONTAINER_REGISTRY_HOST) -u "$(REGISTRY_USERNAME)" --password-stdin; \
+		echo "Logging in to $(CONTAINER_REGISTRY_HOST)..." && \
+		mkdir -p ~/.docker && \
+		echo "{\"auths\":{\"$(CONTAINER_REGISTRY_HOST)\":{\"auth\":\"$$(echo -n '$(REGISTRY_USERNAME):$(REGISTRY_TOKEN)' | base64)\"}}}" > ~/.docker/config.json; \
+	else \
+		echo "Skipping registry login (REGISTRY_USERNAME/REGISTRY_TOKEN not set)"; \
 	fi
 
 build: login
