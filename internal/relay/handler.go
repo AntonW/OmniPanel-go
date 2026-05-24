@@ -30,6 +30,11 @@ func (s *RelayServer) handleWS(c *ws.Conn) {
 }
 
 // handleHostConn manages a single host agent connection (1:1).
+// When a host connects, its IP address is captured via c.IP() and broadcast
+// to all browser clients as a log-event message ("Host connected: <IP>").
+// On disconnect, the IP is broadcast again ("Host disconnected: <IP>").
+// If a second host attempts to connect, it is rejected with a WebSocket
+// close message and the connection is immediately terminated.
 func (s *RelayServer) handleHostConn(c *ws.Conn) {
 	s.hostMu.Lock()
 	if s.hostConn != nil {
@@ -42,22 +47,24 @@ func (s *RelayServer) handleHostConn(c *ws.Conn) {
 	s.hostConn = c
 	s.hostMu.Unlock()
 
-	slog.Info("Host agent connected")
+	hostIP := c.IP()
+	slog.Info("Host agent connected", "ip", hostIP)
 	s.broadcastToBrowsers(map[string]any{
 		"type":      "log-event",
 		"timestamp": time.Now().Format("2006-01-02 15:04:05"),
-		"data":      "Host connected",
+		"data":      "Host connected: " + hostIP,
 	})
 
 	defer func() {
 		s.hostMu.Lock()
 		s.hostConn = nil
+		hostIP := c.IP()
 		s.hostMu.Unlock()
-		slog.Info("Host agent disconnected")
+		slog.Info("Host agent disconnected", "ip", hostIP)
 		s.broadcastToBrowsers(map[string]any{
 			"type":      "log-event",
 			"timestamp": time.Now().Format("2006-01-02 15:04:05"),
-			"data":      "Host disconnected",
+			"data":      "Host disconnected: " + hostIP,
 		})
 	}()
 

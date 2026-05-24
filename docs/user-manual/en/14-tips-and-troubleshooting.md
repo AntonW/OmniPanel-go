@@ -85,10 +85,11 @@ Design on your PC, but always test on the tablet or phone you'll actually use wh
 **Problem:** You tap buttons on your panel, but nothing happens in the game.
 
 **Solutions:**
-1. Check the connection log on the Start Page — is your device connected?
-2. Verify the **Joystick Index** and **Button/Slider ID** are correct
-3. Make sure your game is configured to listen to the correct virtual joystick
-4. Test inputs using your OS's joystick testing tool (see Chapter 12)
+1. Check the connection log on the Start Page — is your device connected? Is the host agent connected?
+2. In relay mode, check the **Host IP indicator** in the top-left corner of the panel — if it's missing, no host is connected
+3. Verify the **Joystick Index** and **Button/Slider ID** are correct
+4. Make sure your game is configured to listen to the correct virtual joystick
+5. Test inputs using your OS's joystick testing tool (see Chapter 12)
 
 ### Virtual Joystick Not Detected by Game
 

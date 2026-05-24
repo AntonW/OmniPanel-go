@@ -50,21 +50,33 @@ Buttons to toggle fullscreen mode on all connected devices:
 
 At the bottom of the page, you'll see a live log showing:
 
-- **When devices connect** — with a timestamp
-- **When devices disconnect** — with a timestamp
-- **The IP address** of each connecting device
+- **When devices connect** — with a timestamp and IP address
+- **When devices disconnect** — with a timestamp and IP address
+- **When the host agent connects or disconnects** (in distributed/relay mode) — shows the host's IP address
 
 This is useful for:
 
 - Checking if your tablet successfully connected
+- Seeing which host machine is connected (in relay mode)
 - Seeing how many devices are currently connected
 - Troubleshooting connection issues
 
 Example log entry:
 ```
 [14:32:15] Device connected from 192.168.1.50
+[14:33:00] Host connected: 10.0.0.25
 [14:35:42] Device disconnected from 192.168.1.50
 ```
+
+### Host IP Indicator (Panel View)
+
+When you open a panel on your tablet or phone in distributed (relay) mode, a small indicator appears in the **top-left corner** showing the connected host's IP address:
+
+```
+Host: 10.0.0.25
+```
+
+This lets you quickly verify which machine your panel is talking to. The indicator disappears when the host disconnects and reappears when a new host connects.
 
 ### Theme Toggle
 

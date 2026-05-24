@@ -196,7 +196,7 @@ func (s *RelayServer) handleWS(c *ws.Conn) {
 }
 ```
 
-Host connection handling enforces the 1:1 constraint:
+Host connection handling enforces the 1:1 constraint and broadcasts the host's IP address to all browsers:
 
 ```go
 func (s *RelayServer) handleHostConn(c *ws.Conn) {
@@ -209,12 +209,23 @@ func (s *RelayServer) handleHostConn(c *ws.Conn) {
     }
     s.hostConn = c
     s.hostMu.Unlock()
-    // ... read loop
+
+    hostIP := c.IP()
+    slog.Info("Host agent connected", "ip", hostIP)
+    s.broadcastToBrowsers(map[string]any{
+        "type":      "log-event",
+        "timestamp": time.Now().Format("2006-01-02 15:04:05"),
+        "data":      "Host connected: " + hostIP,
+    })
+    // ... read loop with defer for disconnect broadcast
 }
 ```
 
 > **Key Pattern: Reject second connection**
 > The mutex-protected check-and-set ensures only one host can be registered at a time. If a second host connects, it receives a WebSocket close message with a descriptive reason.
+
+> **Key Pattern: IP address broadcast**
+> The host's IP address is captured via `c.IP()` on both connect and disconnect, then broadcast as a `log-event` message. The start page (`static/index.html`) displays this in the connection log, and the panel client (`static/client/client.js`) shows a floating indicator with the host IP in the top-left corner.
 
 ## The Host Agent Code
 
@@ -290,17 +301,23 @@ This allows the same WebSocket message handler code (`internal/websocket/handler
 
 ### Host Disconnects
 
-When the host agent disconnects, the server broadcasts a log event to all browsers:
+When the host agent disconnects, the server broadcasts a log event to all browsers that includes the host's IP address:
 
 ```go
-s.broadcastToBrowsers(map[string]any{
-    "type":      "log-event",
-    "timestamp": time.Now().Format("2006-01-02 15:04:05"),
-    "data":      "Host disconnected",
-})
+defer func() {
+    s.hostMu.Lock()
+    s.hostConn = nil
+    hostIP := c.IP()
+    s.hostMu.Unlock()
+    s.broadcastToBrowsers(map[string]any{
+        "type":      "log-event",
+        "timestamp": time.Now().Format("2006-01-02 15:04:05"),
+        "data":      "Host disconnected: " + hostIP,
+    })
+}()
 ```
 
-The browser's connection log shows this message, so users know the host is unavailable.
+The browser's connection log shows this message, so users know the host is unavailable. The IP is also displayed as a floating indicator on the panel client UI (`static/client/client.js`), updating in real-time when the host connects or disconnects.
 
 ### No Host Connected
 
@@ -328,6 +345,8 @@ On reconnection, the host agent sends `host-register` again. The server resets i
 - Serve mode: Fiber HTTP server + WebSocket relay hub (no subsystems)
 - Connect mode: WebSocket client + all subsystems (no HTTP server)
 - 1:1 host connection — second host is rejected with a close message
+- Host IP address is captured via `c.IP()` and broadcast on connect/disconnect as `log-event` messages
+- The panel client UI shows a floating host IP indicator in the top-left corner
 - Auto-reconnect with exponential backoff (1s → 2s → 4s → max 30s)
 - Heartbeat every 15s keeps the connection alive
 - `AppStateInterface` allows the same WebSocket handler to work in both modes

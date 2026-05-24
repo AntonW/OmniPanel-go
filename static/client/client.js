@@ -35,6 +35,14 @@ let keyboardShortcutMap = {};
 // Tracks which keyboard shortcuts are currently held down to prevent repeat events.
 let activeKeyboardKeys = new Set();
 
+/**
+ * Stores the IP address of the connected host agent (relay/serve mode).
+ * Set when a "Host connected: <IP>" log-event message is received via
+ * WebSocket, and cleared on "Host disconnected: <IP>". Used by
+ * updateHostIPDisplay() to show a floating indicator on the panel UI.
+ */
+let hostIPAddress = null;
+
 // Speech configuration received from server on connect.
 // Controls recording behavior, trigger mode, and TTS.
 // Runtime-specific settings like speech.vosk_runtime_url stay server-side and
@@ -1226,6 +1234,17 @@ function connect() {
         const msg = JSON.parse(event.data);
         console.log('WS message received:', msg.type);
 
+        if (msg.type === 'log-event') {
+            const data = msg.data || '';
+            if (data.startsWith('Host connected: ')) {
+                hostIPAddress = data.replace('Host connected: ', '');
+                updateHostIPDisplay(hostIPAddress);
+            } else if (data.startsWith('Host disconnected: ')) {
+                hostIPAddress = null;
+                updateHostIPDisplay(null);
+            }
+        }
+
         if (msg.type === 'force-reload') {
             console.log("Host changed panel. Reloading...");
             location.reload();
@@ -1877,6 +1896,32 @@ function createMicButton() {
     });
 
     document.body.appendChild(micBtn);
+}
+
+/**
+ * Creates or updates a floating host IP indicator on the panel UI.
+ * When a host agent connects in relay/serve mode, this displays the
+ * host's IP address in the top-left corner of the panel. When the
+ * host disconnects, the indicator is removed from the DOM.
+ * @param {string|null} ip - The host's IP address, or null to remove the indicator.
+ */
+function updateHostIPDisplay(ip) {
+    let indicator = document.getElementById('host-ip-indicator');
+    
+    if (!ip) {
+        if (indicator) {
+            indicator.remove();
+        }
+        return;
+    }
+    
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'host-ip-indicator';
+        document.body.appendChild(indicator);
+    }
+    
+    indicator.textContent = 'Host: ' + ip;
 }
 
 /**

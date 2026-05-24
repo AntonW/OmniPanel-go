@@ -85,10 +85,11 @@ Entwirf auf deinem PC, aber teste immer auf dem Tablet oder Handy, das du tatsä
 **Problem:** Du tippst auf Buttons auf deinem Panel, aber im Spiel passiert nichts.
 
 **Lösungen:**
-1. Prüfe das Verbindungsprotokoll auf der Startseite — ist dein Gerät verbunden?
-2. Überprüfe, ob **Joystick Index** und **Button/Slider ID** korrekt sind
-3. Stelle sicher, dass dein Spiel so konfiguriert ist, dass es auf den richtigen virtuellen Joystick hört
-4. Teste Eingaben mit dem Joystick-Testtool deines Betriebssystems (siehe Kapitel 12)
+1. Prüfe das Verbindungsprotokoll auf der Startseite — ist dein Gerät verbunden? Ist der Host-Agent verbunden?
+2. Im Relay-Modus: Prüfe die **Host-IP-Anzeige** in der oberen linken Ecke des Panels — wenn sie fehlt, ist kein Host verbunden
+3. Überprüfe, ob **Joystick Index** und **Button/Slider ID** korrekt sind
+4. Stelle sicher, dass dein Spiel so konfiguriert ist, dass es auf den richtigen virtuellen Joystick hört
+5. Teste Eingaben mit dem Joystick-Testtool deines Betriebssystems (siehe Kapitel 12)
 
 ### Virtueller Joystick wird vom Spiel nicht erkannt
 

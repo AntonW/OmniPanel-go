@@ -50,21 +50,33 @@ Buttons zum Umschalten des Vollbildmodus auf allen verbundenen Geräten:
 
 Am unteren Rand der Seite siehst du ein Live-Protokoll, das Folgendes anzeigt:
 
-- **Wann Geräte sich verbinden** — mit Zeitstempel
-- **Wann Geräte sich trennen** — mit Zeitstempel
-- **Die IP-Adresse** jedes verbindenden Geräts
+- **Wann Geräte sich verbinden** — mit Zeitstempel und IP-Adresse
+- **Wann Geräte sich trennen** — mit Zeitstempel und IP-Adresse
+- **Wann der Host-Agent sich verbindet oder trennt** (im verteilten/Relay-Modus) — zeigt die IP-Adresse des Hosts
 
 Das ist nützlich für:
 
 - Prüfen, ob dein Tablet erfolgreich verbunden ist
+- Sehen, welche Host-Maschine verbunden ist (im Relay-Modus)
 - Sehen, wie viele Geräte gerade verbunden sind
 - Fehlerbehebung bei Verbindungsproblemen
 
 Beispiel-Protokolleintrag:
 ```
 [14:32:15] Gerät verbunden von 192.168.1.50
+[14:33:00] Host verbunden: 10.0.0.25
 [14:35:42] Gerät getrennt von 192.168.1.50
 ```
+
+### Host-IP-Anzeige (Panel-Ansicht)
+
+Wenn du ein Panel auf deinem Tablet oder Handy im verteilten (Relay-) Modus öffnest, erscheint eine kleine Anzeige in der **oberen linken Ecke**, die die IP-Adresse des verbundenen Hosts zeigt:
+
+```
+Host: 10.0.0.25
+```
+
+So kannst du schnell überprüfen, mit welcher Maschine dein Panel kommuniziert. Die Anzeige verschwindet, wenn der Host sich trennt, und erscheint wieder, wenn ein neuer Host sich verbindet.
 
 ### Theme-Umschalter
 
