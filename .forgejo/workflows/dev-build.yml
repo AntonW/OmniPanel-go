@@ -156,10 +156,9 @@ jobs:
           GIT_HASH=$(git rev-parse --short HEAD)
           echo "GIT_HASH=$GIT_HASH" >> $GITHUB_ENV
 
-      - name: Login to registry
-        run: echo "${{ secrets.REGISTRY_TOKEN }}" | ko login git.antonsblog.org -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
-
       - name: Build and push container image
         run: make build
         env:
           CONTAINER_VERSION: ${{ env.GIT_HASH }}
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}

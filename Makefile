@@ -5,17 +5,12 @@ CONTAINER_REGISTRY ?= docker.repo.org/atwi/
 
 .PHONY: build-dev build clean login
 
-build-dev:
-	@echo "Build OmniPanel-go serve (dev)"
-	rm -rf kodata/ starter/ && \
-	mkdir -p starter kodata && \
-	cp -rav user/ starter/ && \
-	cp -rav static/ kodata/static && \
-	cp config.json kodata/config.json && \
-	cp -rav starter/ kodata/starter && \
-	ko build -B --local
+login:
+	@if [ -n "$(REGISTRY_USERNAME)" ] && [ -n "$(REGISTRY_TOKEN)" ]; then \
+		echo "$(REGISTRY_TOKEN)" | ko login $(CONTAINER_REGISTRY) -u "$(REGISTRY_USERNAME)" --password-stdin; \
+	fi
 
-build:
+build: login
 	@echo "Build OmniPanel-go serve"
 	rm -rf kodata/ starter/ && \
 	mkdir -p starter kodata && \
