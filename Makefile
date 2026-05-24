@@ -6,6 +6,7 @@ CONTAINER_REGISTRY_HOST = $(shell echo $(CONTAINER_REGISTRY) | cut -d/ -f1)
 
 build:
 	@if [ -n "$(REGISTRY_USERNAME)" ] && [ -n "$(REGISTRY_TOKEN)" ]; then \
+		echo "Try to login to $(CONTAINER_REGISTRY_HOST)"
 		echo "$(REGISTRY_TOKEN)" | ko login $(CONTAINER_REGISTRY_HOST) -u "$(REGISTRY_USERNAME)" --password-stdin; \
 	fi
 	rm -rf kodata/ starter/ && \
