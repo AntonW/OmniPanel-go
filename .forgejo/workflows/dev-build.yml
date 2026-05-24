@@ -159,6 +159,7 @@ jobs:
       - name: Build and push container image
         run: make build
         env:
+          CONTAINER_REGISTRY: ${{ secrets.REGISTRY_URL }}
           CONTAINER_VERSION: ${{ env.GIT_HASH }}
           REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
           REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
