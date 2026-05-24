@@ -2,12 +2,13 @@ CONTAINER_DATE = $(shell date --rfc-3339=date)
 CONTAINER_GIT = 000000
 CONTAINER_VERSION ?= latest
 CONTAINER_REGISTRY ?= docker.repo.org/atwi/
+CONTAINER_REGISTRY_HOST = $(shell echo $(CONTAINER_REGISTRY) | cut -d/ -f1)
 
 .PHONY: build-dev build clean login
 
 login:
 	@if [ -n "$(REGISTRY_USERNAME)" ] && [ -n "$(REGISTRY_TOKEN)" ]; then \
-		echo "$(REGISTRY_TOKEN)" | ko login $(CONTAINER_REGISTRY) -u "$(REGISTRY_USERNAME)" --password-stdin; \
+		echo "$(REGISTRY_TOKEN)" | ko login $(CONTAINER_REGISTRY_HOST) -u "$(REGISTRY_USERNAME)" --password-stdin; \
 	fi
 
 build: login
