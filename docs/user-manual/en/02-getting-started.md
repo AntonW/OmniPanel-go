@@ -16,6 +16,31 @@ Most users should use the **Default** mode — it's the simplest and works great
 
 The **Server** and **Host Agent** modes are for advanced setups where you want the WebUI on one machine (always-on server) and the actual input simulation on another machine (possibly behind a firewall). See [Chapter 14: Tips and Troubleshooting](14-tips-and-troubleshooting.md) for more details.
 
+### Authentication for Server and Host Agent Modes
+
+If your server administrator has set up a secret token, you'll need to include it when accessing the server. This protects the WebUI and host connections from unauthorized access.
+
+**Accessing the WebUI with a token:**
+```
+http://server-ip:3000/?token=your-secret-token
+```
+
+**Connecting the host agent with a token:**
+Set the token in `config.json` on the host machine:
+```json
+{
+  "server_address": "10.0.0.1:3000",
+  "auth_token": "your-secret-token"
+}
+```
+Or use the environment variable:
+```bash
+export OMNIPANEL_AUTH_TOKEN=your-secret-token
+./omnipanel-go connect 10.0.0.1:3000
+```
+
+> **Note:** If no token is configured, everything works exactly as before — authentication is optional.
+
 ### Docker Container (Server Mode)
 
 For users comfortable with Docker, the server mode can also run as a container:

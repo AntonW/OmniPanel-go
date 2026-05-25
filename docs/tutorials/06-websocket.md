@@ -24,6 +24,9 @@ app.Get("/ws", ws.New(func(c *ws.Conn) {
 > **Concept: WebSocket upgrade**
 > A WebSocket connection starts as a regular HTTP GET request. The `ws.New()` middleware checks for the `Upgrade: websocket` header and transforms the connection. After the upgrade, HTTP is gone — only raw message frames remain.
 
+> **Note: Authentication in serve/connect modes**
+> In distributed deployment (serve/connect modes), all HTTP routes including the WebSocket upgrade are protected by token-based authentication middleware (`internal/auth/middleware.go`). The token is accepted via query parameter (`?token=xxx`) or Authorization header (`Bearer xxx`). Host WebSocket connections additionally validate the token from the query parameter (`?type=host&token=xxx`). See [Chapter 20](20-distributed-deployment.md) for details.
+
 ## The Connection Handler
 
 ```go

@@ -4,6 +4,15 @@
 //   - "host": Host agent connection (1:1, second host is rejected)
 //   - any other value (or empty): Browser client connection (multiple allowed)
 //
+// Authentication:
+//
+// Host connections are validated against the configured auth_token via the
+// "token" query parameter. If the token is configured but not provided or
+// invalid, the connection is rejected with a WebSocket close message.
+// Browser connections are protected by HTTP middleware (auth.Middleware)
+// applied in server.go, which requires the token for all HTTP requests
+// including the WebSocket upgrade.
+//
 // Message flow:
 //   - Browser → Server → Host: input commands, speech config, RSS config, etc.
 //   - Host → Server → Browsers: data updates, speech results, command results, etc.
@@ -16,6 +25,8 @@ import (
 	"time"
 
 	ws "github.com/gofiber/contrib/websocket"
+
+	"omnipanel-go/internal/auth"
 )
 
 // handleWS manages a WebSocket connection, distinguishing between browser and host.
@@ -36,6 +47,14 @@ func (s *RelayServer) handleWS(c *ws.Conn) {
 // If a second host attempts to connect, it is rejected with a WebSocket
 // close message and the connection is immediately terminated.
 func (s *RelayServer) handleHostConn(c *ws.Conn) {
+	token := c.Query("token", "")
+	if !auth.ValidateToken(s.config.AuthToken, token) {
+		slog.Warn("Rejecting host connection: invalid token")
+		c.WriteMessage(ws.CloseMessage, ws.FormatCloseMessage(ws.ClosePolicyViolation, "unauthorized"))
+		c.Close()
+		return
+	}
+
 	s.hostMu.Lock()
 	if s.hostConn != nil {
 		s.hostMu.Unlock()

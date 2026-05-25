@@ -28,6 +28,8 @@ type SpeechConfig struct {
 type Config struct {
     Port         uint16       `mapstructure:"port"`
     NumJoysticks uint8        `mapstructure:"numJoysticks"`
+    ServerAddress string      `mapstructure:"server_address"`
+    AuthToken    string       `mapstructure:"auth_token"`
     Speech       SpeechConfig `mapstructure:"speech"`
 }
 ```
@@ -117,6 +119,8 @@ Here's what `config.json` looks like with all features:
 {
     "port": 3000,
     "numJoysticks": 4,
+    "server_address": "",
+    "auth_token": "",
     "speech": {
         "enabled": false,
         "recording_location": "client",
@@ -163,6 +167,8 @@ The application can be configured via these environment variables:
 |----------|------|---------|-------------|
 | `OMNIPANEL_PORT` | uint16 | `OMNIPANEL_PORT=8080` | HTTP server port |
 | `OMNIPANEL_NUMJOYSTICKS` | uint8 | `OMNIPANEL_NUMJOYSTICKS=8` | Number of virtual joysticks |
+| `OMNIPANEL_SERVER_ADDRESS` | string | `OMNIPANEL_SERVER_ADDRESS=10.0.0.1:3000` | Relay server address for distributed deployment |
+| `OMNIPANEL_AUTH_TOKEN` | string | `OMNIPANEL_AUTH_TOKEN=your-secret` | Token for serve/connect mode authentication |
 
 Example usage:
 
@@ -172,6 +178,9 @@ OMNIPANEL_PORT=8080 ./omnipanel-go
 
 # Run with all config via environment variables
 OMNIPANEL_PORT=9000 OMNIPANEL_NUMJOYSTICKS=2 ./omnipanel-go
+
+# Run relay server with authentication
+OMNIPANEL_AUTH_TOKEN=mysecret ./omnipanel-go serve
 ```
 
 ## Finding the Config File
@@ -233,5 +242,7 @@ Same fallback pattern, but with an extra check: `info.IsDir()` ensures the path 
 - Type assertions let you check specific error types for graceful handling
 - Methods with receivers let you attach behavior to types
 - Nested structs (`SpeechConfig`) group related settings logically
+- `auth_token` enables token-based authentication for serve/connect modes (empty = disabled)
+- `server_address` configures the relay server address for distributed deployment
 
 [← Back: Chapter 1](01-project-overview.md) · [Next: Chapter 3 →](03-state-and-concurrency.md)

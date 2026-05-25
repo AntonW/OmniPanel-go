@@ -6,6 +6,12 @@
 // WebSocket connection to the relay server, which then forwards browser commands
 // to the host and relays host responses back to browsers.
 //
+// Authentication:
+//
+// When auth_token is configured, the agent appends it to the WebSocket URL
+// as a query parameter (ws://server/ws?type=host&token=xxx). The relay server
+// validates this token before accepting the connection.
+//
 // Architecture:
 //
 //	WebSocket client to relay server (ws://server/ws?type=host)
@@ -16,7 +22,7 @@
 //
 // Connection flow:
 //
-//  1. Connect to ws://server/ws?type=host
+//  1. Connect to ws://server/ws?type=host (with token if auth_token is set)
 //  2. Send {"type": "host-register"} to register with server
 //  3. Receive forwarded browser commands
 //  4. Execute commands locally, send results back
@@ -30,6 +36,7 @@
 // Configuration:
 //
 // Set "server_address": "10.0.0.1:3000" in config.json or use OMNIPANEL_SERVER_ADDRESS env var.
+// Set "auth_token": "your-secret" in config.json or use OMNIPANEL_AUTH_TOKEN env var.
 package agent
 
 import (
@@ -152,6 +159,9 @@ func (a *Agent) Run(serverAddr string) {
 		}
 
 		url := fmt.Sprintf("ws://%s/ws?type=host", serverAddr)
+		if a.Config.AuthToken != "" {
+			url += fmt.Sprintf("&token=%s", a.Config.AuthToken)
+		}
 		slog.Info("Connecting to server", "url", url)
 
 		conn, _, err := websocket.DefaultDialer.Dial(url, nil)

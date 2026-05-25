@@ -129,6 +129,75 @@ The host agent needs to know where to find the relay server. Three ways to confi
    ./omnipanel-go connect
    ```
 
+### Authentication
+
+All HTTP routes and WebSocket connections in serve/connect modes can be protected with a shared token. When `auth_token` is configured, clients must provide the token to access the UI or connect as a host agent. If `auth_token` is empty (default), authentication is disabled — this keeps backward compatibility and the default mode (single machine) open.
+
+Configure the token via:
+
+1. **Config file** (`config.json`):
+   ```json
+   {
+     "auth_token": "your-secret-token"
+   }
+   ```
+
+2. **Environment variable**:
+   ```bash
+   export OMNIPANEL_AUTH_TOKEN=your-secret-token
+   ```
+
+**Accessing the UI:** The token is passed as a query parameter or Authorization header:
+```
+http://server:3000/?token=your-secret-token
+```
+
+**Host agent connection:** The agent automatically appends the token from config to the WebSocket URL:
+```go
+url := fmt.Sprintf("ws://%s/ws?type=host", serverAddr)
+if a.Config.AuthToken != "" {
+    url += fmt.Sprintf("&token=%s", a.Config.AuthToken)
+}
+```
+
+> **Concept: Token-based authentication**
+> A shared secret token is simpler than username/password or OAuth. There's no session management, no database, no login form. The client presents the token with every request, and the server validates it. This is well-suited for trusted LAN deployments where you just need a basic access barrier. For production use over untrusted networks, combine with TLS (HTTPS/WSS) to encrypt the token in transit.
+
+> **Key Pattern: Optional middleware**
+> The auth middleware checks if the token is empty before installing any validation logic. If empty, it returns a no-op handler that just calls `c.Next()`. This avoids branching throughout the codebase — every route goes through the same middleware, but it's a pass-through when auth is disabled.
+>
+> ```go
+> func Middleware(token string) fiber.Handler {
+>     if token == "" {
+>         return func(c *fiber.Ctx) error {
+>             return c.Next()
+>         }
+>     }
+>     // ... validation logic
+> }
+> ```
+
+**HTTP middleware** (`internal/relay/server.go`):
+```go
+app.Use(auth.Middleware(cfg.AuthToken))
+```
+
+**Host WebSocket validation** (`internal/relay/handler.go`):
+```go
+func (s *RelayServer) handleHostConn(c *ws.Conn) {
+    token := c.Query("token", "")
+    if !auth.ValidateToken(s.config.AuthToken, token) {
+        c.WriteMessage(ws.CloseMessage, ws.FormatCloseMessage(ws.ClosePolicyViolation, "unauthorized"))
+        c.Close()
+        return
+    }
+    // ... rest of host connection handling
+}
+```
+
+> **Key Pattern: Dual token acceptance**
+> The middleware accepts the token from two sources: query parameter (`?token=xxx`) or Authorization header (`Bearer xxx`). Query params are convenient for browser URLs and WebSocket connections. Bearer headers are cleaner for programmatic API access. The middleware checks the query param first, then falls back to the header.
+
 ## Message Flow
 
 ### Browser → Server → Host
@@ -352,6 +421,10 @@ On reconnection, the host agent sends `host-register` again. The server resets i
 - `AppStateInterface` allows the same WebSocket handler to work in both modes
 - Server address configurable via CLI arg, config file, or environment variable
 - Panel files, themes, and blocks live on the central server
+- Token-based authentication (`auth_token` in config.json or `OMNIPANEL_AUTH_TOKEN` env var) protects serve/connect modes
+- Auth middleware accepts token via query parameter (`?token=xxx`) or Authorization header (`Bearer xxx`)
+- Host WebSocket connections validate token from query parameter (`?type=host&token=xxx`)
+- Empty `auth_token` disables authentication (backward compatible, default mode unaffected)
 - The relay server can run as a Docker container — see [Chapter 21](21-container-build.md) for the ko-based container build
 
 [← Back: Chapter 19](19-windows-build-and-ci.md) · [Next: Chapter 21 →](21-container-build.md)

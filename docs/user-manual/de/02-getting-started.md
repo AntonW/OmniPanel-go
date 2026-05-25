@@ -16,6 +16,31 @@ Die meisten Nutzer sollten den **Standard**-Modus verwenden — er ist am einfac
 
 Die Modi **Server** und **Host-Agent** sind für fortgeschrittene Setups, bei denen du die WebUI auf einem Rechner (immer eingeschalteter Server) und die eigentliche Eingabesimulation auf einem anderen Rechner (möglicherweise hinter einer Firewall) betreiben möchtest. Siehe [Kapitel 14: Tipps und Fehlerbehebung](14-tips-and-troubleshooting.md) für weitere Details.
 
+### Authentifizierung für Server- und Host-Agent-Modi
+
+Wenn dein Server-Administrator ein geheimes Token eingerichtet hat, musst du es beim Zugriff auf den Server angeben. Das schützt die WebUI und Host-Verbindungen vor unbefugtem Zugriff.
+
+**Zugriff auf die WebUI mit Token:**
+```
+http://server-ip:3000/?token=dein-geheimes-token
+```
+
+**Verbinden des Host-Agenten mit Token:**
+Setze das Token in `config.json` auf dem Host-Rechner:
+```json
+{
+  "server_address": "10.0.0.1:3000",
+  "auth_token": "dein-geheimes-token"
+}
+```
+Oder nutze die Umgebungsvariable:
+```bash
+export OMNIPANEL_AUTH_TOKEN=dein-geheimes-token
+./omnipanel-go connect 10.0.0.1:3000
+```
+
+> **Hinweis:** Wenn kein Token konfiguriert ist, funktioniert alles wie zuvor — Authentifizierung ist optional.
+
 ### Docker-Container (Server-Modus)
 
 Für Nutzer, die mit Docker vertraut sind, kann der Server-Modus auch als Container laufen:

@@ -200,6 +200,31 @@ Edit `config.json`:
 ```
 Or use the environment variable `OMNIPANEL_NUMJOYSTICKS=8`.
 
+### How do I set up authentication for my server?
+
+If you're running OmniPanel-go in **Server** mode (`./omnipanel-go serve`), you can protect the WebUI and host connections with a secret token:
+
+1. Edit `config.json` on the server:
+   ```json
+   {
+     "auth_token": "your-secret-token"
+   }
+   ```
+2. Restart the server: `./omnipanel-go serve`
+3. Access the WebUI with the token: `http://server-ip:3000/?token=your-secret-token`
+4. On the host machine, set the same token in `config.json` or use `OMNIPANEL_AUTH_TOKEN`
+
+> **Important:** Both the server and the host agent must use the same token. If they don't match, the host will be rejected with an "unauthorized" error.
+
+### I get "unauthorized" when connecting to the server
+
+This means the server has authentication enabled but your token is missing or incorrect:
+
+1. Check that `auth_token` in your `config.json` matches the server's token
+2. If using the environment variable, verify `OMNIPANEL_AUTH_TOKEN` is set correctly
+3. For browser access, make sure the URL includes `?token=your-secret-token`
+4. Ask your server administrator for the correct token
+
 ---
 
 ## Getting Help

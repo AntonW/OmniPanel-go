@@ -103,6 +103,8 @@ omnipanel-go/
 ├── .ko.yaml                 # ko build configuration
 └── internal/
     ├── config/          # Configuration loading and path discovery
+    ├── auth/            # Token-based authentication middleware for serve/connect modes
+    │   └── middleware.go # Fiber middleware + WebSocket token validation
     ├── logger/          # Structured logging (color, text, JSON)
     ├── starter/         # Starter file initialization for Docker containers
     │   └── starter.go   # Copies default user content into empty volume on first run
@@ -159,6 +161,7 @@ Edit `config.json` to change server settings:
   "port": 3000,
   "numJoysticks": 5,
   "server_address": "",
+  "auth_token": "",
   "speech": {
     "enabled": false,
     "recording_location": "client",
@@ -187,6 +190,7 @@ Edit `config.json` to change server settings:
 | `port` | number | `3000` | HTTP/WebSocket port |
 | `numJoysticks` | number | `5` | Number of virtual joysticks to create |
 | `server_address` | string | `""` | Relay server address for distributed deployment (e.g., `"10.0.0.1:3000"`) |
+| `auth_token` | string | `""` | Token for serve/connect mode authentication (empty = disabled) |
 
 ### Logging
 
@@ -212,6 +216,22 @@ OmniPanel-go supports a split deployment model with subcommands:
 | `./omnipanel-go connect <addr>` | Host agent: connects to relay server, runs subsystems |
 
 The host agent address can be set via CLI argument, `server_address` in `config.json`, or `OMNIPANEL_SERVER_ADDRESS` environment variable. The host auto-reconnects with exponential backoff if the server is unreachable.
+
+### Authentication
+
+All HTTP routes and WebSocket connections in serve/connect modes can be protected with a shared token:
+
+```json
+{
+  "auth_token": "your-secret-token"
+}
+```
+
+Or via environment variable: `OMNIPANEL_AUTH_TOKEN=your-secret-token`
+
+**Accessing the UI:** `http://server:3000/?token=your-secret-token`
+
+**Host agent:** The token from config is automatically appended to the WebSocket connection URL. If `auth_token` is empty (default), authentication is disabled — keeping backward compatibility and the default mode (single machine) open.
 
 See [docs/tutorials/20-distributed-deployment.md](docs/tutorials/20-distributed-deployment.md) for the full developer walkthrough.
 
@@ -797,6 +817,8 @@ Connect to `ws://<host>:<port>/ws` (or `wss://` behind a reverse proxy).
 |-------------|------|-------------|
 | (none) | Browser | WebUI client (multiple allowed) |
 | `?type=host` | Host Agent | Distributed deployment host (1:1, second host rejected) |
+
+**Authentication:** When `auth_token` is configured, append `&token=xxx` to the WebSocket URL. The HTTP middleware validates the token for browser connections; host connections validate via query parameter.
 
 **Server → Client messages:**
 

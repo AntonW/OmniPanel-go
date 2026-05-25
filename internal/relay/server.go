@@ -6,6 +6,14 @@
 // while the host agent runs on a machine behind a firewall that initiates an
 // outbound WebSocket connection to the server.
 //
+// Authentication:
+//
+// All HTTP routes are protected by token-based authentication when auth_token
+// is configured. The token is accepted via query parameter (?token=xxx) or
+// Authorization header (Bearer xxx). Host WebSocket connections validate the
+// token from the query parameter (?type=host&token=xxx). If auth_token is
+// empty, authentication is disabled (backward compatible).
+//
 // Architecture:
 //
 //	Fiber HTTP server serves static files and API routes (same as default mode)
@@ -44,6 +52,7 @@ import (
 	ws "github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 
+	"omnipanel-go/internal/auth"
 	"omnipanel-go/internal/config"
 )
 
@@ -80,6 +89,8 @@ func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 		c.Locals("relay", s)
 		return c.Next()
 	})
+
+	app.Use(auth.Middleware(cfg.AuthToken))
 
 	app.Get("/", s.serveStartPage)
 	app.Get("/panel", s.servePanel)

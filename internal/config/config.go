@@ -69,11 +69,19 @@ type MPRISConfig struct {
 //
 // For distributed deployment, set ServerAddress to the relay server address
 // (e.g., "10.0.0.1:3000") and run the binary with "connect" subcommand.
+// Set AuthToken to protect serve/connect modes with token-based authentication.
 type Config struct {
-	Port          uint16       `mapstructure:"port"`
-	NumJoysticks  uint8        `mapstructure:"numJoysticks"`
-	ServerAddress string       `mapstructure:"server_address"`
-	Speech        SpeechConfig `mapstructure:"speech"`
+	// Port is the HTTP/WebSocket server port.
+	Port uint16 `mapstructure:"port"`
+	// NumJoysticks is the number of virtual joysticks to create.
+	NumJoysticks uint8 `mapstructure:"numJoysticks"`
+	// ServerAddress is the relay server address for distributed deployment (e.g., "10.0.0.1:3000").
+	ServerAddress string `mapstructure:"server_address"`
+	// AuthToken protects serve/connect modes with token-based authentication.
+	// Empty string disables authentication (backward compatible).
+	AuthToken string `mapstructure:"auth_token"`
+	// Speech holds speech recognition settings.
+	Speech SpeechConfig `mapstructure:"speech"`
 	// MPRIS holds media player integration settings for Linux desktop environments.
 	MPRIS MPRISConfig `mapstructure:"mpris"`
 }
@@ -84,6 +92,8 @@ type Config struct {
 // Explicit env bindings are currently defined for:
 // - OMNIPANEL_PORT
 // - OMNIPANEL_NUMJOYSTICKS
+// - OMNIPANEL_SERVER_ADDRESS
+// - OMNIPANEL_AUTH_TOKEN
 func Load(path string) (*Config, error) {
 	v := viper.New()
 
@@ -103,6 +113,7 @@ func Load(path string) (*Config, error) {
 	v.BindEnv("port")
 	v.BindEnv("numJoysticks")
 	v.BindEnv("server_address")
+	v.BindEnv("auth_token")
 
 	var cfg Config
 	if err := v.Unmarshal(&cfg); err != nil {
@@ -122,6 +133,7 @@ func (c *Config) Save(path string) error {
 	v.Set("port", c.Port)
 	v.Set("numJoysticks", c.NumJoysticks)
 	v.Set("server_address", c.ServerAddress)
+	v.Set("auth_token", c.AuthToken)
 	v.Set("speech", c.Speech)
 	v.Set("mpris", c.MPRIS)
 
