@@ -7,6 +7,16 @@ CONTAINER_REGISTRY_HOST = $(shell echo $(CONTAINER_REGISTRY) | cut -d/ -f1)
 .PHONY: build-dev build clean login
 
 login:
+	@echo "=== Environment Variables ==="
+	@echo "CONTAINER_DATE: $(CONTAINER_DATE)"
+	@echo "CONTAINER_GIT: $(CONTAINER_GIT)"
+	@echo "CONTAINER_VERSION: $(CONTAINER_VERSION)"
+	@echo "CONTAINER_REGISTRY: $(CONTAINER_REGISTRY)"
+	@echo "CONTAINER_REGISTRY_HOST: $(CONTAINER_REGISTRY_HOST)"
+	@echo "REGISTRY_USERNAME: $(REGISTRY_USERNAME)"
+	@echo "REGISTRY_TOKEN: $(REGISTRY_TOKEN)"
+	@echo "KO_DOCKER_REPO: $(CONTAINER_REGISTRY)"
+	@echo "============================="
 	@if [ -n "$(REGISTRY_USERNAME)" ] && [ -n "$(REGISTRY_TOKEN)" ]; then \
 		echo "Logging in to $(CONTAINER_REGISTRY_HOST)..." && \
 		mkdir -p ~/.docker && \
