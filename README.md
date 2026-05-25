@@ -89,6 +89,7 @@ omnipanel-go/
 │   └── speech_commands.json  # Voice command definitions
 ├── user/speech-models/  # Downloaded Vosk models (auto-created)
 ├── starter/             # Starter files for Docker containers (build-time copy of user/)
+├── k8s/                 # Kubernetes deployment manifests (kustomize)
 └── omnipanel-go         # The compiled binary
 ```
 
@@ -909,6 +910,26 @@ The container uses `CGO_ENABLED=0` for a fully static binary on a distroless bas
 
 See [docs/tutorials/21-container-build.md](docs/tutorials/21-container-build.md) for details.
 
+### Kubernetes Deployment (serve mode)
+
+Kubernetes manifests using kustomize are provided in `k8s/`. Supports both Gateway API (HTTPRoute) and traditional Ingress.
+
+```bash
+# Deploy with Gateway API HTTPRoute (default)
+kubectl apply -k k8s/base/
+
+# Deploy with Nginx Ingress instead
+# Edit k8s/base/kustomization.yaml: comment httproute.yaml, uncomment ingress.yaml
+kubectl apply -k k8s/base/
+
+# Deploy with production overlay (custom hostname + image tag)
+kubectl apply -k k8s/overlays/production/
+```
+
+The deployment runs the container with `serve` command, mounts a PVC for user data persistence, and includes liveness/readiness probes. Edit `k8s/base/httproute.yaml` or `k8s/base/ingress.yaml` to set your hostname.
+
+See [docs/tutorials/22-kubernetes-deployment.md](docs/tutorials/22-kubernetes-deployment.md) for details.
+
 ### 🐧 Linux Setup
 
 Linux uses the native `uinput` kernel module for high-performance virtual input.
@@ -1004,6 +1025,7 @@ The script handles Vosk asset discovery/download, MinGW-friendly import library 
 ### Release Workflow (`.forgejo/workflows/release.yml`)
 Triggers on version tags (`v*`, e.g., `v1.0.0`):
 - Builds Linux release artifacts in CI. Windows artifacts should be produced with the native Windows script path.
+- Builds and pushes container image tagged with the release version (e.g., `v1.0.0`)
 - Creates a Forgejo release
 - Uploads binaries to the release page (visible in project's **Releases** section)
 
@@ -1012,6 +1034,12 @@ To create a release:
 git tag v1.0.0
 git push origin v1.0.0
 ```
+
+### Dev Build Workflow (`.forgejo/workflows/dev-build.yml`)
+Triggered manually via `workflow_dispatch`:
+- Builds Linux and Windows binaries with Vosk support
+- Builds and pushes container image tagged with the git commit hash
+- Packages ZIP archives as artifacts
 
 ---
 
@@ -1037,8 +1065,8 @@ The [tutorials](docs/tutorials/README.md) are a guided tour through the OmniPane
 | **C** | Platform-Specific Code | Virtual input devices (Linux/Windows) |
 | **D** | Speech Recognition | Overview, STT engines, phrase matching, audio recording |
 | **E** | Web Frontend | Panel UI, Editor UI, Start Page |
-| **F** | Architecture & Data Flow | End-to-end data flow, distributed deployment, container build |
-| **G** | Platform Integrations | MPRIS media player, RSS feed polling, WebSocket push, host URL opening |
+| **F** | Architecture & Data Flow | End-to-end data flow, MPRIS integration, RSS feeds |
+| **G** | Build, CI & Deployment | Windows build script, distributed deployment, container build, Kubernetes |
 
 - Read chapters in order — each builds on concepts from the previous ones
 - Code excerpts include line numbers referencing the original files

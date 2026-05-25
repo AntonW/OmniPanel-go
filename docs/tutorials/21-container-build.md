@@ -199,4 +199,4 @@ When the container runs with speech enabled but CGO is unavailable, the SpeechMa
 - User data persists via a mounted volume at `/var/run/ko/user`
 - Build tags (`//go:build cgo` / `//go:build !cgo`) provide stub implementations for non-CGO builds
 
-[← Back: Chapter 20](20-distributed-deployment.md) · [Next: Chapter 17 →](17-mpris.md)
+[← Back: Chapter 20](20-distributed-deployment.md) · [Next: Chapter 22 →](22-kubernetes-deployment.md)

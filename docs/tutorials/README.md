@@ -44,19 +44,20 @@ A guided tour through the OmniPanel-go codebase, written for developers who are 
 
 ## Part F: Architecture & Data Flow
 
-| Chapter | Topic |
-|---------|-------|
-| [16](16-data-flow.md) | End-to-End Data Flow |
-| [20](20-distributed-deployment.md) | Distributed Deployment (Server + Host Agent) |
-| [21](21-container-build.md) | Container Build with ko (serve mode) |
+| Chapter | Topic | File |
+|---------|-------|------|
+| [16](16-data-flow.md) | End-to-End Data Flow | `internal/websocket/handler.go`, `internal/state/state.go` |
+| [17](17-mpris.md) | MPRIS Media Player Integration (Linux D-Bus) | `internal/mpris/mpris.go`, `internal/routes/mpris.go` |
+| [18](18-rss-feed.md) | RSS Feed Integration (Polling, WebSocket Push, Host URL Opening) | `internal/rssfeed/`, `static/client/client.js` |
 
-## Part G: Platform Integrations
+## Part G: Build, CI & Deployment
 
 | Chapter | Topic | File |
 |---------|-------|------|
-| [17](17-mpris.md) | MPRIS Media Player Integration (Linux D-Bus) | `internal/mpris/mpris.go`, `internal/routes/mpris.go` |
-| [18](18-rss-feed.md) | RSS Feed Integration (Polling, WebSocket Push, Host URL Opening) | `internal/rssfeed/`, `static/client/client.js` |
 | [19](19-windows-build-and-ci.md) | Windows Build Script and CI Alignment | `scripts/build-with-vosk.ps1`, `.forgejo/workflows/ci.yml` |
+| [20](20-distributed-deployment.md) | Distributed Deployment (Server + Host Agent) | `internal/relay/`, `internal/agent/` |
+| [21](21-container-build.md) | Container Build with ko (serve mode) | `Makefile`, `.ko.yaml`, `internal/starter/` |
+| [22](22-kubernetes-deployment.md) | Kubernetes Deployment with kustomize | `k8s/base/`, `k8s/overlays/` |
 
 ## How to Use These Tutorials
 
