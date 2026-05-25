@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: omnipanel-go
+  labels:
+    app: omnipanel-go
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: omnipanel-go
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: omnipanel-go
+    spec:
+      containers:
+        - name: omnipanel-go
+          image: omnipanel-go:latest
+          args:
+            - serve
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: OMNIPANEL_PORT
+              value: "3000"
+          workingDir: /var/run/ko
+          volumeMounts:
+            - name: user-data
+              mountPath: /var/run/ko/user
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+      volumes:
+        - name: user-data
+          persistentVolumeClaim:
+            claimName: omnipanel-go-user-data
