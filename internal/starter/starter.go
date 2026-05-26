@@ -27,7 +27,7 @@ import (
 // all files and subdirectories recursively. If userPath already contains files,
 // Init returns immediately without making changes.
 func Init(userPath string) {
-	starterDir := findStarterDir()
+	starterDir := findStarterDir() + "/user"
 	if starterDir == "" {
 		return
 	}
