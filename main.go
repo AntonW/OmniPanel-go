@@ -91,6 +91,9 @@ func main() {
 	userPath := cfg.UserPath
 	if userPath == "" {
 		userPath = config.FindUserPath()
+		slog.Info("UserPath not found in config, using defaults", "path", userPath)
+	} else {
+		slog.Info("UserPath found", "path", userPath)
 	}
 
 	switch subcommand {
