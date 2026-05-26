@@ -18,8 +18,11 @@
 // users can enter their token. After successful validation, the token is stored
 // in the browser (localStorage or sessionStorage) and included in all subsequent
 // requests via Authorization headers and WebSocket URL query parameters.
-// CSS files are served without authentication so the login page and other
-// unauthenticated pages can load styles.
+// CSS files, JavaScript, images, and fonts are served without authentication
+// so the login page can load styles and all pages can execute their JavaScript
+// to handle auth detection and redirect. HTML pages (/panel, /editor) are also
+// served without auth — they are templates only; sensitive data is protected by
+// requiring authentication on all API endpoints and WebSocket connections.
 //
 // Architecture:
 //
@@ -105,20 +108,8 @@ func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 
 	app.Get("/login", s.serveLoginPage)
 
-	// Serve CSS files without authentication so the login page and
-	// unauthenticated pages can load styles.
-	app.Static("/", staticDir, fiber.Static{
-		Next: func(c *fiber.Ctx) bool {
-			return !strings.HasSuffix(c.Path(), ".css")
-		},
-	})
-
-	app.Use(auth.Middleware(cfg.AuthToken))
-
-	app.Get("/", s.serveStartPage)
-	app.Get("/panel", s.servePanel)
-	app.Get("/editor", s.serveEditorUI)
-
+	// Disable browser caching for JS/CSS so changes are always picked up.
+	// This runs before static serving for unauthenticated assets.
 	noCacheStaticMiddleware := func(c *fiber.Ctx) error {
 		if strings.HasSuffix(c.Path(), ".js") || strings.HasSuffix(c.Path(), ".css") {
 			c.Set("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -126,7 +117,24 @@ func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 		return c.Next()
 	}
 	app.Use(noCacheStaticMiddleware)
-	app.Static("/", staticDir)
+
+	// Serve static assets without authentication:
+	// - CSS files: needed for login page and unauthenticated pages
+	// - JS files: application code, auth enforced via API calls
+	// - Images/fonts: referenced by HTML/CSS
+	// The Next function skips paths that should fall through to HTML handlers.
+	app.Static("/", staticDir, fiber.Static{
+		Next: func(c *fiber.Ctx) bool {
+			// Let HTML page handlers serve these paths
+			return c.Path() == "/" || c.Path() == "/panel" || c.Path() == "/editor"
+		},
+	})
+
+	app.Get("/", s.serveStartPage)
+	app.Get("/panel", s.servePanel)
+	app.Get("/editor", s.serveEditorUI)
+
+	app.Use(auth.Middleware(cfg.AuthToken))
 
 	app.Get("/ws", ws.New(func(c *ws.Conn) {
 		s.handleWS(c)

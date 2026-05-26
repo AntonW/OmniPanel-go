@@ -204,12 +204,20 @@ app.Get("/health", func(c *fiber.Ctx) error {
 
 app.Get("/login", s.serveLoginPage)  // exempt from auth
 
-// CSS files served without auth so login page can load styles
+// Cache-busting for JS/CSS
+app.Use(noCacheStaticMiddleware)
+
+// Static files (CSS, JS, images, fonts) served without auth
 app.Static("/", staticDir, fiber.Static{
     Next: func(c *fiber.Ctx) bool {
-        return !strings.HasSuffix(c.Path(), ".css")
+        return c.Path() == "/" || c.Path() == "/panel" || c.Path() == "/editor"
     },
 })
+
+// HTML page handlers (exempt from auth — templates only, no sensitive data)
+app.Get("/", s.serveStartPage)
+app.Get("/panel", s.servePanel)
+app.Get("/editor", s.serveEditorUI)
 
 app.Use(auth.Middleware(cfg.AuthToken))
 ```
@@ -458,7 +466,8 @@ On reconnection, the host agent sends `host-register` again. The server resets i
 - Host WebSocket connections validate token from query parameter (`?type=host&token=xxx`)
 - Empty `auth_token` disables authentication (backward compatible, default mode unaffected)
 - The `/login` page is exempt from auth middleware, providing a login form for token entry
-- CSS files are served without authentication so unauthenticated pages can load styles
+- CSS, JS, images, and fonts are served without authentication so pages can load and execute JavaScript
+- HTML pages (/, /panel, /editor) are served without auth — they are templates only; sensitive data is protected at the API level
 - Frontend detects auth requirement by probing `/api/config` (401 = auth needed)
 - Token is stored in localStorage (persistent) or sessionStorage (tab-only) based on user choice
 - All subsequent API requests include the token via Authorization headers and WebSocket URL params

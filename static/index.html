@@ -2,10 +2,12 @@
     OmniPanel Start Page (Host UI)
 
     Authentication flow:
+    - This page is served without authentication (template only, no sensitive data)
     - getToken() checks URL params, then localStorage, then sessionStorage for auth_token
     - checkAuthRequired() probes /api/config to detect if auth is enabled (401 = auth required)
     - If no token found and auth is enabled, redirects to /login
     - All fetch() calls include Authorization: Bearer <token> header via addAuthHeaders()
+    - On 401 response, handleUnauthorized() clears tokens and redirects to /login
     - WebSocket connections include token as URL query param via addTokenToUrl()
     - Links with data-auth-link attribute get token appended on DOMContentLoaded
 -->
