@@ -186,6 +186,20 @@ Falls du diese Meldung verpasst hast:
 
 Die IP-Adresse deines PCs kann sich ändern, wenn dein Router neu startet. Wenn die Verbindung plötzlich nicht mehr funktioniert, überprüfe deine IP-Adresse noch einmal mit den Schritten aus Schritt 2.
 
+### Benutzerdaten an einem anderen Ort speichern
+
+Standardmäßig speichert OmniPanel-go alle deine Panels und Einstellungen in einem Ordner namens `user/`. Wenn du diesen Ordner auf einem anderen Laufwerk (z.B. D:) haben möchtest, in einem anderen Verzeichnis oder über einen Cloud-Dienst synchronisieren lassen willst, kannst du einen eigenen Pfad in `config.json` angeben:
+
+1. Öffne `config.json` in einem Texteditor
+2. Füge diese Zeile neben `"numJoysticks"` ein:
+   ```json
+   "user_path": "D:\\Spiele\\OmniPanelData"
+   ```
+   Unter Linux/Mac verwende Schrägstriche ohne Backslashes: `"user_path": "/media/external-drive/omnipanel-user"`
+3. Speichere die Datei und starte OmniPanel-go neu
+
+Ein benutzerdefinierter `user_path` kann ein absoluter Pfad (wie oben) oder ein relativer Pfad relativ zu OmniPanel-go sein. Der Ordner wird automatisch erstellt, falls er nicht existiert.
+
 ## Was kommt als Nächstes?
 
 Jetzt, wenn OmniPanel-go läuft, erkunde die [Startseite](03-the-start-page.md) — dein Dashboard zum Verwalten von Panels und Verbindungen.

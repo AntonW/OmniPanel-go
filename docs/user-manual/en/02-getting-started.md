@@ -186,6 +186,20 @@ If you missed this prompt:
 
 Your PC's IP address can change if your router restarts. If the connection suddenly stops working, check your IP address again using the steps in Step 2.
 
+### Storing user data in a custom location
+
+By default, OmniPanel-go saves all your panels and settings in a folder called `user/`. If you want this folder on a different drive (e.g., D:), in another folder, or synced via a cloud drive, you can set a custom path in `config.json`:
+
+1. Open `config.json` in a text editor
+2. Add this line next to `"numJoysticks"`:
+   ```json
+   "user_path": "D:\\Games\\OmniPanelData"
+   ```
+   On Linux/Mac, use forward slashes without backslashes: `"user_path": "/media/mydrive/omnipanel-user"`
+3. Save the file and restart OmniPanel-go
+
+A custom `user_path` can be an absolute path (like above) or a path relative to where OmniPanel-go is running. OmniPanel-go will create the folder if it doesn't exist.
+
 ## What's Next?
 
 Now that OmniPanel-go is running, let's explore the [Start Page](03-the-start-page.md) — your dashboard for managing panels and connections.
