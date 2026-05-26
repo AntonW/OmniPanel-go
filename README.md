@@ -948,7 +948,7 @@ kubectl apply -k k8s/base/
 kubectl apply -k k8s/overlays/production/
 ```
 
-The deployment runs the container with `serve` command, mounts a PVC for user data persistence, and includes liveness/readiness probes. Edit `k8s/base/httproute.yaml` or `k8s/base/ingress.yaml` to set your hostname.
+The deployment runs the container with `serve` command, mounts a ConfigMap for `config.json`, mounts a PVC for user data persistence, and includes liveness/readiness probes using the `/health` endpoint (bypasses auth). Edit `k8s/base/configmap.yaml` for server settings, and `k8s/base/httproute.yaml` or `k8s/base/ingress.yaml` to set your hostname. The production overlay adds image pull secrets, TLS, and cert-manager integration.
 
 See [docs/tutorials/22-kubernetes-deployment.md](docs/tutorials/22-kubernetes-deployment.md) for details.
 

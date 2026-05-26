@@ -8,8 +8,8 @@ resources:
   - service.yaml
 
   # Choose ONE of the following ingress methods:
-  - httproute.yaml
-  # - ingress.yaml
+  # - httproute.yaml
+  - ingress.yaml
 
 images:
   - name: omnipanel-go

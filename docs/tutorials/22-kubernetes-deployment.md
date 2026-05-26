@@ -6,10 +6,11 @@ OmniPanel-go's `serve` mode can be deployed to a Kubernetes cluster using the pr
 
 The kustomize setup:
 - Deploys the container with `serve` command
+- Mounts a ConfigMap for `config.json` configuration
 - Mounts a PersistentVolumeClaim for user data (panels, blocks, themes)
-- Includes liveness and readiness probes
-- Supports both Gateway API (HTTPRoute) and traditional Ingress
-- Provides a production overlay for custom hostnames and image tags
+- Includes liveness and readiness probes using the `/health` endpoint
+- Supports both Gateway API (HTTPRoute) and traditional Ingress with TLS
+- Provides a production overlay for custom hostnames, image tags, image pull secrets, and cert-manager integration
 
 > **Note:** The Kubernetes deployment uses the same container image built with ko. See [Chapter 21](21-container-build.md) for building the container image.
 
@@ -18,15 +19,17 @@ The kustomize setup:
 ```
 k8s/
 ├── base/
-│   ├── deployment.yaml    # Deployment with serve command, PVC, probes
-│   ├── pvc.yaml           # PersistentVolumeClaim for user data
-│   ├── service.yaml       # ClusterIP service
-│   ├── httproute.yaml     # Gateway API HTTPRoute (default)
-│   ├── ingress.yaml       # Nginx Ingress (alternative)
-│   └── kustomization.yaml # Base kustomization
+│   ├── configmap.yaml       # ConfigMap for config.json
+│   ├── deployment.yaml      # Deployment with serve command, PVC, probes
+│   ├── pvc.yaml             # PersistentVolumeClaim for user data
+│   ├── service.yaml         # ClusterIP service
+│   ├── httproute.yaml       # Gateway API HTTPRoute (default)
+│   ├── ingress.yaml         # Nginx Ingress (alternative)
+│   └── kustomization.yaml   # Base kustomization
 └── overlays/
     └── production/
-        └── kustomization.yaml # Production overlay
+        ├── kustomization.yaml # Production overlay
+        └── secret.yaml        # Image pull secret
 ```
 
 ## Base Manifests
@@ -55,6 +58,10 @@ spec:
               containerPort: 3000
           workingDir: /var/run/ko
           volumeMounts:
+            - name: config
+              mountPath: /var/run/ko/config.json
+              subPath: config.json
+              readOnly: true
             - name: user-data
               mountPath: /var/run/ko/user
 ```
@@ -62,15 +69,28 @@ spec:
 > **Concept: Recreate strategy**
 > `strategy.type: Recreate` terminates the old pod before creating a new one. This is necessary because the PVC is `ReadWriteOnce` — only one pod can mount it at a time. The default `RollingUpdate` strategy would try to start a new pod while the old one is still running, causing a volume mount conflict.
 
-Key deployment settings:
+### ConfigMap
 
-| Field | Value | Purpose |
-|-------|-------|---------|
-| `args: [serve]` | `serve` | Runs the relay server mode |
-| `workingDir` | `/var/run/ko` | Required for ko container to resolve `static/` and `config.json` |
-| `volumeMounts` | `/var/run/ko/user` | Persistent user data directory |
-| `livenessProbe` | HTTP GET `/` | Restarts container if server becomes unresponsive |
-| `readinessProbe` | HTTP GET `/` | Removes pod from service until server is ready |
+```yaml
+# k8s/base/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: omnipanel-go-config
+data:
+  config.json: |
+    {
+        "port": 3000,
+        "numJoysticks": 5,
+        "speech": { ... },
+        "mpris": { ... }
+    }
+```
+
+The ConfigMap mounts `config.json` into the container at `/var/run/ko/config.json`. This allows you to change server settings without rebuilding the container image. Edit the ConfigMap and reapply with `kubectl apply -k k8s/base/`.
+
+> **Key Pattern: ConfigMap for configuration**
+> Configuration is separated from the container image via ConfigMap. The `subPath` mount ensures only the `config.json` key is mounted as a file (not a directory), and `readOnly: true` prevents the container from modifying it. Environment variables like `OMNIPANEL_PORT` still override ConfigMap values per Viper's precedence order.
 
 ### PersistentVolumeClaim
 
@@ -155,6 +175,10 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - omnipanel.example.com
+      secretName: omnipanel-go-tls
   rules:
     - host: omnipanel.example.com
       http:
@@ -207,12 +231,22 @@ kind: Kustomization
 
 resources:
   - ../../base
+  - secret.yaml
 
 images:
   - name: omnipanel-go
+    newName: git.antonsblog.org/atwi/omnipanel-go
     newTag: v1.0.0
 
 patches:
+  - target:
+      kind: Deployment
+      name: omnipanel-go
+    patch: |
+      - op: add
+        path: /spec/template/spec/imagePullSecrets
+        value:
+          - name: omnipanel-go-registry
   - target:
       kind: HTTPRoute
       name: omnipanel-go
@@ -220,9 +254,28 @@ patches:
       - op: replace
         path: /spec/hostnames/0
         value: omnipanel.mydomain.com
+  - target:
+      kind: Ingress
+      name: omnipanel-go
+    patch: |
+      - op: add
+        path: /metadata/annotations/cert-manager.io~1cluster-issuer
+        value: letsencrypt
+      - op: replace
+        path: /spec/rules/0/host
+        value: omni.antonsblog.org
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: omni.antonsblog.org
+      - op: replace
+        path: /spec/tls/0/secretName
+        value: omni-antonsblog-org-tls
 ```
 
-The overlay changes the image tag and hostname without modifying the base manifests.
+The overlay changes the image tag, hostname, adds image pull secrets, and configures cert-manager for automatic TLS certificate provisioning without modifying the base manifests.
+
+> **Key Pattern: Production overlay**
+> The production overlay demonstrates kustomize best practices: separate `secret.yaml` for registry credentials, `images` block for tag management, and `patches` for environment-specific overrides. The `cert-manager.io/cluster-issuer` annotation triggers automatic TLS certificate generation when cert-manager is installed in the cluster.
 
 ## Deploying
 
@@ -296,25 +349,37 @@ resources:
 
 ### Add TLS
 
-For HTTPRoute, add a TLS section to the Gateway (not the HTTPRoute itself). For Ingress:
+TLS is pre-configured in the base ingress manifest. For automatic certificate provisioning, add the cert-manager annotation in your overlay:
 
 ```yaml
-spec:
-  tls:
-    - hosts:
-        - omnipanel.mydomain.com
-      secretName: omnipanel-tls
+patches:
+  - target:
+      kind: Ingress
+      name: omnipanel-go
+    patch: |
+      - op: add
+        path: /metadata/annotations/cert-manager.io~1cluster-issuer
+        value: letsencrypt
+```
+
+For manual TLS, create the secret and reference it in the ingress:
+
+```bash
+kubectl create secret tls omnipanel-go-tls --cert=tls.crt --key=tls.key
 ```
 
 ## Key Takeaways
 
 - kustomize manifests in `k8s/` provide a complete Kubernetes deployment for serve mode
+- ConfigMap mounts `config.json` for configuration without rebuilding the image
 - `Recreate` strategy is required because the PVC is `ReadWriteOnce`
 - `workingDir: /var/run/ko` is required for ko container file resolution
+- `/health` endpoint bypasses authentication for Kubernetes probes
 - Starter files auto-populate the PVC on first run
 - HTTPRoute (Gateway API) and Ingress are both supported — choose one
+- TLS is pre-configured in base ingress; cert-manager annotation enables automatic certificates
+- Production overlay adds image pull secrets and environment-specific overrides
 - WebSocket timeout annotations prevent premature connection termination
-- Production overlay demonstrates how to customize hostname and image tag
 - Liveness and readiness probes ensure healthy pod lifecycle management
 
 [← Back: Chapter 21](21-container-build.md)

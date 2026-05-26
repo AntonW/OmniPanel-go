@@ -13,6 +13,7 @@
 // Authorization header (Bearer xxx). Host WebSocket connections validate the
 // token from the query parameter (?type=host&token=xxx). If auth_token is
 // empty, authentication is disabled (backward compatible).
+// The /health endpoint is exempt from authentication for Kubernetes probes.
 //
 // Architecture:
 //
@@ -61,10 +62,10 @@ import (
 // and multiple browser WebSocket connections. Messages are relayed
 // bidirectionally between the host and all browsers.
 type RelayServer struct {
-	app      *fiber.App
-	hostConn *ws.Conn
-	hostMu   sync.Mutex
-	browsers map[*ws.Conn]struct{}
+	app       *fiber.App
+	hostConn  *ws.Conn
+	hostMu    sync.Mutex
+	browsers  map[*ws.Conn]struct{}
 	browserMu sync.Mutex
 	staticDir string
 	userPath  string
@@ -73,6 +74,8 @@ type RelayServer struct {
 
 // New creates a new relay server with all HTTP routes and WebSocket hub initialized.
 // The server serves static files, API endpoints, and manages browser/host connections.
+// A /health endpoint is registered before authentication middleware to allow
+// unauthenticated health checks for Kubernetes liveness and readiness probes.
 func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 	staticDir := filepath.Join(baseDir, "static")
 
@@ -88,6 +91,10 @@ func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 	app.Use(func(c *fiber.Ctx) error {
 		c.Locals("relay", s)
 		return c.Next()
+	})
+
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.SendString("OK")
 	})
 
 	app.Use(auth.Middleware(cfg.AuthToken))

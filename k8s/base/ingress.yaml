@@ -18,3 +18,7 @@ spec:
                 name: omnipanel-go
                 port:
                   name: http
+  tls:
+    - hosts:
+        - omnipanel.example.com
+      secretName: omnipanel-go-tls

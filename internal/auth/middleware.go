@@ -6,6 +6,9 @@
 // pass through without validation. This keeps the default mode (single machine)
 // open while protecting distributed deployments.
 //
+// The /health endpoint in the relay package is registered before this middleware
+// and is exempt from authentication for Kubernetes health probes.
+//
 // Usage:
 //
 //	// Apply as Fiber middleware to all HTTP routes:

@@ -3,12 +3,21 @@ kind: Kustomization
 
 resources:
   - ../../base
+  - secret.yaml
 
 images:
   - name: omnipanel-go
     newTag: v1.0.0
 
 patches:
+  - target:
+      kind: Deployment
+      name: omnipanel-go
+    patch: |
+      - op: add
+        path: /spec/template/spec/imagePullSecrets
+        value:
+          - name: omnipanel-go-registry
   - target:
       kind: HTTPRoute
       name: omnipanel-go
@@ -20,6 +29,15 @@ patches:
       kind: Ingress
       name: omnipanel-go
     patch: |
+      - op: add
+        path: /metadata/annotations/cert-manager.io~1cluster-issuer
+        value: letsencrypt
       - op: replace
         path: /spec/rules/0/host
         value: omnipanel.mydomain.com
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: omnipanel.mydomain.com
+      - op: replace
+        path: /spec/tls/0/secretName
+        value: omni-tls
