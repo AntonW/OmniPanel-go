@@ -4,6 +4,29 @@
  * default applied to new blocks; existing blocks retain their individual theme unless
  * the user explicitly changes them. Panel JSON includes a top-level "theme" field.
  */
+
+/**
+ * Retrieves the auth token from URL params, localStorage, or sessionStorage.
+ * @returns {string|null} The auth token or null.
+ */
+function getEditorAuthToken() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    if (urlToken) return urlToken;
+    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+}
+
+/**
+ * Adds Authorization: Bearer header to fetch headers for API calls.
+ * @param {Object} headers - Existing headers
+ * @returns {Object} Headers with auth added (unchanged if no token)
+ */
+function addEditorAuthHeaders(headers = {}) {
+    const token = getEditorAuthToken();
+    if (!token) return headers;
+    return { ...headers, 'Authorization': `Bearer ${token}` };
+}
+
 class PanelManager {
     constructor(state) {
         this.state = state;
@@ -27,7 +50,7 @@ class PanelManager {
     
     async initThemeSelector() {
         try {
-            const res = await fetch('/api/themes');
+            const res = await fetch('/api/themes', { headers: addEditorAuthHeaders() });
             const themes = await res.json();
             
             const selector = document.getElementById('panel-theme-selector');
@@ -70,7 +93,7 @@ class PanelManager {
 
     async showLoadDialog() {
         try {
-            const panelsRes = await fetch('/api/panels');
+            const panelsRes = await fetch('/api/panels', { headers: addEditorAuthHeaders() });
             const panels = await panelsRes.json();
 
             if (!panels.allPanels || panels.allPanels.length === 0) {
@@ -117,7 +140,7 @@ class PanelManager {
         try {
             const res = await fetch('/api/panel/save', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: addEditorAuthHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ fileName: name, content: data })
             });
             const result = await res.json();
@@ -144,7 +167,7 @@ class PanelManager {
      */
     async loadPanel(name) {
         try {
-            const res = await fetch(`/api/panel/content?name=${encodeURIComponent(name)}`);
+            const res = await fetch(`/api/panel/content?name=${encodeURIComponent(name)}`, { headers: addEditorAuthHeaders() });
             if (!res.ok) {
                 showToast('Failed to load panel', 'error');
                 return;
@@ -227,7 +250,7 @@ class PanelManager {
         if (!newName) return;
 
         try {
-            const res = await fetch(`/api/panel/content?name=${encodeURIComponent(this.currentPanelName)}`);
+            const res = await fetch(`/api/panel/content?name=${encodeURIComponent(this.currentPanelName)}`, { headers: addEditorAuthHeaders() });
             if (!res.ok) {
                 showToast('Failed to load panel for duplication', 'error');
                 return;
@@ -236,7 +259,7 @@ class PanelManager {
             const data = await res.json();
             const saveRes = await fetch('/api/panel/save', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: addEditorAuthHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ fileName: newName, content: data })
             });
 
@@ -262,7 +285,8 @@ class PanelManager {
 
         try {
             const res = await fetch(`/api/panel/delete?name=${encodeURIComponent(this.currentPanelName)}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: addEditorAuthHeaders()
             });
 
             if (res.ok) {
@@ -307,7 +331,7 @@ class PanelManager {
 
                 const res = await fetch('/api/panel/save', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: addEditorAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ fileName: name, content: data })
                 });
 

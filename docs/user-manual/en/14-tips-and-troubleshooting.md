@@ -205,13 +205,13 @@ Or use the environment variable `OMNIPANEL_NUMJOYSTICKS=8`.
 If you're running OmniPanel-go in **Server** mode (`./omnipanel-go serve`), you can protect the WebUI and host connections with a secret token:
 
 1. Edit `config.json` on the server:
-   ```json
-   {
-     "auth_token": "your-secret-token"
-   }
-   ```
+    ```json
+    {
+      "auth_token": "your-secret-token"
+    }
+    ```
 2. Restart the server: `./omnipanel-go serve`
-3. Access the WebUI with the token: `http://server-ip:3000/?token=your-secret-token`
+3. Access the WebUI — you'll see a login screen where you can enter your token
 4. On the host machine, set the same token in `config.json` or use `OMNIPANEL_AUTH_TOKEN`
 
 > **Important:** Both the server and the host agent must use the same token. If they don't match, the host will be rejected with an "unauthorized" error.
@@ -222,8 +222,21 @@ This means the server has authentication enabled but your token is missing or in
 
 1. Check that `auth_token` in your `config.json` matches the server's token
 2. If using the environment variable, verify `OMNIPANEL_AUTH_TOKEN` is set correctly
-3. For browser access, make sure the URL includes `?token=your-secret-token`
+3. For browser access, enter your token on the login page or include `?token=your-secret-token` in the URL
 4. Ask your server administrator for the correct token
+
+### How does the login page work?
+
+When authentication is enabled, OmniPanel-go shows a login screen instead of requiring you to type the token in the URL. Here's what happens:
+
+1. You visit the server URL (e.g., `http://server:3000`)
+2. The browser checks if a token is already saved or in the URL
+3. If not, it asks the server if auth is required (by calling `/api/config`)
+4. If auth is required, you're redirected to the login page
+5. Enter your token and click **Login** — the server validates it
+6. Your token is saved and you're redirected back to the page you wanted
+
+If you check **Remember token**, it stays saved in your browser for future visits. If you don't check it, the token is only saved for that browser tab.
 
 ---
 

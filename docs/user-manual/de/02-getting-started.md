@@ -18,9 +18,18 @@ Die Modi **Server** und **Host-Agent** sind für fortgeschrittene Setups, bei de
 
 ### Authentifizierung für Server- und Host-Agent-Modi
 
-Wenn dein Server-Administrator ein geheimes Token eingerichtet hat, musst du es beim Zugriff auf den Server angeben. Das schützt die WebUI und Host-Verbindungen vor unbefugtem Zugriff.
+Wenn dein Server-Administrator ein geheimes Token eingerichtet hat, musst du es beim Zugriff auf den Server eingeben. Das schützt die WebUI und Host-Verbindungen vor unbefugtem Zugriff.
 
 **Zugriff auf die WebUI mit Token:**
+
+Wenn du die Server-URL besuchst, erkennt OmniPanel-go automatisch, ob Authentifizierung erforderlich ist. Falls ja, siehst du eine Anmeldeseite, auf der du dein Token eingeben kannst:
+
+1. Öffne `http://server-ip:3000` in deinem Browser
+2. Wenn Authentifizierung aktiviert ist, siehst du die Anmeldeseite
+3. Gib dein Token ein und klicke auf **Login**
+4. Optional: Aktiviere **Token merken**, um bei zukünftigen Besuchen angemeldet zu bleiben
+
+Du kannst das Token auch direkt in die URL einfügen (nützlich für Lesezeichen):
 ```
 http://server-ip:3000/?token=dein-geheimes-token
 ```

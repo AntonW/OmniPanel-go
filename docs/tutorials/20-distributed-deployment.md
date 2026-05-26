@@ -136,21 +136,40 @@ All HTTP routes and WebSocket connections in serve/connect modes can be protecte
 Configure the token via:
 
 1. **Config file** (`config.json`):
-   ```json
-   {
-     "auth_token": "your-secret-token"
-   }
-   ```
+    ```json
+    {
+      "auth_token": "your-secret-token"
+    }
+    ```
 
 2. **Environment variable**:
-   ```bash
-   export OMNIPANEL_AUTH_TOKEN=your-secret-token
-   ```
+    ```bash
+    export OMNIPANEL_AUTH_TOKEN=your-secret-token
+    ```
 
-**Accessing the UI:** The token is passed as a query parameter or Authorization header:
+**Accessing the UI:** When authentication is enabled and no token is present in the URL or browser storage, the frontend automatically redirects to the login page (`/login`). The login form validates the token against `/api/config` and stores it in `localStorage` (persistent) or `sessionStorage` (tab-only). After login, the token is appended to all API requests as an `Authorization: Bearer` header and to WebSocket URLs as a query parameter.
+
 ```
-http://server:3000/?token=your-secret-token
+http://server:3000/login          # Login form (always accessible)
+http://server:3000/?token=xxx     # Direct access with token in URL
 ```
+
+> **Concept: Login mask**
+> Instead of requiring users to manually append `?token=xxx` to URLs, the frontend detects missing authentication by probing `/api/config`. If the server returns 401, the browser redirects to `/login` where users enter their token. The token is then stored and automatically included in all subsequent requests. This provides a familiar login experience without changing the underlying token-based auth model.
+
+> **Key Pattern: Auth detection via probe**
+> The frontend calls an unprotected endpoint (`/api/config`) without a token. A 200 response means auth is disabled; a 401 means auth is required. This avoids hardcoding auth state and works correctly when the server config changes.
+>
+> ```javascript
+> async function checkAuthRequired() {
+>     try {
+>         const res = await fetch('/api/config');
+>         if (res.ok) return false;       // no auth needed
+>         if (res.status === 401) return true; // auth required
+>     } catch { }
+>     return false;
+> }
+> ```
 
 **Host agent connection:** The agent automatically appends the token from config to the WebSocket URL:
 ```go
@@ -161,7 +180,7 @@ if a.Config.AuthToken != "" {
 ```
 
 > **Concept: Token-based authentication**
-> A shared secret token is simpler than username/password or OAuth. There's no session management, no database, no login form. The client presents the token with every request, and the server validates it. This is well-suited for trusted LAN deployments where you just need a basic access barrier. For production use over untrusted networks, combine with TLS (HTTPS/WSS) to encrypt the token in transit.
+> A shared secret token is simpler than username/password or OAuth. There's no session management, no database, no user accounts. The client presents the token with every request, and the server validates it. This is well-suited for trusted LAN deployments where you just need a basic access barrier. For production use over untrusted networks, combine with TLS (HTTPS/WSS) to encrypt the token in transit.
 
 > **Key Pattern: Optional middleware**
 > The auth middleware checks if the token is empty before installing any validation logic. If empty, it returns a no-op handler that just calls `c.Next()`. This avoids branching throughout the codebase — every route goes through the same middleware, but it's a pass-through when auth is disabled.
@@ -179,6 +198,19 @@ if a.Config.AuthToken != "" {
 
 **HTTP middleware** (`internal/relay/server.go`):
 ```go
+app.Get("/health", func(c *fiber.Ctx) error {
+    return c.SendString("OK")
+})
+
+app.Get("/login", s.serveLoginPage)  // exempt from auth
+
+// CSS files served without auth so login page can load styles
+app.Static("/", staticDir, fiber.Static{
+    Next: func(c *fiber.Ctx) bool {
+        return !strings.HasSuffix(c.Path(), ".css")
+    },
+})
+
 app.Use(auth.Middleware(cfg.AuthToken))
 ```
 
@@ -425,6 +457,11 @@ On reconnection, the host agent sends `host-register` again. The server resets i
 - Auth middleware accepts token via query parameter (`?token=xxx`) or Authorization header (`Bearer xxx`)
 - Host WebSocket connections validate token from query parameter (`?type=host&token=xxx`)
 - Empty `auth_token` disables authentication (backward compatible, default mode unaffected)
+- The `/login` page is exempt from auth middleware, providing a login form for token entry
+- CSS files are served without authentication so unauthenticated pages can load styles
+- Frontend detects auth requirement by probing `/api/config` (401 = auth needed)
+- Token is stored in localStorage (persistent) or sessionStorage (tab-only) based on user choice
+- All subsequent API requests include the token via Authorization headers and WebSocket URL params
 - The relay server can run as a Docker container — see [Chapter 21](21-container-build.md) for the ko-based container build
 
 [← Back: Chapter 19](19-windows-build-and-ci.md) · [Next: Chapter 21 →](21-container-build.md)

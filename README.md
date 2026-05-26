@@ -229,7 +229,9 @@ All HTTP routes and WebSocket connections in serve/connect modes can be protecte
 
 Or via environment variable: `OMNIPANEL_AUTH_TOKEN=your-secret-token`
 
-**Accessing the UI:** `http://server:3000/?token=your-secret-token`
+**Accessing the UI:** When authentication is enabled, the WebUI shows a login page where you can enter your token. The token is validated and stored in the browser for subsequent requests. You can also include the token directly in the URL: `http://server:3000/?token=your-secret-token`
+
+**CSS files** are served without authentication so the login page can load styles. All other static files (JS, images, assets) require authentication.
 
 **Host agent:** The token from config is automatically appended to the WebSocket connection URL. If `auth_token` is empty (default), authentication is disabled — keeping backward compatibility and the default mode (single machine) open.
 

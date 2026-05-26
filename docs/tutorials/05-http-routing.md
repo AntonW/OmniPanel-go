@@ -41,6 +41,17 @@ func NewRouter(s *state.AppState) *fiber.App {
     app.Get("/", serveStartPage)     // Start page (panel list, host controls, log)
     app.Get("/panel", servePanel)    // Panel client
     app.Get("/editor", serveEditorUI) // Panel editor
+    app.Get("/login", serveLoginPage) // Login form (exempt from auth middleware)
+
+    // CSS files are served without authentication so the login page
+    // and unauthenticated pages can load styles.
+    app.Static("/", staticDir, fiber.Static{
+        Next: func(c *fiber.Ctx) bool {
+            return !strings.HasSuffix(c.Path(), ".css")
+        },
+    })
+
+    app.Use(auth.Middleware(cfg.AuthToken))
 
     // Static files (JS, CSS, assets served directly from static/ directory)
     // Disable browser caching for JS/CSS so changes are always picked up
@@ -81,6 +92,17 @@ Routes are organized into three groups:
 
 > **Key Pattern: Targeted middleware**
 > Instead of disabling caching for all static files (which would hurt performance for images/fonts), the middleware uses `strings.HasSuffix` to target only the file types that change frequently. This is a common pattern: inspect the request path and apply headers conditionally.
+
+> **Key Pattern: Selective static serving**
+> Fiber's `fiber.Static` struct accepts a `Next` function that determines whether to skip the static handler. By returning `true` for non-CSS paths, CSS files are served immediately without hitting auth middleware, while all other static files fall through to the authenticated `app.Static("/", s.StaticDir)` below.
+>
+> ```go
+> app.Static("/", staticDir, fiber.Static{
+>     Next: func(c *fiber.Ctx) bool {
+>         return !strings.HasSuffix(c.Path(), ".css") // skip non-CSS
+>     },
+> })
+> ```
 
 ## Serving Static Files
 

@@ -14,6 +14,12 @@
 // token from the query parameter (?type=host&token=xxx). If auth_token is
 // empty, authentication is disabled (backward compatible).
 // The /health endpoint is exempt from authentication for Kubernetes probes.
+// The /login page is exempt from authentication, providing a login form where
+// users can enter their token. After successful validation, the token is stored
+// in the browser (localStorage or sessionStorage) and included in all subsequent
+// requests via Authorization headers and WebSocket URL query parameters.
+// CSS files are served without authentication so the login page and other
+// unauthenticated pages can load styles.
 //
 // Architecture:
 //
@@ -97,6 +103,16 @@ func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 		return c.SendString("OK")
 	})
 
+	app.Get("/login", s.serveLoginPage)
+
+	// Serve CSS files without authentication so the login page and
+	// unauthenticated pages can load styles.
+	app.Static("/", staticDir, fiber.Static{
+		Next: func(c *fiber.Ctx) bool {
+			return !strings.HasSuffix(c.Path(), ".css")
+		},
+	})
+
 	app.Use(auth.Middleware(cfg.AuthToken))
 
 	app.Get("/", s.serveStartPage)
@@ -168,6 +184,14 @@ func (s *RelayServer) serveFile(c *fiber.Ctx, path string, contentType string) e
 
 func (s *RelayServer) serveStartPage(c *fiber.Ctx) error {
 	path := filepath.Join(s.staticDir, "index.html")
+	return s.serveFile(c, path, "text/html; charset=utf-8")
+}
+
+// serveLoginPage serves the login page (static/login.html).
+// This route is registered before auth middleware so it is always accessible,
+// allowing users to enter their token when authentication is enabled.
+func (s *RelayServer) serveLoginPage(c *fiber.Ctx) error {
+	path := filepath.Join(s.staticDir, "login.html")
 	return s.serveFile(c, path, "text/html; charset=utf-8")
 }
 

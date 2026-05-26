@@ -205,13 +205,13 @@ Oder nutze die Umgebungsvariable `OMNIPANEL_NUMJOYSTICKS=8`.
 Wenn du OmniPanel-go im **Server**-Modus betreibst (`./omnipanel-go serve`), kannst du die WebUI und Host-Verbindungen mit einem geheimen Token schützen:
 
 1. Bearbeite `config.json` auf dem Server:
-   ```json
-   {
-     "auth_token": "dein-geheimes-token"
-   }
-   ```
+    ```json
+    {
+      "auth_token": "dein-geheimes-token"
+    }
+    ```
 2. Starte den Server neu: `./omnipanel-go serve`
-3. Greife auf die WebUI mit Token zu: `http://server-ip:3000/?token=dein-geheimes-token`
+3. Greife auf die WebUI zu — du siehst eine Anmeldeseite, auf der du dein Token eingeben kannst
 4. Auf dem Host-Rechner setze dasselbe Token in `config.json` oder nutze `OMNIPANEL_AUTH_TOKEN`
 
 > **Wichtig:** Sowohl der Server als auch der Host-Agent müssen dasselbe Token verwenden. Wenn sie nicht übereinstimmen, wird der Host mit einem „unauthorized"-Fehler abgelehnt.
@@ -222,8 +222,21 @@ Das bedeutet, dass der Server Authentifizierung aktiviert hat, aber dein Token f
 
 1. Prüfe, ob `auth_token` in deiner `config.json` mit dem Token des Servers übereinstimmt
 2. Wenn du die Umgebungsvariable nutzt, überprüfe, ob `OMNIPANEL_AUTH_TOKEN` korrekt gesetzt ist
-3. Für den Browser-Zugriff stelle sicher, dass die URL `?token=dein-geheimes-token` enthält
+3. Für den Browser-Zugriff gib dein Token auf der Anmeldeseite ein oder füge `?token=dein-geheimes-token` in die URL ein
 4. Frage deinen Server-Administrator nach dem korrekten Token
+
+### Wie funktioniert die Anmeldeseite?
+
+Wenn Authentifizierung aktiviert ist, zeigt OmniPanel-go eine Anmeldeseite an, anstatt dass du das Token in die URL eintippen musst. So funktioniert es:
+
+1. Du besuchst die Server-URL (z. B. `http://server:3000`)
+2. Der Browser prüft, ob bereits ein Token gespeichert oder in der URL ist
+3. Wenn nicht, fragt er den Server, ob Authentifizierung erforderlich ist (durch Aufruf von `/api/config`)
+4. Wenn Authentifizierung erforderlich ist, wirst du zur Anmeldeseite weitergeleitet
+5. Gib dein Token ein und klicke auf **Login** — der Server prüft es
+6. Dein Token wird gespeichert und du wirst zurück zu der Seite weitergeleitet, die du aufrufen wolltest
+
+Wenn du **Token merken** aktivierst, bleibt es in deinem Browser für zukünftige Besuche gespeichert. Wenn du es nicht aktivierst, wird das Token nur für diesen Browser-Tab gespeichert.
 
 ---
 

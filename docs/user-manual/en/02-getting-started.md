@@ -18,9 +18,18 @@ The **Server** and **Host Agent** modes are for advanced setups where you want t
 
 ### Authentication for Server and Host Agent Modes
 
-If your server administrator has set up a secret token, you'll need to include it when accessing the server. This protects the WebUI and host connections from unauthorized access.
+If your server administrator has set up a secret token, you'll need to enter it when accessing the server. This protects the WebUI and host connections from unauthorized access.
 
 **Accessing the WebUI with a token:**
+
+When you visit the server URL, OmniPanel-go will automatically detect if authentication is required. If so, you'll see a login screen where you can enter your token:
+
+1. Open `http://server-ip:3000` in your browser
+2. If authentication is enabled, you'll see the login page
+3. Enter your token and click **Login**
+4. Optional: Check **Remember token** to stay logged in on future visits
+
+You can also include the token directly in the URL (useful for bookmarks):
 ```
 http://server-ip:3000/?token=your-secret-token
 ```

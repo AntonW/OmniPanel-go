@@ -4,6 +4,29 @@
  * into a flat directory (user/blocks/*.html) without theme subdirectories; each
  * block type appears once regardless of how many themes exist.
  */
+
+/**
+ * Retrieves the auth token from URL params, localStorage, or sessionStorage.
+ * @returns {string|null} The auth token or null.
+ */
+function getBlockLibAuthToken() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    if (urlToken) return urlToken;
+    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+}
+
+/**
+ * Adds Authorization: Bearer header to fetch headers for block API calls.
+ * @param {Object} headers - Existing headers
+ * @returns {Object} Headers with auth added (unchanged if no token)
+ */
+function addBlockLibAuthHeaders(headers = {}) {
+    const token = getBlockLibAuthToken();
+    if (!token) return headers;
+    return { ...headers, 'Authorization': `Bearer ${token}` };
+}
+
 class BlockLibrary {
     constructor() {
         this.blocks = [];
@@ -22,7 +45,7 @@ class BlockLibrary {
 
     async init() {
         try {
-            const res = await fetch('/api/blocks');
+            const res = await fetch('/api/blocks', { headers: addBlockLibAuthHeaders() });
             const blocksRaw = await res.json();
             this.blocks = this.flattenBlocks(blocksRaw);
             this.render();

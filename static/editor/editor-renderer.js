@@ -1,3 +1,13 @@
+/**
+ * Editor renderer - handles block rendering, workspace management, and panel save/load.
+ *
+ * Authentication:
+ * - getAuthToken() retrieves token from URL params, localStorage, or sessionStorage
+ * - checkAuthRequired() probes /api/config to detect if auth is enabled
+ * - If no token and auth is required, redirects to /login
+ * - All API fetch() calls use addAuthHeaders() for Bearer token injection
+ */
+
 class Block {
     constructor(name, type, absolutePath, children = []) {
         this.name = name;
@@ -5,6 +15,54 @@ class Block {
         this.path = absolutePath;
         this.children = children;
     }
+}
+
+/**
+ * Retrieves the authentication token from URL, localStorage, or sessionStorage.
+ * Priority: URL query param > localStorage > sessionStorage.
+ * @returns {string|null} The auth token or null.
+ */
+function getAuthToken() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    if (urlToken) return urlToken;
+    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+}
+
+/**
+ * Adds Authorization: Bearer header to fetch headers.
+ * @param {Object} headers - Existing headers
+ * @returns {Object} Headers with auth added (unchanged if no token)
+ */
+function addAuthHeaders(headers = {}) {
+    const token = getAuthToken();
+    if (!token) return headers;
+    return { ...headers, 'Authorization': `Bearer ${token}` };
+}
+
+/**
+ * Appends token as query parameter to a URL.
+ * @param {string} url - Target URL
+ * @returns {string} URL with token param (unchanged if no token)
+ */
+function addTokenToUrl(url) {
+    const token = getAuthToken();
+    if (!token) return url;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}token=${encodeURIComponent(token)}`;
+}
+
+/**
+ * Checks if authentication is required by probing /api/config.
+ * @returns {Promise<boolean>} True if server returns 401
+ */
+async function checkAuthRequired() {
+    try {
+        const res = await fetch('/api/config');
+        if (res.ok) return false;
+        if (res.status === 401) return true;
+    } catch { }
+    return false;
 }
 
 let highestZ = 100;
@@ -23,7 +81,16 @@ function pathToBlockUrl(filePath) {
     return '/blocks/' + filePath.substring(idx + 7);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    const authToken = getAuthToken();
+    if (!authToken) {
+        const authRequired = await checkAuthRequired();
+        if (authRequired) {
+            window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+            return;
+        }
+    }
+
     console.log("Renderer loaded");
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -59,7 +126,7 @@ function OrderZIndex(targetBlock) {
 async function GetBlocks() {
     const blocksconstainer = document.getElementById("blocksconstainer");
     try {
-        const res = await fetch('/api/blocks');
+        const res = await fetch('/api/blocks', { headers: addAuthHeaders() });
         const blocksRaw = await res.json();
         const blocks = blocksRaw.map(item => new Block(item.name, item.type, item.path, item.children));
         buildHtmlTree(blocks, blocksconstainer);
@@ -532,7 +599,7 @@ async function saveWorkspace() {
     try {
         const res = await fetch('/api/panel/save', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: addAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ fileName, content: panelData })
         });
         const result = await res.json();
@@ -566,12 +633,12 @@ function getBlockDataRecursive(block) {
 async function loadWorkspace(firstTime = false) {
     let data = null;
     try {
-        const panelsRes = await fetch('/api/panels');
+        const panelsRes = await fetch('/api/panels', { headers: addAuthHeaders() });
         const panels = await panelsRes.json();
         const panelName = prompt("Select panel to load:", panels.allPanels[0] || "");
         if (!panelName) return;
         currentPanelName = panelName;
-        const res = await fetch(`/api/panel/content?name=${encodeURIComponent(panelName)}`);
+        const res = await fetch(`/api/panel/content?name=${encodeURIComponent(panelName)}`, { headers: addAuthHeaders() });
         if (res.ok) data = await res.json();
     } catch (e) { console.error("Failed to load panel:", e); }
     if (!data || !data.blocks) return;

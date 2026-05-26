@@ -1,3 +1,25 @@
+/**
+ * Retrieves the auth token from URL params, localStorage, or sessionStorage.
+ * @returns {string|null} The auth token or null.
+ */
+function getEditorMainAuthToken() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    if (urlToken) return urlToken;
+    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+}
+
+/**
+ * Adds Authorization: Bearer header to fetch headers for editor API calls.
+ * @param {Object} headers - Existing headers
+ * @returns {Object} Headers with auth added (unchanged if no token)
+ */
+function addEditorMainAuthHeaders(headers = {}) {
+    const token = getEditorMainAuthToken();
+    if (!token) return headers;
+    return { ...headers, 'Authorization': `Bearer ${token}` };
+}
+
 class Editor {
     constructor() {
         this.state = new EditorState();
@@ -94,7 +116,7 @@ class Editor {
 
     async loadLastPanel() {
         try {
-            const panelsRes = await fetch('/api/panels');
+            const panelsRes = await fetch('/api/panels', { headers: addEditorMainAuthHeaders() });
             const panels = await panelsRes.json();
             if (panels.allPanels && panels.allPanels.length > 0) {
                 await this.panelManager.loadPanel(panels.allPanels[0]);

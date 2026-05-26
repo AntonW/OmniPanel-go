@@ -43,6 +43,59 @@ let activeKeyboardKeys = new Set();
  */
 let hostIPAddress = null;
 
+/**
+ * Retrieves the authentication token from the URL, localStorage, or sessionStorage.
+ * Priority order: URL query param > localStorage > sessionStorage.
+ * @returns {string|null} The auth token, or null if not found.
+ */
+function getAuthToken() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    if (urlToken) return urlToken;
+    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+}
+
+/**
+ * Adds an Authorization header to a fetch headers object.
+ * Returns the original headers unchanged if no token is available.
+ * @param {Object} headers - Existing headers object
+ * @returns {Object} Headers with Authorization added
+ */
+function addAuthHeaders(headers = {}) {
+    const token = getAuthToken();
+    if (!token) return headers;
+    return { ...headers, 'Authorization': `Bearer ${token}` };
+}
+
+/**
+ * Appends the auth token as a query parameter to a URL.
+ * Used for WebSocket connections and navigation links.
+ * Returns the original URL unchanged if no token is available.
+ * @param {string} url - The URL to append the token to
+ * @returns {string} URL with token query parameter
+ */
+function addTokenToUrl(url) {
+    const token = getAuthToken();
+    if (!token) return url;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}token=${encodeURIComponent(token)}`;
+}
+
+/**
+ * Probes /api/config to determine if authentication is required.
+ * Returns true if the server responds with 401 Unauthorized.
+ * Returns false if the server responds with 200 OK or the request fails.
+ * @returns {Promise<boolean>} True if auth is required
+ */
+async function checkAuthRequired() {
+    try {
+        const res = await fetch('/api/config');
+        if (res.ok) return false;
+        if (res.status === 401) return true;
+    } catch { }
+    return false;
+}
+
 // Speech configuration received from server on connect.
 // Controls recording behavior, trigger mode, and TTS.
 // Runtime-specific settings like speech.vosk_runtime_url stay server-side and
@@ -353,7 +406,7 @@ function renderMediaSourceTabs() {
                 try {
                     await fetch('/api/mpris/select', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: addAuthHeaders({ 'Content-Type': 'application/json' }),
                         body: JSON.stringify({ player: player.name })
                     });
                     mprisSelectedPlayer = player.name;
@@ -1223,7 +1276,8 @@ function connect() {
     }
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     console.log("Attempting to connect...");
-    socket = new WebSocket(`${protocol}//${window.location.host}/ws`);
+    const wsUrl = addTokenToUrl(`${protocol}//${window.location.host}/ws`);
+    socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
         console.log("Connected to OmniPanel-go Host");
@@ -1655,14 +1709,14 @@ function enableInputs() {
                 // then send a set-volume command with a relative delta.
                 let mprisAction = action;
                 if (action === 'volumedown' || action === 'volumeup') {
-                    const volumeData = await fetch('/api/mpris/players').then(r => r.json());
+                    const volumeData = await fetch('/api/mpris/players', { headers: addAuthHeaders() }).then(r => r.json());
                     if (volumeData.players && volumeData.players.length > 0) {
                         const currentVolume = volumeData.players[0].volume || 0.5;
                         const delta = action === 'volumedown' ? -0.05 : 0.05;
                         const newVolume = Math.max(0, Math.min(1, currentVolume + delta));
                         await fetch('/api/mpris/control', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: addAuthHeaders({ 'Content-Type': 'application/json' }),
                             body: JSON.stringify({ action: 'volume', volume: newVolume })
                         });
                     }
@@ -1671,7 +1725,7 @@ function enableInputs() {
 
                 await fetch('/api/mpris/control', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: addAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ action: mprisAction })
                 });
             } else {
@@ -2401,12 +2455,21 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+    const authToken = getAuthToken();
+    if (!authToken) {
+        const authRequired = await checkAuthRequired();
+        if (authRequired) {
+            window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+            return;
+        }
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const panelName = urlParams.get('name');
 
     if (panelName) {
-        fetch(`/api/panel/content?name=${encodeURIComponent(panelName)}`)
+        fetch(`/api/panel/content?name=${encodeURIComponent(panelName)}`, { headers: addAuthHeaders() })
             .then(res => {
                 if (!res.ok) throw new Error(`Panel "${panelName}" not found`);
                 return res.json();
@@ -2589,7 +2652,7 @@ const SWIPE_COOLDOWN = 500;
  */
 async function loadPanelList() {
     try {
-        const res = await fetch('/api/panels');
+        const res = await fetch('/api/panels', { headers: addAuthHeaders() });
         const data = await res.json();
         availablePanels = data.allPanels || [];
         
@@ -2632,7 +2695,7 @@ function switchPanel(direction) {
     
     showSwipeFeedback(direction, targetPanel);
     
-    fetch(`/api/panel/content?name=${encodeURIComponent(targetPanel)}`)
+    fetch(`/api/panel/content?name=${encodeURIComponent(targetPanel)}`, { headers: addAuthHeaders() })
         .then(res => {
             if (!res.ok) throw new Error(`Panel "${targetPanel}" not found`);
             return res.json();

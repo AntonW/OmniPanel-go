@@ -1,3 +1,14 @@
+<!--
+    OmniPanel Start Page (Host UI)
+
+    Authentication flow:
+    - getToken() checks URL params, then localStorage, then sessionStorage for auth_token
+    - checkAuthRequired() probes /api/config to detect if auth is enabled (401 = auth required)
+    - If no token found and auth is enabled, redirects to /login
+    - All fetch() calls include Authorization: Bearer <token> header via addAuthHeaders()
+    - WebSocket connections include token as URL query param via addTokenToUrl()
+    - Links with data-auth-link attribute get token appended on DOMContentLoaded
+-->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -24,12 +35,12 @@
         <section class="tools-section">
             <h2 class="section-title">Tools</h2>
             <div class="tools-grid">
-                <a href="/editor" class="tool-card">
+                <a href="/editor" class="tool-card" data-auth-link>
                     <span class="tool-icon">🛠️</span>
                     <span class="tool-name">Panel Editor</span>
                     <span class="tool-desc">Design and edit panels</span>
                 </a>
-                <a href="/editor?new=true" class="tool-card">
+                <a href="/editor?new=true" class="tool-card" data-auth-link>
                     <span class="tool-icon">➕</span>
                     <span class="tool-name">New Panel</span>
                     <span class="tool-desc">Create a blank panel</span>
@@ -63,6 +74,45 @@
     </main>
 
     <script>
+        function getToken() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlToken = urlParams.get('token');
+            if (urlToken) return urlToken;
+            return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+        }
+
+        async function checkAuthRequired() {
+            try {
+                const res = await fetch('/api/config');
+                if (res.ok) return false;
+                if (res.status === 401) return true;
+            } catch { }
+            return false;
+        }
+
+        (async () => {
+            const authToken = getToken();
+            if (!authToken) {
+                const authRequired = await checkAuthRequired();
+                if (authRequired) {
+                    window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+                }
+            }
+        })();
+
+        const authToken = getToken();
+
+        function addAuthHeaders(headers = {}) {
+            if (!authToken) return headers;
+            return { ...headers, 'Authorization': `Bearer ${authToken}` };
+        }
+
+        function addTokenToUrl(url) {
+            if (!authToken) return url;
+            const separator = url.includes('?') ? '&' : '?';
+            return `${url}${separator}token=${encodeURIComponent(authToken)}`;
+        }
+
         const themeToggle = document.getElementById('theme-toggle');
         const themeIcon = themeToggle.querySelector('.theme-icon');
         const html = document.documentElement;
@@ -82,18 +132,18 @@
         async function loadPanels() {
             const grid = document.getElementById('panels-grid');
             try {
-                const res = await fetch('/api/panels');
+                const res = await fetch('/api/panels', { headers: addAuthHeaders() });
                 const data = await res.json();
 
                 if (!data.allPanels || data.allPanels.length === 0) {
-                    grid.innerHTML = '<div class="empty-state">No panels found. Create one in the <a href="/editor">Panel Editor</a>.</div>';
+                    grid.innerHTML = '<div class="empty-state">No panels found. Create one in the <a href="' + addTokenToUrl('/editor') + '">Panel Editor</a>.</div>';
                     return;
                 }
 
                 grid.innerHTML = '';
                 data.allPanels.forEach(panel => {
                     const card = document.createElement('a');
-                    card.href = `/panel?name=${encodeURIComponent(panel)}`;
+                    card.href = addTokenToUrl(`/panel?name=${encodeURIComponent(panel)}`);
                     card.target = '_blank';
                     card.className = 'panel-card';
                     card.innerHTML = `
@@ -135,7 +185,7 @@
 
         async function loadConfig() {
             try {
-                const res = await fetch('/api/config');
+                const res = await fetch('/api/config', { headers: addAuthHeaders() });
                 const config = await res.json();
                 const ip = getLocalIP();
                 document.getElementById('url-display').innerText = `http://${ip}:${config.port}`;
@@ -147,7 +197,8 @@
         let ws;
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+            const wsUrl = addTokenToUrl(`${protocol}//${window.location.host}/ws`);
+            ws = new WebSocket(wsUrl);
 
             ws.onopen = () => {
                 addLogEntry(new Date().toLocaleTimeString(), 'System', 'Host UI connected');
@@ -171,6 +222,10 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-auth-link]').forEach(link => {
+                link.href = addTokenToUrl(link.href);
+            });
+
             loadPanels();
             loadConfig();
             connectWebSocket();

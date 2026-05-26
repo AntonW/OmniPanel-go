@@ -7,6 +7,29 @@
  * Changes are pushed to undo history and trigger a re-render of the block. The panel
  * subscribes to block-selected, selection-cleared, and blocks-changed events during init().
  */
+
+/**
+ * Retrieves the auth token from URL params, localStorage, or sessionStorage.
+ * @returns {string|null} The auth token or null.
+ */
+function getPropsPanelAuthToken() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    if (urlToken) return urlToken;
+    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+}
+
+/**
+ * Adds Authorization: Bearer header to fetch headers for properties panel API calls.
+ * @param {Object} headers - Existing headers
+ * @returns {Object} Headers with auth added (unchanged if no token)
+ */
+function addPropsPanelAuthHeaders(headers = {}) {
+    const token = getPropsPanelAuthToken();
+    if (!token) return headers;
+    return { ...headers, 'Authorization': `Bearer ${token}` };
+}
+
 class PropertiesPanel {
     constructor(state) {
         this.state = state;
@@ -43,7 +66,7 @@ class PropertiesPanel {
         
         // Load themes
         try {
-            const res = await fetch('/api/themes');
+            const res = await fetch('/api/themes', { headers: addPropsPanelAuthHeaders() });
             this.themes = await res.json();
         } catch (e) {
             console.error('Failed to load themes:', e);
