@@ -27,6 +27,22 @@ function addEditorAuthHeaders(headers = {}) {
     return { ...headers, 'Authorization': `Bearer ${token}` };
 }
 
+/**
+ * Redirects to /login if the response is 401 Unauthorized.
+ * Clears stored tokens to prevent redirect loops.
+ * @param {Response} res - The fetch response to check
+ * @returns {boolean} True if redirected (caller should return early)
+ */
+function handleEditorUnauthorized(res) {
+    if (res.status === 401) {
+        localStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_token');
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+        return true;
+    }
+    return false;
+}
+
 class PanelManager {
     constructor(state) {
         this.state = state;
@@ -51,6 +67,7 @@ class PanelManager {
     async initThemeSelector() {
         try {
             const res = await fetch('/api/themes', { headers: addEditorAuthHeaders() });
+            if (handleEditorUnauthorized(res)) return;
             const themes = await res.json();
             
             const selector = document.getElementById('panel-theme-selector');
@@ -94,6 +111,7 @@ class PanelManager {
     async showLoadDialog() {
         try {
             const panelsRes = await fetch('/api/panels', { headers: addEditorAuthHeaders() });
+            if (handleEditorUnauthorized(panelsRes)) return;
             const panels = await panelsRes.json();
 
             if (!panels.allPanels || panels.allPanels.length === 0) {
@@ -143,6 +161,7 @@ class PanelManager {
                 headers: addEditorAuthHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ fileName: name, content: data })
             });
+            if (handleEditorUnauthorized(res)) return;
             const result = await res.json();
             if (result.success) {
                 this.currentPanelName = name;
@@ -168,6 +187,7 @@ class PanelManager {
     async loadPanel(name) {
         try {
             const res = await fetch(`/api/panel/content?name=${encodeURIComponent(name)}`, { headers: addEditorAuthHeaders() });
+            if (handleEditorUnauthorized(res)) return;
             if (!res.ok) {
                 showToast('Failed to load panel', 'error');
                 return;
@@ -251,6 +271,7 @@ class PanelManager {
 
         try {
             const res = await fetch(`/api/panel/content?name=${encodeURIComponent(this.currentPanelName)}`, { headers: addEditorAuthHeaders() });
+            if (handleEditorUnauthorized(res)) return;
             if (!res.ok) {
                 showToast('Failed to load panel for duplication', 'error');
                 return;
@@ -262,6 +283,7 @@ class PanelManager {
                 headers: addEditorAuthHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ fileName: newName, content: data })
             });
+            if (handleEditorUnauthorized(saveRes)) return;
 
             const result = await saveRes.json();
             if (result.success) {
@@ -288,6 +310,7 @@ class PanelManager {
                 method: 'DELETE',
                 headers: addEditorAuthHeaders()
             });
+            if (handleEditorUnauthorized(res)) return;
 
             if (res.ok) {
                 showToast(`Panel "${this.currentPanelName}" deleted`, 'success');
@@ -334,6 +357,7 @@ class PanelManager {
                     headers: addEditorAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ fileName: name, content: data })
                 });
+                if (handleEditorUnauthorized(res)) return;
 
                 const result = await res.json();
                 if (result.success) {

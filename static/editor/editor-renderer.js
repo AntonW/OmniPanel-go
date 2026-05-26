@@ -65,6 +65,22 @@ async function checkAuthRequired() {
     return false;
 }
 
+/**
+ * Redirects to /login if the response is 401 Unauthorized.
+ * Clears stored tokens to prevent redirect loops.
+ * @param {Response} res - The fetch response to check
+ * @returns {boolean} True if redirected (caller should return early)
+ */
+function handleUnauthorized(res) {
+    if (res.status === 401) {
+        localStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_token');
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+        return true;
+    }
+    return false;
+}
+
 let highestZ = 100;
 const WORKSPACE_GRID_X = 12;
 const WORKSPACE_GRID_Y = 12;
@@ -127,6 +143,7 @@ async function GetBlocks() {
     const blocksconstainer = document.getElementById("blocksconstainer");
     try {
         const res = await fetch('/api/blocks', { headers: addAuthHeaders() });
+        if (handleUnauthorized(res)) return;
         const blocksRaw = await res.json();
         const blocks = blocksRaw.map(item => new Block(item.name, item.type, item.path, item.children));
         buildHtmlTree(blocks, blocksconstainer);
@@ -602,6 +619,7 @@ async function saveWorkspace() {
             headers: addAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ fileName, content: panelData })
         });
+        if (handleUnauthorized(res)) return;
         const result = await res.json();
         if (result.success) alert("Workspace saved successfully!");
         else alert("Save failed: " + result.error);
@@ -634,11 +652,13 @@ async function loadWorkspace(firstTime = false) {
     let data = null;
     try {
         const panelsRes = await fetch('/api/panels', { headers: addAuthHeaders() });
+        if (handleUnauthorized(panelsRes)) return;
         const panels = await panelsRes.json();
         const panelName = prompt("Select panel to load:", panels.allPanels[0] || "");
         if (!panelName) return;
         currentPanelName = panelName;
         const res = await fetch(`/api/panel/content?name=${encodeURIComponent(panelName)}`, { headers: addAuthHeaders() });
+        if (handleUnauthorized(res)) return;
         if (res.ok) data = await res.json();
     } catch (e) { console.error("Failed to load panel:", e); }
     if (!data || !data.blocks) return;

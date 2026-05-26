@@ -113,6 +113,16 @@
             return `${url}${separator}token=${encodeURIComponent(authToken)}`;
         }
 
+        function handleUnauthorized(res) {
+            if (res.status === 401) {
+                localStorage.removeItem('auth_token');
+                sessionStorage.removeItem('auth_token');
+                window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+                return true;
+            }
+            return false;
+        }
+
         const themeToggle = document.getElementById('theme-toggle');
         const themeIcon = themeToggle.querySelector('.theme-icon');
         const html = document.documentElement;
@@ -133,6 +143,7 @@
             const grid = document.getElementById('panels-grid');
             try {
                 const res = await fetch('/api/panels', { headers: addAuthHeaders() });
+                if (handleUnauthorized(res)) return;
                 const data = await res.json();
 
                 if (!data.allPanels || data.allPanels.length === 0) {
@@ -186,6 +197,7 @@
         async function loadConfig() {
             try {
                 const res = await fetch('/api/config', { headers: addAuthHeaders() });
+                if (handleUnauthorized(res)) return;
                 const config = await res.json();
                 const ip = getLocalIP();
                 document.getElementById('url-display').innerText = `http://${ip}:${config.port}`;

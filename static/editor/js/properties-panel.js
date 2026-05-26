@@ -30,6 +30,22 @@ function addPropsPanelAuthHeaders(headers = {}) {
     return { ...headers, 'Authorization': `Bearer ${token}` };
 }
 
+/**
+ * Redirects to /login if the response is 401 Unauthorized.
+ * Clears stored tokens to prevent redirect loops.
+ * @param {Response} res - The fetch response to check
+ * @returns {boolean} True if redirected (caller should return early)
+ */
+function handlePropsPanelUnauthorized(res) {
+    if (res.status === 401) {
+        localStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_token');
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+        return true;
+    }
+    return false;
+}
+
 class PropertiesPanel {
     constructor(state) {
         this.state = state;
@@ -67,6 +83,7 @@ class PropertiesPanel {
         // Load themes
         try {
             const res = await fetch('/api/themes', { headers: addPropsPanelAuthHeaders() });
+            if (handlePropsPanelUnauthorized(res)) return;
             this.themes = await res.json();
         } catch (e) {
             console.error('Failed to load themes:', e);

@@ -27,6 +27,22 @@ function addBlockLibAuthHeaders(headers = {}) {
     return { ...headers, 'Authorization': `Bearer ${token}` };
 }
 
+/**
+ * Redirects to /login if the response is 401 Unauthorized.
+ * Clears stored tokens to prevent redirect loops.
+ * @param {Response} res - The fetch response to check
+ * @returns {boolean} True if redirected (caller should return early)
+ */
+function handleBlockLibUnauthorized(res) {
+    if (res.status === 401) {
+        localStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_token');
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+        return true;
+    }
+    return false;
+}
+
 class BlockLibrary {
     constructor() {
         this.blocks = [];
@@ -46,6 +62,7 @@ class BlockLibrary {
     async init() {
         try {
             const res = await fetch('/api/blocks', { headers: addBlockLibAuthHeaders() });
+            if (handleBlockLibUnauthorized(res)) return;
             const blocksRaw = await res.json();
             this.blocks = this.flattenBlocks(blocksRaw);
             this.render();

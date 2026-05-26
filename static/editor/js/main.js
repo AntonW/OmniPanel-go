@@ -20,6 +20,22 @@ function addEditorMainAuthHeaders(headers = {}) {
     return { ...headers, 'Authorization': `Bearer ${token}` };
 }
 
+/**
+ * Redirects to /login if the response is 401 Unauthorized.
+ * Clears stored tokens to prevent redirect loops.
+ * @param {Response} res - The fetch response to check
+ * @returns {boolean} True if redirected (caller should return early)
+ */
+function handleEditorMainUnauthorized(res) {
+    if (res.status === 401) {
+        localStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_token');
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+        return true;
+    }
+    return false;
+}
+
 class Editor {
     constructor() {
         this.state = new EditorState();
@@ -117,6 +133,7 @@ class Editor {
     async loadLastPanel() {
         try {
             const panelsRes = await fetch('/api/panels', { headers: addEditorMainAuthHeaders() });
+            if (handleEditorMainUnauthorized(panelsRes)) return;
             const panels = await panelsRes.json();
             if (panels.allPanels && panels.allPanels.length > 0) {
                 await this.panelManager.loadPanel(panels.allPanels[0]);

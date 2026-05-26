@@ -96,6 +96,22 @@ async function checkAuthRequired() {
     return false;
 }
 
+/**
+ * Redirects to /login if the response is 401 Unauthorized.
+ * Clears stored tokens to prevent redirect loops.
+ * @param {Response} res - The fetch response to check
+ * @returns {boolean} True if redirected (caller should return early)
+ */
+function handleUnauthorized(res) {
+    if (res.status === 401) {
+        localStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_token');
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+        return true;
+    }
+    return false;
+}
+
 // Speech configuration received from server on connect.
 // Controls recording behavior, trigger mode, and TTS.
 // Runtime-specific settings like speech.vosk_runtime_url stay server-side and
@@ -1709,7 +1725,9 @@ function enableInputs() {
                 // then send a set-volume command with a relative delta.
                 let mprisAction = action;
                 if (action === 'volumedown' || action === 'volumeup') {
-                    const volumeData = await fetch('/api/mpris/players', { headers: addAuthHeaders() }).then(r => r.json());
+                    const volumeRes = await fetch('/api/mpris/players', { headers: addAuthHeaders() });
+                    if (handleUnauthorized(volumeRes)) return;
+                    const volumeData = await volumeRes.json();
                     if (volumeData.players && volumeData.players.length > 0) {
                         const currentVolume = volumeData.players[0].volume || 0.5;
                         const delta = action === 'volumedown' ? -0.05 : 0.05;
@@ -2471,10 +2489,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (panelName) {
         fetch(`/api/panel/content?name=${encodeURIComponent(panelName)}`, { headers: addAuthHeaders() })
             .then(res => {
+                if (handleUnauthorized(res)) return null;
                 if (!res.ok) throw new Error(`Panel "${panelName}" not found`);
                 return res.json();
             })
-            .then(data => loadPanel(data))
+            .then(data => { if (data) loadPanel(data); })
             .catch(err => {
                 document.body.innerHTML = `<h1>Error</h1><p>${err.message}</p><p><a href="/">Go to start page</a></p>`;
             });
@@ -2653,6 +2672,7 @@ const SWIPE_COOLDOWN = 500;
 async function loadPanelList() {
     try {
         const res = await fetch('/api/panels', { headers: addAuthHeaders() });
+        if (handleUnauthorized(res)) return;
         const data = await res.json();
         availablePanels = data.allPanels || [];
         
@@ -2697,10 +2717,12 @@ function switchPanel(direction) {
     
     fetch(`/api/panel/content?name=${encodeURIComponent(targetPanel)}`, { headers: addAuthHeaders() })
         .then(res => {
+            if (handleUnauthorized(res)) return null;
             if (!res.ok) throw new Error(`Panel "${targetPanel}" not found`);
             return res.json();
         })
         .then(data => {
+            if (!data) return;
             loadPanel(data);
             currentPanelIndex = targetIndex;
             window.history.replaceState({}, '', `/panel?name=${encodeURIComponent(targetPanel)}`);
