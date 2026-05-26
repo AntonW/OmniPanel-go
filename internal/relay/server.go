@@ -20,9 +20,12 @@
 // requests via Authorization headers and WebSocket URL query parameters.
 // CSS files, JavaScript, images, and fonts are served without authentication
 // so the login page can load styles and all pages can execute their JavaScript
-// to handle auth detection and redirect. HTML pages (/panel, /editor) are also
-// served without auth — they are templates only; sensitive data is protected by
-// requiring authentication on all API endpoints and WebSocket connections.
+// to handle auth detection and redirect. Block templates (/blocks/), theme CSS
+// (/themes/), and user assets (/assets/) are also served without auth — they
+// contain no sensitive data, only static files referenced by the frontend.
+// HTML pages (/panel, /editor) are served without auth as templates only;
+// sensitive data is protected by requiring authentication on all API endpoints
+// and WebSocket connections.
 //
 // Architecture:
 //
@@ -108,6 +111,11 @@ func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 
 	app.Get("/login", s.serveLoginPage)
 
+	// Return 204 for favicon requests so browsers don't show 401 errors.
+	app.Get("/favicon.ico", func(c *fiber.Ctx) error {
+		return c.SendStatus(fiber.StatusNoContent)
+	})
+
 	// Disable browser caching for JS/CSS so changes are always picked up.
 	// This runs before static serving for unauthenticated assets.
 	noCacheStaticMiddleware := func(c *fiber.Ctx) error {
@@ -119,16 +127,32 @@ func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 	app.Use(noCacheStaticMiddleware)
 
 	// Serve static assets without authentication:
-	// - CSS files: needed for login page and unauthenticated pages
-	// - JS files: application code, auth enforced via API calls
-	// - Images/fonts: referenced by HTML/CSS
+	// - CSS, JS, images, fonts from static/ directory
+	// - Block templates from user/blocks/
+	// - Theme CSS from user/themes/
+	// - User assets from user/assets/
+	// These are referenced by HTML/CSS and contain no sensitive data.
 	// The Next function skips paths that should fall through to HTML handlers.
 	app.Static("/", staticDir, fiber.Static{
 		Next: func(c *fiber.Ctx) bool {
-			// Let HTML page handlers serve these paths
 			return c.Path() == "/" || c.Path() == "/panel" || c.Path() == "/editor"
 		},
 	})
+
+	blocksPath := filepath.Join(userPath, "blocks")
+	if _, err := os.Stat(blocksPath); err == nil {
+		app.Static("/blocks", blocksPath)
+	}
+
+	themesPath := filepath.Join(userPath, "themes")
+	if _, err := os.Stat(themesPath); err == nil {
+		app.Static("/themes", themesPath)
+	}
+
+	assetsPath := filepath.Join(userPath, "assets")
+	if _, err := os.Stat(assetsPath); err == nil {
+		app.Static("/assets", assetsPath)
+	}
 
 	app.Get("/", s.serveStartPage)
 	app.Get("/panel", s.servePanel)
@@ -150,21 +174,6 @@ func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 	app.Post("/api/joystick-count", s.setJoystickCount)
 	app.Get("/api/config", s.getConfig)
 	app.Post("/api/data/push", s.pushData)
-
-	blocksPath := filepath.Join(userPath, "blocks")
-	if _, err := os.Stat(blocksPath); err == nil {
-		app.Static("/blocks", blocksPath)
-	}
-
-	themesPath := filepath.Join(userPath, "themes")
-	if _, err := os.Stat(themesPath); err == nil {
-		app.Static("/themes", themesPath)
-	}
-
-	assetsPath := filepath.Join(userPath, "assets")
-	if _, err := os.Stat(assetsPath); err == nil {
-		app.Static("/assets", assetsPath)
-	}
 
 	s.app = app
 	return s

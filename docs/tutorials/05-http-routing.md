@@ -42,6 +42,7 @@ func NewRouter(s *state.AppState) *fiber.App {
     app.Get("/panel", servePanel)    // Panel client
     app.Get("/editor", serveEditorUI) // Panel editor
     app.Get("/login", serveLoginPage) // Login form (exempt from auth middleware)
+    app.Get("/favicon.ico", ...)      // Returns 204 to prevent browser 401 errors
 
     // Disable browser caching for JS/CSS so changes are always picked up
     noCacheStaticMiddleware := func(c *fiber.Ctx) error {
@@ -59,6 +60,11 @@ func NewRouter(s *state.AppState) *fiber.App {
             return c.Path() == "/" || c.Path() == "/panel" || c.Path() == "/editor"
         },
     })
+
+    // User directories served without auth (block templates, themes, assets)
+    app.Static("/blocks", blocksPath)
+    app.Static("/themes", themesPath)
+    app.Static("/assets", assetsPath)
 
     app.Get("/ws", ws.New(func(c *ws.Conn) {
         handleWS(c, s)

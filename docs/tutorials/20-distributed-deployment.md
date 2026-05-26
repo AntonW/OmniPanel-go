@@ -466,7 +466,8 @@ On reconnection, the host agent sends `host-register` again. The server resets i
 - Host WebSocket connections validate token from query parameter (`?type=host&token=xxx`)
 - Empty `auth_token` disables authentication (backward compatible, default mode unaffected)
 - The `/login` page is exempt from auth middleware, providing a login form for token entry
-- CSS, JS, images, and fonts are served without authentication so pages can load and execute JavaScript
+- `/favicon.ico` returns 204 to prevent browser 401 errors
+- CSS, JS, images, fonts, block templates (/blocks/), theme CSS (/themes/), and user assets (/assets/) are served without authentication so pages can load and execute JavaScript
 - HTML pages (/, /panel, /editor) are served without auth — they are templates only; sensitive data is protected at the API level
 - Frontend detects auth requirement by probing `/api/config` (401 = auth needed)
 - Token is stored in localStorage (persistent) or sessionStorage (tab-only) based on user choice
