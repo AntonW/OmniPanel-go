@@ -30,6 +30,7 @@ type Config struct {
     NumJoysticks uint8        `mapstructure:"numJoysticks"`
     ServerAddress string      `mapstructure:"server_address"`
     AuthToken    string       `mapstructure:"auth_token"`
+    UserPath     string       `mapstructure:"user_path"`
     Speech       SpeechConfig `mapstructure:"speech"`
 }
 ```
@@ -119,6 +120,7 @@ Here's what `config.json` looks like with all features:
 {
     "port": 3000,
     "numJoysticks": 4,
+    "user_path": "",
     "server_address": "",
     "auth_token": "",
     "speech": {
@@ -169,6 +171,7 @@ The application can be configured via these environment variables:
 | `OMNIPANEL_NUMJOYSTICKS` | uint8 | `OMNIPANEL_NUMJOYSTICKS=8` | Number of virtual joysticks |
 | `OMNIPANEL_SERVER_ADDRESS` | string | `OMNIPANEL_SERVER_ADDRESS=10.0.0.1:3000` | Relay server address for distributed deployment |
 | `OMNIPANEL_AUTH_TOKEN` | string | `OMNIPANEL_AUTH_TOKEN=your-secret` | Token for serve/connect mode authentication |
+| `OMNIPANEL_USER_PATH` | string | `OMNIPANEL_USER_PATH=C:\my-custom-user` | Custom user data directory (overrides auto-discovery) |
 
 Example usage:
 
@@ -233,6 +236,24 @@ func FindUserPath() string {
 
 Same fallback pattern, but with an extra check: `info.IsDir()` ensures the path is actually a directory, not a regular file.
 
+### Manual User Path Override
+
+Instead of auto-discovery, you can set `user_path` in `config.json` or via the `OMNIPANEL_USER_PATH` environment variable:
+
+```json
+{
+    "user_path": "C:\\my-custom-user"
+}
+```
+
+The application checks the config first. If `user_path` is empty, it falls back to the `FindUserPath()` discovery logic. This gives you full control over where panels, blocks, themes, and assets are stored.
+
+> **Concept: Fallback priority**
+> The application resolves the user path in this order:
+> 1. `config.user_path` (or `OMNIPANEL_USER_PATH` env var) — if set, use it directly
+> 2. `FindUserPath()` discovery — check current directory, then next to the executable
+> 3. Default `"user"` directory — if nothing else exists
+
 ## Key Takeaways
 
 - Viper provides a unified configuration interface with automatic environment variable support
@@ -244,5 +265,6 @@ Same fallback pattern, but with an extra check: `info.IsDir()` ensures the path 
 - Nested structs (`SpeechConfig`) group related settings logically
 - `auth_token` enables token-based authentication for serve/connect modes (empty = disabled)
 - `server_address` configures the relay server address for distributed deployment
+- `user_path` allows manual override of the user data directory; empty means auto-discovery via `FindUserPath()`
 
 [← Back: Chapter 1](01-project-overview.md) · [Next: Chapter 3 →](03-state-and-concurrency.md)

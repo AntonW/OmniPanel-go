@@ -160,6 +160,7 @@ Edit `config.json` to change server settings:
 {
   "port": 3000,
   "numJoysticks": 5,
+  "user_path": "",
   "server_address": "",
   "auth_token": "",
   "speech": {
@@ -189,6 +190,7 @@ Edit `config.json` to change server settings:
 |-------|------|---------|-------------|
 | `port` | number | `3000` | HTTP/WebSocket port |
 | `numJoysticks` | number | `5` | Number of virtual joysticks to create |
+| `user_path` | string | `""` | Custom user data directory path. Empty = auto-discover (current dir, then next to binary) |
 | `server_address` | string | `""` | Relay server address for distributed deployment (e.g., `"10.0.0.1:3000"`) |
 | `auth_token` | string | `""` | Token for serve/connect mode authentication (empty = disabled) |
 

@@ -77,7 +77,6 @@ func main() {
 	logger.Init(format)
 
 	configPath := config.FindConfigPath()
-	userPath := config.FindUserPath()
 	baseDir, _ := os.Getwd()
 
 	cfg, err := config.Load(configPath)
@@ -87,6 +86,11 @@ func main() {
 			Port:         3000,
 			NumJoysticks: 4,
 		}
+	}
+
+	userPath := cfg.UserPath
+	if userPath == "" {
+		userPath = config.FindUserPath()
 	}
 
 	switch subcommand {

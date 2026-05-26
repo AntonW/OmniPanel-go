@@ -269,6 +269,7 @@ Panel:       http://YOUR-PC-IP:3000/panel?name=PanelName
 ### File Locations
 ```
 Config:          config.json
+User Data:       user/ (overridable via user_path in config.json)
 Panels:          user/panels/
 Custom Blocks:   user/blocks/
 Speech Commands: user/speech_commands.json

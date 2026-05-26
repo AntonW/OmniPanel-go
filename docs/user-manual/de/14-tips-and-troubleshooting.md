@@ -268,6 +268,7 @@ Panel:       http://DEINE-PC-IP:3000/panel?name=PanelName
 ### Dateispeicherorte
 ```
 Konfiguration:     config.json
+Benutzerspeicher:  user/ (überschreibbar via user_path in config.json)
 Panels:            user/panels/
 Eigene Blöcke:     user/blocks/
 Sprachbefehle:     user/speech_commands.json

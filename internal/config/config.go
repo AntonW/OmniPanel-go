@@ -80,6 +80,8 @@ type Config struct {
 	// AuthToken protects serve/connect modes with token-based authentication.
 	// Empty string disables authentication (backward compatible).
 	AuthToken string `mapstructure:"auth_token"`
+	// UserPath is the path to the user data directory. If empty, it is discovered automatically.
+	UserPath string `mapstructure:"user_path"`
 	// Speech holds speech recognition settings.
 	Speech SpeechConfig `mapstructure:"speech"`
 	// MPRIS holds media player integration settings for Linux desktop environments.
@@ -94,6 +96,7 @@ type Config struct {
 // - OMNIPANEL_NUMJOYSTICKS
 // - OMNIPANEL_SERVER_ADDRESS
 // - OMNIPANEL_AUTH_TOKEN
+// - OMNIPANEL_USER_PATH
 func Load(path string) (*Config, error) {
 	v := viper.New()
 
@@ -114,6 +117,7 @@ func Load(path string) (*Config, error) {
 	v.BindEnv("numJoysticks")
 	v.BindEnv("server_address")
 	v.BindEnv("auth_token")
+	v.BindEnv("user_path")
 
 	var cfg Config
 	if err := v.Unmarshal(&cfg); err != nil {
@@ -134,6 +138,7 @@ func (c *Config) Save(path string) error {
 	v.Set("numJoysticks", c.NumJoysticks)
 	v.Set("server_address", c.ServerAddress)
 	v.Set("auth_token", c.AuthToken)
+	v.Set("user_path", c.UserPath)
 	v.Set("speech", c.Speech)
 	v.Set("mpris", c.MPRIS)
 
