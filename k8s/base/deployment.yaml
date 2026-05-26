@@ -30,6 +30,10 @@ spec:
               value: "3000"
           workingDir: /var/run/ko
           volumeMounts:
+            - name: config
+              mountPath: /var/run/ko/config.json
+              subPath: config.json
+              readOnly: true
             - name: user-data
               mountPath: /var/run/ko/user
           resources:
@@ -52,6 +56,9 @@ spec:
             initialDelaySeconds: 3
             periodSeconds: 5
       volumes:
+        - name: config
+          configMap:
+            name: omnipanel-go-config
         - name: user-data
           persistentVolumeClaim:
             claimName: omnipanel-go-user-data
