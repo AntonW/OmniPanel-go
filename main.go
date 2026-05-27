@@ -176,7 +176,7 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
 		serverAddr = cfg.ServerAddress
 	}
 	if serverAddr == "" {
-		slog.Error("No server address provided. Use 'connect <IP>:<PORT>' or set server_address in config.json")
+		slog.Error("No server address provided. Use 'connect <IP>:<PORT>' or 'connect wss://<IP>:<PORT>', or set server_address in config.json")
 		os.Exit(1)
 	}
 

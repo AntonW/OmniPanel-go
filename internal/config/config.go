@@ -75,7 +75,10 @@ type Config struct {
 	Port uint16 `mapstructure:"port"`
 	// NumJoysticks is the number of virtual joysticks to create.
 	NumJoysticks uint8 `mapstructure:"numJoysticks"`
-	// ServerAddress is the relay server address for distributed deployment (e.g., "10.0.0.1:3000").
+	// ServerAddress is the relay server address for distributed deployment.
+	// Supports plain host:port (e.g., "10.0.0.1:3000") or full WebSocket URLs
+	// (e.g., "wss://10.0.0.1:3000" for secure connections). Defaults to ws://
+	// if no scheme is provided.
 	ServerAddress string `mapstructure:"server_address"`
 	// AuthToken protects serve/connect modes with token-based authentication.
 	// Empty string disables authentication (backward compatible).

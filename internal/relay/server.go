@@ -30,15 +30,15 @@
 // Architecture:
 //
 //	Fiber HTTP server serves static files and API routes (same as default mode)
-//	WebSocket at /ws accepts two connection types:
+//	WebSocket at /ws accepts two connection types (ws:// or wss://):
 //	  - Browser: no query param, multiple allowed
 //	  - Host: ?type=host query param, exactly one allowed (1:1)
 //	Messages are relayed bidirectionally between the host and all browsers
 //
 // Connection flow:
 //
-//  1. Browser connects to ws://server/ws → added to browser pool
-//  2. Host connects to ws://server/ws?type=host → accepted if no host exists
+//  1. Browser connects to ws://server/ws (or wss://) → added to browser pool
+//  2. Host connects to ws://server/ws?type=host (or wss://) → accepted if no host exists
 //  3. Browser messages forwarded to host
 //  4. Host messages broadcast to all browsers
 //
@@ -49,7 +49,8 @@
 //
 // The host agent connects using:
 //
-//	./omnipanel connect <server-ip>:<port>
+//	./omnipanel connect <server-ip>:<port>        # ws:// (default)
+//	./omnipanel connect wss://<server-ip>:<port>  # wss:// (secure, behind TLS proxy)
 package relay
 
 import (

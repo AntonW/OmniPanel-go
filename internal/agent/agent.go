@@ -14,7 +14,7 @@
 //
 // Architecture:
 //
-//	WebSocket client to relay server (ws://server/ws?type=host)
+//	WebSocket client to relay server (ws:// or wss://)
 //	No HTTP server — all UI served by the central server
 //	All subsystems run locally: joystick, mousepad, keyboard, databus, speech, MPRIS, RSS
 //	Receives forwarded browser commands from server, executes locally
@@ -22,7 +22,7 @@
 //
 // Connection flow:
 //
-//  1. Connect to ws://server/ws?type=host (with token if auth_token is set)
+//  1. Connect to ws://server/ws?type=host or wss://server/ws?type=host (with token if auth_token is set)
 //  2. Send {"type": "host-register"} to register with server
 //  3. Receive forwarded browser commands
 //  4. Execute commands locally, send results back
@@ -30,12 +30,13 @@
 //
 // Usage:
 //
-//	./omnipanel connect 10.0.0.1:3000              # Connect to server at address
+//	./omnipanel connect 10.0.0.1:3000              # Connect to server at address (ws://)
+//	./omnipanel connect wss://10.0.0.1:3000        # Connect with WebSocket Secure
 //	./omnipanel connect                             # Uses server_address from config.json
 //
 // Configuration:
 //
-// Set "server_address": "10.0.0.1:3000" in config.json or use OMNIPANEL_SERVER_ADDRESS env var.
+// Set "server_address": "10.0.0.1:3000" or "wss://10.0.0.1:3000" in config.json.
 // Set "auth_token": "your-secret" in config.json or use OMNIPANEL_AUTH_TOKEN env var.
 package agent
 
@@ -46,6 +47,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -144,6 +146,23 @@ func New(cfg *config.Config, configPath, userPath, baseDir string) *Agent {
 	return a
 }
 
+// buildWebSocketURL constructs the WebSocket URL from the server address.
+// Supports full URLs (ws:// or wss://) or plain host:port (defaults to ws://).
+func buildWebSocketURL(serverAddr string, authToken string) string {
+	url := serverAddr
+	if serverAddr != "" && !strings.HasPrefix(serverAddr, "ws://") && !strings.HasPrefix(serverAddr, "wss://") {
+		url = "ws://" + serverAddr
+	}
+	if !strings.HasSuffix(url, "/") {
+		url += "/"
+	}
+	url += "ws?type=host"
+	if authToken != "" {
+		url += fmt.Sprintf("&token=%s", authToken)
+	}
+	return url
+}
+
 // Run connects to the relay server and starts the agent loop with auto-reconnect.
 // It blocks until Stop() is called. Connection failures trigger exponential backoff
 // (1s → 2s → 4s → max 30s) and automatic reconnection attempts.
@@ -158,10 +177,7 @@ func (a *Agent) Run(serverAddr string) {
 		default:
 		}
 
-		url := fmt.Sprintf("ws://%s/ws?type=host", serverAddr)
-		if a.Config.AuthToken != "" {
-			url += fmt.Sprintf("&token=%s", a.Config.AuthToken)
-		}
+		url := buildWebSocketURL(serverAddr, a.Config.AuthToken)
 		slog.Info("Connecting to server", "url", url)
 
 		conn, _, err := websocket.DefaultDialer.Dial(url, nil)

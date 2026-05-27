@@ -169,7 +169,7 @@ The application can be configured via these environment variables:
 |----------|------|---------|-------------|
 | `OMNIPANEL_PORT` | uint16 | `OMNIPANEL_PORT=8080` | HTTP server port |
 | `OMNIPANEL_NUMJOYSTICKS` | uint8 | `OMNIPANEL_NUMJOYSTICKS=8` | Number of virtual joysticks |
-| `OMNIPANEL_SERVER_ADDRESS` | string | `OMNIPANEL_SERVER_ADDRESS=10.0.0.1:3000` | Relay server address for distributed deployment |
+| `OMNIPANEL_SERVER_ADDRESS` | string | `OMNIPANEL_SERVER_ADDRESS=10.0.0.1:3000` or `OMNIPANEL_SERVER_ADDRESS=wss://10.0.0.1:3000` | Relay server address for distributed deployment. Accepts plain `host:port` (defaults to `ws://`) or full WebSocket URLs (`ws://` or `wss://`) |
 | `OMNIPANEL_AUTH_TOKEN` | string | `OMNIPANEL_AUTH_TOKEN=your-secret` | Token for serve/connect mode authentication |
 | `OMNIPANEL_USER_PATH` | string | `OMNIPANEL_USER_PATH=C:\my-custom-user` | Custom user data directory (overrides auto-discovery) |
 
@@ -264,7 +264,7 @@ The application checks the config first. If `user_path` is empty, it falls back 
 - Methods with receivers let you attach behavior to types
 - Nested structs (`SpeechConfig`) group related settings logically
 - `auth_token` enables token-based authentication for serve/connect modes (empty = disabled)
-- `server_address` configures the relay server address for distributed deployment
+- `server_address` configures the relay server address for distributed deployment; accepts plain `host:port` (defaults to `ws://`) or full WebSocket URLs (`ws://` or `wss://`)
 - `user_path` allows manual override of the user data directory; empty means auto-discovery via `FindUserPath()`
 
 [← Back: Chapter 1](01-project-overview.md) · [Next: Chapter 3 →](03-state-and-concurrency.md)

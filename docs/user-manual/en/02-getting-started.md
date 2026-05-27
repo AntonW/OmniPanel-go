@@ -10,7 +10,7 @@ OmniPanel-go can run in three different ways depending on your setup:
 |------|-------------|---------|
 | **Default** | Everything on one PC | `./omnipanel-go` |
 | **Server** | WebUI on a central PC, host behind firewall | `./omnipanel-go serve` |
-| **Host Agent** | Connect to a central server | `./omnipanel-go connect <IP>:<PORT>` |
+| **Host Agent** | Connect to a central server | `./omnipanel-go connect <IP>:<PORT>` or `./omnipanel-go connect wss://<IP>:<PORT>` |
 
 Most users should use the **Default** mode — it's the simplest and works great on a local network.
 
@@ -39,6 +39,13 @@ Set the token in `config.json` on the host machine:
 ```json
 {
   "server_address": "10.0.0.1:3000",
+  "auth_token": "your-secret-token"
+}
+```
+Or use a secure WebSocket URL (`wss://`) if your server is behind a reverse proxy with TLS:
+```json
+{
+  "server_address": "wss://10.0.0.1:3000",
   "auth_token": "your-secret-token"
 }
 ```

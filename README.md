@@ -191,7 +191,7 @@ Edit `config.json` to change server settings:
 | `port` | number | `3000` | HTTP/WebSocket port |
 | `numJoysticks` | number | `5` | Number of virtual joysticks to create |
 | `user_path` | string | `""` | Custom user data directory path. Empty = auto-discover (current dir, then next to binary) |
-| `server_address` | string | `""` | Relay server address for distributed deployment (e.g., `"10.0.0.1:3000"`) |
+| `server_address` | string | `""` | Relay server address for distributed deployment. Accepts plain `host:port` (e.g., `"10.0.0.1:3000"`, defaults to `ws://`) or full WebSocket URLs (`"ws://..."` or `"wss://..."`) |
 | `auth_token` | string | `""` | Token for serve/connect mode authentication (empty = disabled) |
 
 ### Logging
@@ -215,9 +215,9 @@ OmniPanel-go supports a split deployment model with subcommands:
 |---------|-------------|
 | `./omnipanel-go` | Default mode: HTTP server + subsystems on one machine |
 | `./omnipanel-go serve` | Relay server: serves WebUI, relays WebSocket messages |
-| `./omnipanel-go connect <addr>` | Host agent: connects to relay server, runs subsystems |
+| `./omnipanel-go connect <addr>` | Host agent: connects to relay server, runs subsystems. `<addr>` accepts `host:port` (ws://) or full URL (`wss://`) |
 
-The host agent address can be set via CLI argument, `server_address` in `config.json`, or `OMNIPANEL_SERVER_ADDRESS` environment variable. The host auto-reconnects with exponential backoff if the server is unreachable.
+The host agent address can be set via CLI argument, `server_address` in `config.json`, or `OMNIPANEL_SERVER_ADDRESS` environment variable. Use `wss://` prefix for secure WebSocket connections when the relay server is behind a TLS-terminating reverse proxy. The host auto-reconnects with exponential backoff if the server is unreachable.
 
 ### Authentication
 

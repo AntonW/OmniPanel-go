@@ -82,7 +82,7 @@ Web Clients (browser):
 │    - Multiple browser connections               │
 │    - Single host connection (1:1)               │
 └──────────────┬──────────────────────────────────┘
-               │ WebSocket (ws://server/ws)
+               │ WebSocket (ws:// or wss://)
                │ ← simulate-*, execute-command
                │ → data-update, speech-result
                ▼
@@ -166,7 +166,7 @@ OmniPanel-go supports three deployment modes, selected via subcommand:
 |------|---------|-------------|
 | Default | `./omnipanel-go` | HTTP server + subsystems (traditional, unchanged) |
 | Serve | `./omnipanel-go serve` | Central relay server (WebUI + WebSocket hub) |
-| Connect | `./omnipanel-go connect <addr>` | Host agent (WebSocket client + subsystems) |
+| Connect | `./omnipanel-go connect <addr>` | Host agent (WebSocket client + subsystems). `<addr>` accepts `host:port` (ws://) or full URL (`wss://`) |
 
 Let's walk through the entry point structure.
 

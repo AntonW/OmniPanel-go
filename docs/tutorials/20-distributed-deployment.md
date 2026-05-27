@@ -32,7 +32,7 @@ Distributed deployment solves this by separating concerns:
 │    - Multiple browser connections               │
 │    - Single host connection (1:1)               │
 └──────────────┬──────────────────────────────────┘
-               │ WebSocket (ws://server/ws)
+               │ WebSocket (ws:// or wss://)
                │ ← simulate-*, execute-command
                │ → data-update, speech-result
                ▼
@@ -86,8 +86,11 @@ The relay server:
 ## Using Connect Mode
 
 ```bash
-# Connect to a relay server
+# Connect to a relay server (ws://, default)
 ./omnipanel-go connect 10.0.0.1:3000
+
+# Connect with WebSocket Secure (wss://)
+./omnipanel-go connect wss://10.0.0.1:3000
 
 # Or use the address from config.json
 ./omnipanel-go connect
@@ -96,7 +99,7 @@ The relay server:
 The host agent:
 - Creates all subsystems (joystick, mousepad, keyboard, databus, speech, MPRIS, RSS)
 - Does **not** start an HTTP server
-- Connects to the relay server via WebSocket (`ws://server/ws?type=host`)
+- Connects to the relay server via WebSocket (`ws://server/ws?type=host` or `wss://server/ws?type=host`)
 - Sends `{"type": "host-register"}` on connect
 - Receives forwarded browser commands and executes them locally
 - Sends results back to the server for broadcast to browsers
@@ -111,7 +114,8 @@ The host agent needs to know where to find the relay server. Three ways to confi
 
 1. **Command-line argument** (highest priority):
    ```bash
-   ./omnipanel-go connect 10.0.0.1:3000
+   ./omnipanel-go connect 10.0.0.1:3000          # ws:// (default)
+   ./omnipanel-go connect wss://10.0.0.1:3000    # wss:// (secure)
    ```
 
 2. **Config file** (`config.json`):
@@ -122,12 +126,20 @@ The host agent needs to know where to find the relay server. Three ways to confi
      "numJoysticks": 5
    }
    ```
+   Or with WebSocket Secure:
+   ```json
+   {
+     "server_address": "wss://10.0.0.1:3000"
+   }
+   ```
 
 3. **Environment variable**:
    ```bash
    export OMNIPANEL_SERVER_ADDRESS=10.0.0.1:3000
    ./omnipanel-go connect
    ```
+
+The server address accepts either a plain `host:port` (defaults to `ws://`) or a full WebSocket URL (`ws://` or `wss://`). Use `wss://` when the relay server is behind a TLS-terminating reverse proxy.
 
 ### Authentication
 
@@ -171,11 +183,21 @@ http://server:3000/?token=xxx     # Direct access with token in URL
 > }
 > ```
 
-**Host agent connection:** The agent automatically appends the token from config to the WebSocket URL:
+**Host agent connection:** The agent builds the WebSocket URL from the server address, supporting both plain `host:port` and full URLs with `ws://` or `wss://` scheme:
 ```go
-url := fmt.Sprintf("ws://%s/ws?type=host", serverAddr)
-if a.Config.AuthToken != "" {
-    url += fmt.Sprintf("&token=%s", a.Config.AuthToken)
+func buildWebSocketURL(serverAddr string, authToken string) string {
+    url := serverAddr
+    if serverAddr != "" && !strings.HasPrefix(serverAddr, "ws://") && !strings.HasPrefix(serverAddr, "wss://") {
+        url = "ws://" + serverAddr
+    }
+    if !strings.HasSuffix(url, "/") {
+        url += "/"
+    }
+    url += "ws?type=host"
+    if authToken != "" {
+        url += fmt.Sprintf("&token=%s", authToken)
+    }
+    return url
 }
 ```
 
@@ -350,7 +372,7 @@ type Agent struct {
 }
 ```
 
-The `Run()` method implements the auto-reconnect loop:
+The `Run()` method implements the auto-reconnect loop with WebSocket URL construction that supports both `ws://` and `wss://`:
 
 ```go
 func (a *Agent) Run(serverAddr string) {
@@ -358,7 +380,7 @@ func (a *Agent) Run(serverAddr string) {
     maxBackoff := 30 * time.Second
 
     for {
-        url := fmt.Sprintf("ws://%s/ws?type=host", serverAddr)
+        url := buildWebSocketURL(serverAddr, a.Config.AuthToken)
         conn, _, err := websocket.DefaultDialer.Dial(url, nil)
         if err != nil {
             time.Sleep(backoff)
@@ -453,6 +475,8 @@ On reconnection, the host agent sends `host-register` again. The server resets i
 - The host agent initiates an outbound WebSocket connection (no inbound ports needed)
 - Serve mode: Fiber HTTP server + WebSocket relay hub (no subsystems)
 - Connect mode: WebSocket client + all subsystems (no HTTP server)
+- WebSocket URL supports plain `host:port` (defaults to `ws://`) or full URLs (`ws://` or `wss://`)
+- Use `wss://` when the relay server is behind a TLS-terminating reverse proxy
 - 1:1 host connection — second host is rejected with a close message
 - Host IP address is captured via `c.IP()` and broadcast on connect/disconnect as `log-event` messages
 - The panel client UI shows a floating host IP indicator in the top-left corner
