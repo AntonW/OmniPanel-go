@@ -127,6 +127,8 @@ func HandleMessage(s state.AppStateInterface, clientID uint64, raw string) {
         slog.Info("Host agent registered")
     case "heartbeat":
         s.BroadcastJSON(map[string]any{"type": "heartbeat-ack"})
+    case "heartbeat-ack":
+        // Acknowledgment of our heartbeat, no action needed
     case "simulate-button":
         handleButton(s, data)
     case "simulate-slider":
