@@ -64,6 +64,7 @@ OmniPanel-go v3 is a Go application that serves as:
 | **WebSocket** | Real-time communication on `/ws` for button/slider/joystick/keyboard events + binary audio frames |
 | **Relay Server** | Central server mode (`serve` subcommand) — serves WebUI and relays WebSocket messages between browsers and a single host agent |
 | **Host Agent** | Distributed mode (`connect` subcommand) — WebSocket client with all subsystems, auto-reconnects with exponential backoff |
+| **System Tray** | Cross-platform tray icon (default + connect modes, `fyne.io/systray`) with fullscreen toggle and graceful exit. Skipped on headless systems |
 | **Starter Init** | Copies default user content (blocks, panels, themes, assets) into an empty volume on first run (Docker containers) |
 | **Virtual Joystick** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: vJoy driver (CGO, requires `vJoyInterface.dll`) |
 | **Virtual Mouse** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: SendInput API (CGO) |
@@ -111,6 +112,9 @@ omnipanel-go/
     ├── state/           # Application state with broadcast channels + AppStateInterface
     ├── agent/           # Host agent for distributed deployment (connect mode)
     │   └── agent.go     # WebSocket client, auto-reconnect, all subsystems
+    ├── systray/         # System tray icon (fyne.io/systray)
+    │   ├── systray.go   # Tray with fullscreen toggle and exit controls
+    │   └── icon.png     # Embedded 64x64 PNG icon
     ├── relay/           # Central relay server for distributed deployment (serve mode)
     │   ├── server.go    # Fiber HTTP server + WebSocket hub
     │   └── handler.go   # WebSocket message routing (browser ↔ host)

@@ -50,6 +50,7 @@ import (
 	"omnipanel-go/internal/routes"
 	"omnipanel-go/internal/starter"
 	"omnipanel-go/internal/state"
+	"omnipanel-go/internal/systray"
 )
 
 func main() {
@@ -106,6 +107,10 @@ func main() {
 	}
 }
 
+// runDefault starts the application in default mode: HTTP server, all subsystems,
+// and a system tray icon (when a display server is available). The system tray
+// provides fullscreen toggle and graceful exit controls. The server runs in a
+// goroutine while the main thread waits for SIGINT or SIGTERM.
 func runDefault(cfg *config.Config, configPath, userPath, baseDir string) {
 	slog.Info("Starting OmniPanel-go server", "port", cfg.Port)
 
@@ -113,6 +118,31 @@ func runDefault(cfg *config.Config, configPath, userPath, baseDir string) {
 	defer appState.Close()
 
 	app := routes.NewRouter(appState)
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
+	if !systray.IsHeadless() {
+		fullscreenToggle := false
+		tray := systray.New(
+			func() {
+				fullscreenToggle = !fullscreenToggle
+				if fullscreenToggle {
+					appState.BroadcastJSON(map[string]any{"type": "enter-fullscreen"})
+				} else {
+					appState.BroadcastJSON(map[string]any{"type": "exit-fullscreen"})
+				}
+			},
+			func() {
+				quit <- syscall.SIGTERM
+			},
+		)
+		go tray.Run()
+		defer tray.Quit()
+		slog.Info("System tray initialized")
+	} else {
+		slog.Info("No display server detected, skipping system tray")
+	}
 
 	addr := fmt.Sprintf("0.0.0.0:%d", cfg.Port)
 	slog.Info("Server starting", "addr", addr)
@@ -124,8 +154,6 @@ func runDefault(cfg *config.Config, configPath, userPath, baseDir string) {
 		}
 	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	<-quit
 
 	slog.Info("Shutting down...")
@@ -170,6 +198,10 @@ func runServe(cfg *config.Config, userPath, baseDir string) {
 	slog.Info("Relay server closed")
 }
 
+// runConnect starts the application in connect mode: host agent that connects to a
+// relay server via WebSocket and runs all subsystems locally. A system tray icon
+// (when a display server is available) provides fullscreen toggle and graceful exit
+// controls. The exit callback sends SIGTERM to unblock WaitSignal().
 func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg string) {
 	serverAddr := serverAddrArg
 	if serverAddr == "" {
@@ -184,6 +216,28 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
 
 	agt := agent.New(cfg, configPath, userPath, baseDir)
 	defer agt.Close()
+
+	if !systray.IsHeadless() {
+		fullscreenToggle := false
+		tray := systray.New(
+			func() {
+				fullscreenToggle = !fullscreenToggle
+				if fullscreenToggle {
+					agt.BroadcastJSON(map[string]any{"type": "enter-fullscreen"})
+				} else {
+					agt.BroadcastJSON(map[string]any{"type": "exit-fullscreen"})
+				}
+			},
+			func() {
+				syscall.Kill(os.Getpid(), syscall.SIGTERM)
+			},
+		)
+		go tray.Run()
+		defer tray.Quit()
+		slog.Info("System tray initialized")
+	} else {
+		slog.Info("No display server detected, skipping system tray")
+	}
 
 	go func() {
 		agt.Run(serverAddr)

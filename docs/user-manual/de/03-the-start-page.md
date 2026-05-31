@@ -46,6 +46,9 @@ Buttons zum Umschalten des Vollbildmodus auf allen verbundenen Geräten:
 
 > **Tipp:** Der Vollbildmodus ist super für Immersion — dein Panel sieht dann aus wie eine dedizierte App statt einer Webseite.
 
+> **Alternative: System-Tray**
+> Wenn OmniPanel-go auf einem Rechner mit grafischer Oberfläche läuft, kannst du den Vollbildmodus auch über das System-Tray-Symbol umschalten. Klicke mit der rechten Maustaste auf das Tray-Symbol und wähle **Vollbild aktivieren** oder **Vollbild verlassen**. Das funktioniert sowohl im Standard- als auch im Host-Agent-Modus und sendet denselben Befehl an alle verbundenen Geräte.
+
 ### Verbindungsprotokoll
 
 Am unteren Rand der Seite siehst du ein Live-Protokoll, das Folgendes anzeigt:

@@ -55,6 +55,12 @@ OmniPanel-go is a web-based control panel system that runs on Linux or Windows. 
 │  │  Speech   │                                   │
 │  │  Manager  │                                   │
 │  └──────────┘                                   │
+│                                                  │
+│  ┌────────────────────────────────────────────┐  │
+│  │  System Tray (default mode, with display)  │  │
+│  │  - Enter/Exit Fullscreen (broadcast)       │  │
+│  │  - Exit Application (SIGTERM)              │  │
+│  └────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────┘
            │                │
            ▼                ▼
@@ -95,6 +101,8 @@ Web Clients (browser):
 │  - MPRISWatcher                                 │
 │  - RSSManager                                   │
 │  - Auto-reconnect with backoff                  │
+│  - System Tray (with display):                  │
+│      Enter/Exit Fullscreen, Exit Application    │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -150,12 +158,16 @@ OmniPanel-go/
 │   ├── assets/                  # Images and other assets
 │   ├── themes/                  # Theme CSS files
 │   └── speech_commands.json     # Voice command definitions
-└── starter/                     # Starter files for Docker containers (build-time copy of user/)
-    ├── panels/                  # Default panels for first-run setup
-    ├── blocks/                  # Default block templates
-    ├── assets/                  # Default assets
-    ├── themes/                  # Default themes
-    └── speech_commands.json     # Default speech commands
+├── starter/                     # Starter files for Docker containers (build-time copy of user/)
+│   ├── panels/                  # Default panels for first-run setup
+│   ├── blocks/                  # Default block templates
+│   ├── assets/                  # Default assets
+│   ├── themes/                  # Default themes
+│   └── speech_commands.json     # Default speech commands
+└── internal/
+    └── systray/                 # System tray icon (fyne.io/systray)
+        ├── systray.go           # Tray package with fullscreen toggle and exit
+        └── icon.png             # Embedded tray icon (64x64 PNG from SVG logo)
 ```
 
 ## The Entry Point: `main.go`
@@ -304,6 +316,28 @@ func runDefault(cfg *config.Config, configPath, userPath, baseDir string) {
 
     app := routes.NewRouter(appState)
 
+    quit := make(chan os.Signal, 1)
+    signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
+    if !systray.IsHeadless() {
+        fullscreenToggle := false
+        tray := systray.New(
+            func() {
+                fullscreenToggle = !fullscreenToggle
+                if fullscreenToggle {
+                    appState.BroadcastJSON(map[string]any{"type": "enter-fullscreen"})
+                } else {
+                    appState.BroadcastJSON(map[string]any{"type": "exit-fullscreen"})
+                }
+            },
+            func() {
+                quit <- syscall.SIGTERM
+            },
+        )
+        go tray.Run()
+        defer tray.Quit()
+    }
+
     addr := fmt.Sprintf("0.0.0.0:%d", cfg.Port)
 
     go func() {
@@ -313,8 +347,6 @@ func runDefault(cfg *config.Config, configPath, userPath, baseDir string) {
         }
     }()
 
-    quit := make(chan os.Signal, 1)
-    signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
     <-quit
 
     ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -323,7 +355,10 @@ func runDefault(cfg *config.Config, configPath, userPath, baseDir string) {
 }
 ```
 
-This is the traditional mode: HTTP server + all subsystems on the same machine.
+This is the traditional mode: HTTP server + all subsystems on the same machine. A system tray icon is created when a display server (X11 or Wayland) is detected, providing fullscreen toggle and exit controls. The `quit` channel is shared between signal handling and the tray's exit callback, so either Ctrl+C or "Exit Application" from the tray triggers the same graceful shutdown path.
+
+> **Concept: `systray.IsHeadless()`**
+> On Linux, the system tray requires a display server. `IsHeadless()` checks the `DISPLAY` and `WAYLAND_DISPLAY` environment variables. If neither is set (e.g., on a headless server or SSH session without X forwarding), the tray is skipped entirely and the application runs normally with only signal-based shutdown.
 
 ### Serve Mode: `runServe()`
 
@@ -377,6 +412,25 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
     agt := agent.New(cfg, configPath, userPath, baseDir)
     defer agt.Close()
 
+    if !systray.IsHeadless() {
+        fullscreenToggle := false
+        tray := systray.New(
+            func() {
+                fullscreenToggle = !fullscreenToggle
+                if fullscreenToggle {
+                    agt.BroadcastJSON(map[string]any{"type": "enter-fullscreen"})
+                } else {
+                    agt.BroadcastJSON(map[string]any{"type": "exit-fullscreen"})
+                }
+            },
+            func() {
+                syscall.Kill(os.Getpid(), syscall.SIGTERM)
+            },
+        )
+        go tray.Run()
+        defer tray.Quit()
+    }
+
     go func() {
         agt.Run(serverAddr)
     }()
@@ -386,7 +440,10 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
 }
 ```
 
-The host agent creates all subsystems (joystick, speech, MPRIS, RSS, etc.) but no HTTP server. It connects to the relay server via WebSocket and auto-reconnects on disconnect with exponential backoff.
+The host agent creates all subsystems (joystick, speech, MPRIS, RSS, etc.) but no HTTP server. It connects to the relay server via WebSocket and auto-reconnects on disconnect with exponential backoff. Like default mode, a system tray icon is created when a display server is available. The exit callback sends `SIGTERM` to the process via `syscall.Kill(os.Getpid(), syscall.SIGTERM)`, which unblocks `agt.WaitSignal()` and allows the normal shutdown flow to call `agt.Stop()` exactly once.
+
+> **Key Pattern: SIGTERM self-signal for tray exit**
+> In connect mode, the main goroutine is blocked on `agt.WaitSignal()`, which creates its own internal signal channel. Simply calling `agt.Stop()` from the tray callback would leave `WaitSignal()` blocked forever. Instead, the callback sends a real `SIGTERM` to the process itself, which `WaitSignal()` receives, unblocking the main thread and allowing graceful shutdown.
 
 ## Key Takeaways
 
@@ -402,5 +459,8 @@ The host agent creates all subsystems (joystick, speech, MPRIS, RSS, etc.) but n
 - The `starter` package copies default user content into an empty volume on first run (Docker containers)
 - `AppStateInterface` allows the same WebSocket handler code to work in both default and connect modes
 - Speech features (Vosk STT, host recording) require CGO and are excluded from container builds
+- The `systray` package provides a cross-platform system tray icon (using `fyne.io/systray`) with fullscreen toggle and exit controls in default and connect modes
+- System tray is skipped on headless systems (no `DISPLAY` or `WAYLAND_DISPLAY` env vars on Linux)
+- In connect mode, the tray exit callback sends `SIGTERM` to unblock `WaitSignal()` via `syscall.Kill`
 
 [Next: Chapter 2 — Configuration System →](02-configuration.md)

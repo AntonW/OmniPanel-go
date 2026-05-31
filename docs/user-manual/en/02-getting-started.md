@@ -91,6 +91,15 @@ The container automatically copies default panels, blocks, and themes into your 
 
 > **Important:** Keep this window open. If you close it, OmniPanel-go stops running and your panels won't work.
 
+### System Tray Icon
+
+When running in **Default** or **Host Agent** mode on a machine with a display (desktop environment), OmniPanel-go shows a system tray icon in your taskbar/notification area. Right-click it to access:
+
+- **Enter Fullscreen / Exit Fullscreen** — toggles fullscreen mode on all connected client devices (tablets, phones). The menu label changes to reflect the current state.
+- **Exit Application** — gracefully shuts down OmniPanel-go, equivalent to pressing Ctrl+C in the terminal.
+
+> **Note:** On headless systems (servers without a desktop environment, SSH sessions without display forwarding), the system tray is automatically disabled. You can still use Ctrl+C to stop the application.
+
 ### Log Output
 
 OmniPanel-go shows colored log messages by default. You can change the log format if needed:

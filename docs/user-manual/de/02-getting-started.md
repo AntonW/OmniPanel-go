@@ -91,6 +91,15 @@ Der Container kopiert beim ersten Start automatisch Standard-Panels, Blöcke und
 
 > **Wichtig:** Lass dieses Fenster geöffnet. Wenn du es schließt, stoppt OmniPanel-go und deine Panels funktionieren nicht mehr.
 
+### System-Tray-Symbol
+
+Wenn OmniPanel-go im **Standard**- oder **Host-Agent**-Modus auf einem Rechner mit grafischer Oberfläche läuft, erscheint ein Symbol in der Taskleiste bzw. im Benachrichtigungsbereich. Klicke mit der rechten Maustaste darauf für:
+
+- **Vollbild aktivieren / Vollbild verlassen** — schaltet den Vollbildmodus auf allen verbundenen Client-Geräten (Tablets, Handys) um. Die Menübezeichnung ändert sich je nach aktuellem Zustand.
+- **Anwendung beenden** — fährt OmniPanel-go ordnungsgemäß herunter, genau wie Strg+C im Terminal.
+
+> **Hinweis:** Auf headless-Systemen (Server ohne Desktop-Umgebung, SSH-Sitzungen ohne Display-Weiterleitung) wird das System-Tray automatisch deaktiviert. Du kannst die Anwendung weiterhin mit Strg+C beenden.
+
 ### Log-Ausgabe
 
 OmniPanel-go zeigt standardmäßig farbige Log-Nachrichten an. Du kannst das Log-Format bei Bedarf ändern:

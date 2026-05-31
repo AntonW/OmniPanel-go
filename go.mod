@@ -3,7 +3,9 @@ module omnipanel-go
 go 1.26.2
 
 require (
+	fyne.io/systray v1.12.1
 	github.com/alphacep/vosk-api/go v0.3.50
+	github.com/fasthttp/websocket v1.5.12
 	github.com/gen2brain/malgo v0.11.24
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/gofiber/contrib/websocket v1.3.4
@@ -21,7 +23,6 @@ require (
 	github.com/andybalholm/brotli v1.2.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
-	github.com/fasthttp/websocket v1.5.12 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
