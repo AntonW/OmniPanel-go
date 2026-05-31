@@ -2843,6 +2843,9 @@ function enableThreeFingerSwipe() {
     let lastCenterX = 0;
     
     document.addEventListener('pointerdown', (e) => {
+        if (swipeState.activePointers.size === 0) {
+            swipeState.activePointers.clear();
+        }
         swipeState.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
         
         if (swipeState.activePointers.size === 3 && !swipeState.isTracking) {
@@ -2882,9 +2885,9 @@ function enableThreeFingerSwipe() {
     document.addEventListener('pointercancel', handlePointerEnd, true);
     
     function handlePointerEnd(e) {
-        if (!swipeState.isTracking) return;
-        
         swipeState.activePointers.delete(e.pointerId);
+        
+        if (!swipeState.isTracking) return;
         
         if (swipeState.activePointers.size < 2) {
             if (Math.abs(cumulativeDeltaX) > SWIPE_THRESHOLD) {
