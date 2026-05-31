@@ -42,7 +42,7 @@ func NewRouter(s *state.AppState) *fiber.App {
     app.Get("/panel", servePanel)    // Panel client
     app.Get("/editor", serveEditorUI) // Panel editor
     app.Get("/login", serveLoginPage) // Login form (exempt from auth middleware)
-    app.Get("/favicon.ico", ...)      // Redirects to SVG logo
+    app.Get("/favicon.ico", ...)      // Redirects to /omnipanel-go-logo.svg
 
     // Disable browser caching for JS/CSS so changes are always picked up
     noCacheStaticMiddleware := func(c *fiber.Ctx) error {

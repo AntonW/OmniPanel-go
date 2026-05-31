@@ -598,7 +598,7 @@ coverImg.src = newCover;
 - Host WebSocket connections validate token from query parameter (`?type=host&token=xxx`)
 - Empty `auth_token` disables authentication (backward compatible, default mode unaffected)
 - The `/login` page is exempt from auth middleware, providing a login form for token entry
-- `/favicon.ico` redirects to the SVG logo (`/static/omnipanel-go-logo.svg`)
+- `/favicon.ico` redirects to the SVG logo (`/omnipanel-go-logo.svg`)
 - CSS, JS, images, fonts, block templates (/blocks/), theme CSS (/themes/), and user assets (/assets/) are served without authentication so pages can load and execute JavaScript
 - The `/assets/` directory uses `Browse: true` in Fiber's static middleware to generate an HTML directory listing, which the frontend parses to populate background image selectors
 - HTML pages (/, /panel, /editor) are served without auth — they are templates only; sensitive data is protected at the API level

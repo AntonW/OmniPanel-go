@@ -129,10 +129,11 @@ func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 	app.Get("/login", s.serveLoginPage)
 
 	// Redirect favicon.ico requests to the SVG logo so browsers display
-	// the OmniPanel icon in the tab. All HTML pages also include a
-	// <link rel="icon"> header for direct favicon discovery.
+	// the OmniPanel icon in the tab. The static directory is mounted at /,
+	// so the file is served at /omnipanel-go-logo.svg. All HTML pages also
+	// include a <link rel="icon"> for direct favicon discovery.
 	app.Get("/favicon.ico", func(c *fiber.Ctx) error {
-		return c.Redirect("/static/omnipanel-go-logo.svg", fiber.StatusMovedPermanently)
+		return c.Redirect("/omnipanel-go-logo.svg", fiber.StatusMovedPermanently)
 	})
 
 	// Disable browser caching for JS/CSS so changes are always picked up.
