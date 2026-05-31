@@ -412,6 +412,9 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
     agt := agent.New(cfg, configPath, userPath, baseDir)
     defer agt.Close()
 
+    quit := make(chan os.Signal, 1)
+    signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
     if !systray.IsHeadless() {
         fullscreenToggle := false
         tray := systray.New(
@@ -435,7 +438,7 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
         agt.Run(serverAddr)
     }()
 
-    agt.WaitSignal()
+    <-quit
     agt.Stop()
 }
 ```

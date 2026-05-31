@@ -107,6 +107,7 @@ The host agent:
 - Sends results back to the server for broadcast to browsers
 - Auto-reconnects on disconnect with exponential backoff (1s → 2s → 4s → max 30s)
 - Sends heartbeat every 15s to keep the connection alive
+- Creates a system tray icon (when a display server is available) with fullscreen toggle and exit controls
 
 ## Configuration
 
