@@ -69,6 +69,8 @@ You can set a background image for the Paged Container:
 3. The image appears behind all blocks on the page
 
 > **Tip:** Use subtle, dark images so your blocks remain visible and readable.
+>
+> **Browse your assets:** You can view all your uploaded assets by visiting `http://your-server:3000/assets/` in your browser. This shows a directory listing of everything in `user/assets/`, making it easy to find the right filename for your image path.
 
 ---
 

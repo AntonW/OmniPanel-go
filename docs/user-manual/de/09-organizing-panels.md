@@ -69,6 +69,8 @@ Du kannst ein Hintergrundbild für den Paged Container setzen:
 3. Das Bild erscheint hinter allen Blöcken auf der Seite
 
 > **Tipp:** Nutze dezente, dunkle Bilder, damit deine Blöcke sichtbar und lesbar bleiben.
+>
+> **Durchsuche deine Assets:** Du kannst alle deine hochgeladenen Assets ansehen indem du `http://dein-server:3000/assets/` in deinem Browser öffnest. Dies zeigt eine Verzeichnisliste von allem in `user/assets/`, was es einfach macht den richtigen Dateinamen für deinen Bildpfad zu finden.
 
 ---
 
