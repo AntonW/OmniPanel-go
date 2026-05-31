@@ -424,7 +424,7 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
                 }
             },
             func() {
-                syscall.Kill(os.Getpid(), syscall.SIGTERM)
+                quit <- syscall.SIGTERM
             },
         )
         go tray.Run()
@@ -440,10 +440,7 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
 }
 ```
 
-The host agent creates all subsystems (joystick, speech, MPRIS, RSS, etc.) but no HTTP server. It connects to the relay server via WebSocket and auto-reconnects on disconnect with exponential backoff. Like default mode, a system tray icon is created when a display server is available. The exit callback sends `SIGTERM` to the process via `syscall.Kill(os.Getpid(), syscall.SIGTERM)`, which unblocks `agt.WaitSignal()` and allows the normal shutdown flow to call `agt.Stop()` exactly once.
-
-> **Key Pattern: SIGTERM self-signal for tray exit**
-> In connect mode, the main goroutine is blocked on `agt.WaitSignal()`, which creates its own internal signal channel. Simply calling `agt.Stop()` from the tray callback would leave `WaitSignal()` blocked forever. Instead, the callback sends a real `SIGTERM` to the process itself, which `WaitSignal()` receives, unblocking the main thread and allowing graceful shutdown.
+The host agent creates all subsystems (joystick, speech, MPRIS, RSS, etc.) but no HTTP server. It connects to the relay server via WebSocket and auto-reconnects on disconnect with exponential backoff. Like default mode, a system tray icon is created when a display server is available. A shared `quit` channel receives both OS signals and the tray's exit callback, so either Ctrl+C or "Exit Application" triggers the same shutdown path calling `agt.Stop()`.
 
 ## Key Takeaways
 
@@ -461,6 +458,6 @@ The host agent creates all subsystems (joystick, speech, MPRIS, RSS, etc.) but n
 - Speech features (Vosk STT, host recording) require CGO and are excluded from container builds
 - The `systray` package provides a cross-platform system tray icon (using `fyne.io/systray`) with fullscreen toggle and exit controls in default and connect modes
 - System tray is skipped on headless systems (no `DISPLAY` or `WAYLAND_DISPLAY` env vars on Linux)
-- In connect mode, the tray exit callback sends `SIGTERM` to unblock `WaitSignal()` via `syscall.Kill`
+- A shared `quit` channel handles both OS signals and tray exit callbacks in default and connect modes
 
 [Next: Chapter 2 — Configuration System →](02-configuration.md)

@@ -479,7 +479,7 @@ On reconnection, the host agent sends `host-register` again. The server resets i
 - Connect mode: WebSocket client + all subsystems (no HTTP server)
 - Default and connect modes include a system tray icon (when a display server is detected) with fullscreen toggle and exit controls
 - System tray is skipped on headless systems (no `DISPLAY` or `WAYLAND_DISPLAY` env vars on Linux)
-- In connect mode, the tray exit callback sends `SIGTERM` via `syscall.Kill` to unblock `WaitSignal()`
+- In connect mode, the tray exit callback sends to a shared `quit` channel to trigger graceful shutdown
 - WebSocket URL supports plain `host:port` (defaults to `ws://`) or full URLs (`ws://` or `wss://`)
 - Use `wss://` when the relay server is behind a TLS-terminating reverse proxy
 - 1:1 host connection — second host is rejected with a close message

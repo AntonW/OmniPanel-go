@@ -201,7 +201,7 @@ func runServe(cfg *config.Config, userPath, baseDir string) {
 // runConnect starts the application in connect mode: host agent that connects to a
 // relay server via WebSocket and runs all subsystems locally. A system tray icon
 // (when a display server is available) provides fullscreen toggle and graceful exit
-// controls. The exit callback sends SIGTERM to unblock WaitSignal().
+// controls. The exit callback sends to the quit channel to unblock the main goroutine.
 func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg string) {
 	serverAddr := serverAddrArg
 	if serverAddr == "" {
@@ -217,6 +217,9 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
 	agt := agent.New(cfg, configPath, userPath, baseDir)
 	defer agt.Close()
 
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
 	if !systray.IsHeadless() {
 		fullscreenToggle := false
 		tray := systray.New(
@@ -229,7 +232,7 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
 				}
 			},
 			func() {
-				syscall.Kill(os.Getpid(), syscall.SIGTERM)
+				quit <- syscall.SIGTERM
 			},
 		)
 		go tray.Run()
@@ -243,7 +246,7 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
 		agt.Run(serverAddr)
 	}()
 
-	agt.WaitSignal()
+	<-quit
 	slog.Info("Shutting down host agent...")
 	agt.Stop()
 	slog.Info("Host agent stopped")
