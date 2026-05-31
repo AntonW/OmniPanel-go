@@ -73,13 +73,13 @@ Example log entry:
 
 ### Host IP Indicator (Panel View)
 
-When you open a panel on your tablet or phone in distributed (relay) mode, a small indicator appears in the **top-left corner** showing the connected host's IP address:
+When you open a panel on your tablet or phone in distributed (relay) mode, a small indicator briefly appears in the **top-left corner** showing the connected host's IP address:
 
 ```
 Host: 10.0.0.25
 ```
 
-This lets you quickly verify which machine your panel is talking to. The indicator disappears when the host disconnects and reappears when a new host connects.
+This lets you quickly verify which machine your panel is talking to. The indicator **automatically fades out after 5 seconds** to avoid cluttering the screen. It reappears each time a new host connects.
 
 ### Theme Toggle
 

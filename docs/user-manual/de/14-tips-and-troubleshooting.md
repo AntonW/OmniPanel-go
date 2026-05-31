@@ -86,7 +86,7 @@ Entwirf auf deinem PC, aber teste immer auf dem Tablet oder Handy, das du tatsä
 
 **Lösungen:**
 1. Prüfe das Verbindungsprotokoll auf der Startseite — ist dein Gerät verbunden? Ist der Host-Agent verbunden?
-2. Im Relay-Modus: Prüfe die **Host-IP-Anzeige** in der oberen linken Ecke des Panels — wenn sie fehlt, ist kein Host verbunden
+2. Im Relay-Modus: Achte auf die **Host-IP-Anzeige** in der oberen linken Ecke des Panels, wenn sich ein Host verbindet (sie verschwindet nach 5 Sekunden) — wenn sie nicht erscheint, ist kein Host verbunden. Du kannst auch das Verbindungsprotokoll auf der Startseite prüfen.
 3. Überprüfe, ob **Joystick Index** und **Button/Slider ID** korrekt sind
 4. Stelle sicher, dass dein Spiel so konfiguriert ist, dass es auf den richtigen virtuellen Joystick hört
 5. Teste Eingaben mit dem Joystick-Testtool deines Betriebssystems (siehe Kapitel 12)

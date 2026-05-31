@@ -86,7 +86,7 @@ Design on your PC, but always test on the tablet or phone you'll actually use wh
 
 **Solutions:**
 1. Check the connection log on the Start Page — is your device connected? Is the host agent connected?
-2. In relay mode, check the **Host IP indicator** in the top-left corner of the panel — if it's missing, no host is connected
+2. In relay mode, look for the **Host IP indicator** in the top-left corner of the panel when a host connects (it fades out after 5 seconds) — if it doesn't appear, no host is connected. You can also check the connection log on the Start Page.
 3. Verify the **Joystick Index** and **Button/Slider ID** are correct
 4. Make sure your game is configured to listen to the correct virtual joystick
 5. Test inputs using your OS's joystick testing tool (see Chapter 12)

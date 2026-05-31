@@ -450,7 +450,7 @@ defer func() {
 }()
 ```
 
-The browser's connection log shows this message, so users know the host is unavailable. The IP is also displayed as a floating indicator on the panel client UI (`static/client/client.js`), updating in real-time when the host connects or disconnects.
+The browser's connection log shows this message, so users know the host is unavailable. The IP is also displayed as a floating indicator on the panel client UI (`static/client/client.js`), appearing briefly when the host connects and automatically fading out after 5 seconds.
 
 ### No Host Connected
 
@@ -484,7 +484,7 @@ On reconnection, the host agent sends `host-register` again. The server resets i
 - Use `wss://` when the relay server is behind a TLS-terminating reverse proxy
 - 1:1 host connection — second host is rejected with a close message
 - Host IP address is captured via `c.IP()` and broadcast on connect/disconnect as `log-event` messages
-- The panel client UI shows a floating host IP indicator in the top-left corner
+- The panel client UI shows a floating host IP indicator in the top-left corner that auto-dismisses after 5 seconds
 - Auto-reconnect with exponential backoff (1s → 2s → 4s → max 30s)
 - Heartbeat every 15s keeps the connection alive
 - `AppStateInterface` allows the same WebSocket handler to work in both modes

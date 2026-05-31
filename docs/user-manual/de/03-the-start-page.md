@@ -73,13 +73,13 @@ Beispiel-Protokolleintrag:
 
 ### Host-IP-Anzeige (Panel-Ansicht)
 
-Wenn du ein Panel auf deinem Tablet oder Handy im verteilten (Relay-) Modus öffnest, erscheint eine kleine Anzeige in der **oberen linken Ecke**, die die IP-Adresse des verbundenen Hosts zeigt:
+Wenn du ein Panel auf deinem Tablet oder Handy im verteilten (Relay-) Modus öffnest, erscheint kurz eine kleine Anzeige in der **oberen linken Ecke**, die die IP-Adresse des verbundenen Hosts zeigt:
 
 ```
 Host: 10.0.0.25
 ```
 
-So kannst du schnell überprüfen, mit welcher Maschine dein Panel kommuniziert. Die Anzeige verschwindet, wenn der Host sich trennt, und erscheint wieder, wenn ein neuer Host sich verbindet.
+So kannst du schnell überprüfen, mit welcher Maschine dein Panel kommuniziert. Die Anzeige **verschwindet automatisch nach 5 Sekunden** durch einen sanften Fade-Out-Effekt, um den Bildschirm nicht zu überladen. Sie erscheint jedes Mal erneut, wenn sich ein neuer Host verbindet.
 
 ### Theme-Umschalter
 

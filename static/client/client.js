@@ -1970,15 +1970,23 @@ function createMicButton() {
     document.body.appendChild(micBtn);
 }
 
+let hostIPDismissTimeout = null;
+
 /**
  * Creates or updates a floating host IP indicator on the panel UI.
  * When a host agent connects in relay/serve mode, this displays the
- * host's IP address in the top-left corner of the panel. When the
- * host disconnects, the indicator is removed from the DOM.
+ * host's IP address in the top-left corner of the panel. The indicator
+ * automatically fades out and is removed after 5 seconds. When the
+ * host disconnects, the indicator is removed from the DOM immediately.
  * @param {string|null} ip - The host's IP address, or null to remove the indicator.
  */
 function updateHostIPDisplay(ip) {
     let indicator = document.getElementById('host-ip-indicator');
+    
+    if (hostIPDismissTimeout) {
+        clearTimeout(hostIPDismissTimeout);
+        hostIPDismissTimeout = null;
+    }
     
     if (!ip) {
         if (indicator) {
@@ -1994,6 +2002,16 @@ function updateHostIPDisplay(ip) {
     }
     
     indicator.textContent = 'Host: ' + ip;
+    indicator.classList.remove('fade-out');
+    
+    hostIPDismissTimeout = setTimeout(() => {
+        if (indicator) {
+            indicator.classList.add('fade-out');
+            indicator.addEventListener('transitionend', () => {
+                indicator.remove();
+            }, { once: true });
+        }
+    }, 5000);
 }
 
 /**
