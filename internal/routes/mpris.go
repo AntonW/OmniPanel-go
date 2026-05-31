@@ -186,9 +186,17 @@ func serveMPRISCoverArt(c *fiber.Ctx) error {
 	// Strip file:// prefix if present
 	filePath = strings.TrimPrefix(filePath, "file://")
 
-	// Security: only allow files under /tmp (where MPRIS stores artwork)
+	// Security: only allow files under /tmp, /var/tmp, or user's cache directory
 	cleanPath := filepath.Clean(filePath)
-	if !strings.HasPrefix(cleanPath, "/tmp/") {
+	allowedPrefixes := []string{"/tmp/", "/var/tmp/", os.Getenv("HOME") + "/.cache/"}
+	allowed := false
+	for _, prefix := range allowedPrefixes {
+		if strings.HasPrefix(cleanPath, prefix) {
+			allowed = true
+			break
+		}
+	}
+	if !allowed {
 		return c.Status(fiber.StatusForbidden).JSON(map[string]any{
 			"error": "Access denied",
 		})

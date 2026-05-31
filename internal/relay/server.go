@@ -55,13 +55,16 @@ package relay
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	ws "github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
@@ -74,6 +77,12 @@ import (
 // It manages the Fiber HTTP app, a single host WebSocket connection,
 // and multiple browser WebSocket connections. Messages are relayed
 // bidirectionally between the host and all browsers.
+//
+// For MPRIS media player control in distributed deployments, the relay server
+// forwards HTTP API requests to the host agent via WebSocket using a request-response
+// pattern. Each request is assigned a unique ID, sent as an "mpris-request" message,
+// and the response arrives as an "mpris-response" message that completes the pending
+// request channel. Cover art is base64-encoded for transport over WebSocket.
 type RelayServer struct {
 	app       *fiber.App
 	hostConn  *ws.Conn
@@ -83,6 +92,12 @@ type RelayServer struct {
 	staticDir string
 	userPath  string
 	config    *config.Config
+
+	// pendingRequests tracks in-flight MPRIS requests forwarded to the host agent.
+	// Each entry maps a unique request ID to a buffered channel that receives
+	// the response payload when the host agent replies.
+	pendingRequests   map[string]chan map[string]any
+	pendingRequestsMu sync.Mutex
 }
 
 // New creates a new relay server with all HTTP routes and WebSocket hub initialized.
@@ -93,10 +108,11 @@ func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 	staticDir := filepath.Join(baseDir, "static")
 
 	s := &RelayServer{
-		browsers:  make(map[*ws.Conn]struct{}),
-		staticDir: staticDir,
-		userPath:  userPath,
-		config:    cfg,
+		browsers:        make(map[*ws.Conn]struct{}),
+		pendingRequests: make(map[string]chan map[string]any),
+		staticDir:       staticDir,
+		userPath:        userPath,
+		config:          cfg,
 	}
 
 	app := fiber.New()
@@ -175,6 +191,12 @@ func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 	app.Post("/api/joystick-count", s.setJoystickCount)
 	app.Get("/api/config", s.getConfig)
 	app.Post("/api/data/push", s.pushData)
+
+	// MPRIS media control endpoints (forwarded to host agent)
+	app.Get("/api/mpris/players", s.listMPRISPlayers)
+	app.Post("/api/mpris/control", s.controlMPRIS)
+	app.Post("/api/mpris/select", s.selectMPRISPlayer)
+	app.Get("/api/mpris/cover", s.serveMPRISCoverArt)
 
 	s.app = app
 	return s
@@ -445,4 +467,264 @@ func writeFile(path string, data []byte) error {
 		return err
 	}
 	return os.WriteFile(path, data, 0644)
+}
+
+// registerPendingRequest creates a buffered channel for an MPRIS request-response
+// pair and stores it in the pendingRequests map under the given requestID.
+// The caller should read from the returned channel to receive the response.
+func (s *RelayServer) registerPendingRequest(requestID string) chan map[string]any {
+	ch := make(chan map[string]any, 1)
+	s.pendingRequestsMu.Lock()
+	s.pendingRequests[requestID] = ch
+	s.pendingRequestsMu.Unlock()
+	return ch
+}
+
+// completePendingRequest delivers the response payload to the waiting channel
+// for the given requestID and removes the entry from pendingRequests.
+// If no pending request exists for the ID, the response is silently dropped.
+func (s *RelayServer) completePendingRequest(requestID string, response map[string]any) {
+	s.pendingRequestsMu.Lock()
+	ch, exists := s.pendingRequests[requestID]
+	if exists {
+		delete(s.pendingRequests, requestID)
+	}
+	s.pendingRequestsMu.Unlock()
+
+	if exists {
+		select {
+		case ch <- response:
+		default:
+		}
+	}
+}
+
+// cleanupPendingRequest removes a pending request entry without delivering a response.
+// Called when a request times out or fails before the host agent replies.
+func (s *RelayServer) cleanupPendingRequest(requestID string) {
+	s.pendingRequestsMu.Lock()
+	delete(s.pendingRequests, requestID)
+	s.pendingRequestsMu.Unlock()
+}
+
+// generateRequestID creates a unique identifier for MPRIS request-response pairs.
+// Uses nanosecond-precision timestamps to ensure uniqueness across concurrent requests.
+func generateRequestID() string {
+	return fmt.Sprintf("mpris-%d", time.Now().UnixNano())
+}
+
+// sendMPRISRequest forwards an MPRIS API request to the host agent via WebSocket
+// and waits for the response. It generates a unique request ID, sends an
+// "mpris-request" message, and blocks until the matching "mpris-response" arrives
+// or the 5-second timeout expires. Returns the response payload or an error.
+//
+// This enables the relay server to proxy MPRIS HTTP endpoints to the host agent
+// in distributed deployments (serve + connect mode). The host agent processes
+// the request locally against the D-Bus session and sends back the result.
+func (s *RelayServer) sendMPRISRequest(endpoint, method string, body map[string]any, query map[string]string) (map[string]any, error) {
+	requestID := generateRequestID()
+	respCh := s.registerPendingRequest(requestID)
+
+	msg := map[string]any{
+		"type": "mpris-request",
+		"data": map[string]any{
+			"request_id": requestID,
+			"endpoint":   endpoint,
+			"method":     method,
+		},
+	}
+
+	if body != nil {
+		msg["data"].(map[string]any)["body"] = body
+	}
+	if query != nil {
+		msg["data"].(map[string]any)["query"] = query
+	}
+
+	msgData, err := json.Marshal(msg)
+	if err != nil {
+		s.cleanupPendingRequest(requestID)
+		return nil, err
+	}
+
+	s.hostMu.Lock()
+	if s.hostConn == nil {
+		s.hostMu.Unlock()
+		s.cleanupPendingRequest(requestID)
+		return nil, fmt.Errorf("no host connected")
+	}
+	if err := s.hostConn.WriteMessage(ws.TextMessage, msgData); err != nil {
+		s.hostMu.Unlock()
+		s.cleanupPendingRequest(requestID)
+		return nil, err
+	}
+	s.hostMu.Unlock()
+
+	select {
+	case resp := <-respCh:
+		return resp, nil
+	case <-time.After(5 * time.Second):
+		s.cleanupPendingRequest(requestID)
+		return nil, fmt.Errorf("timeout waiting for MPRIS response")
+	}
+}
+
+// listMPRISPlayers handles GET /api/mpris/players by forwarding the request
+// to the host agent and returning the list of connected MPRIS media players.
+// Returns 503 if no host is connected or the request times out.
+func (s *RelayServer) listMPRISPlayers(c *fiber.Ctx) error {
+	resp, err := s.sendMPRISRequest("/players", "GET", nil, nil)
+	if err != nil {
+		return c.Status(fiber.StatusServiceUnavailable).JSON(map[string]any{
+			"error":   "MPRIS is not available",
+			"enabled": false,
+			"players": []string{},
+		})
+	}
+	return c.JSON(resp)
+}
+
+// controlMPRIS handles POST /api/mpris/control by forwarding playback commands
+// (play, pause, next, previous, stop, volume) to the host agent. Parses the
+// request body for player name, action, and optional volume value. Maps error
+// messages from the host to appropriate HTTP status codes.
+func (s *RelayServer) controlMPRIS(c *fiber.Ctx) error {
+	var req struct {
+		Player string  `json:"player"`
+		Action string  `json:"action"`
+		Volume float64 `json:"volume,omitempty"`
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]any{
+			"error": "Invalid request body",
+		})
+	}
+
+	body := map[string]any{
+		"player": req.Player,
+		"action": req.Action,
+	}
+	if req.Action == "volume" {
+		body["volume"] = req.Volume
+	}
+
+	resp, err := s.sendMPRISRequest("/control", "POST", body, nil)
+	if err != nil {
+		return c.Status(fiber.StatusServiceUnavailable).JSON(map[string]any{
+			"error": "MPRIS is not available",
+		})
+	}
+
+	if errMsg, ok := resp["error"].(string); ok && errMsg != "" {
+		status := fiber.StatusInternalServerError
+		if strings.Contains(errMsg, "not found") {
+			status = fiber.StatusNotFound
+		} else if strings.Contains(errMsg, "Invalid") || strings.Contains(errMsg, "Unknown") {
+			status = fiber.StatusBadRequest
+		}
+		return c.Status(status).JSON(resp)
+	}
+
+	return c.JSON(resp)
+}
+
+// selectMPRISPlayer handles POST /api/mpris/select by forwarding the player
+// selection request to the host agent. The selected player's state is then
+// published to the DataBus and broadcast to all browsers via WebSocket.
+func (s *RelayServer) selectMPRISPlayer(c *fiber.Ctx) error {
+	var req struct {
+		Player string `json:"player"`
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]any{
+			"error": "Invalid request body",
+		})
+	}
+
+	if req.Player == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]any{
+			"error": "Player name is required",
+		})
+	}
+
+	body := map[string]any{
+		"player": req.Player,
+	}
+
+	resp, err := s.sendMPRISRequest("/select", "POST", body, nil)
+	if err != nil {
+		return c.Status(fiber.StatusServiceUnavailable).JSON(map[string]any{
+			"error": "MPRIS is not available",
+		})
+	}
+
+	if errMsg, ok := resp["error"].(string); ok && errMsg != "" {
+		status := fiber.StatusInternalServerError
+		if strings.Contains(errMsg, "not found") {
+			status = fiber.StatusNotFound
+		}
+		return c.Status(status).JSON(resp)
+	}
+
+	return c.JSON(resp)
+}
+
+// serveMPRISCoverArt handles GET /api/mpris/cover by forwarding the cover art
+// request to the host agent. The agent reads the local file (restricted to
+// /tmp/, /var/tmp/, and ~/.cache/ for security), base64-encodes it, and sends
+// it back over WebSocket. The relay server decodes and serves it with the
+// correct Content-Type header. Browsers cannot load file:// URLs directly,
+// so this proxy endpoint is required for cover art display.
+func (s *RelayServer) serveMPRISCoverArt(c *fiber.Ctx) error {
+	fileURL := c.Query("url")
+	if fileURL == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]any{
+			"error": "Missing url parameter",
+		})
+	}
+
+	query := map[string]string{
+		"url": fileURL,
+	}
+
+	resp, err := s.sendMPRISRequest("/cover", "GET", nil, query)
+	if err != nil {
+		return c.Status(fiber.StatusServiceUnavailable).JSON(map[string]any{
+			"error": "MPRIS is not available",
+		})
+	}
+
+	if errMsg, ok := resp["error"].(string); ok && errMsg != "" {
+		status := fiber.StatusInternalServerError
+		if strings.Contains(errMsg, "denied") {
+			status = fiber.StatusForbidden
+		} else if strings.Contains(errMsg, "not found") {
+			status = fiber.StatusNotFound
+		}
+		return c.Status(status).JSON(resp)
+	}
+
+	contentType, _ := resp["content_type"].(string)
+	dataStr, _ := resp["data"].(string)
+
+	if dataStr == "" {
+		return c.Status(fiber.StatusNotFound).JSON(map[string]any{
+			"error": "Cover art not found",
+		})
+	}
+
+	data, err := base64.StdEncoding.DecodeString(dataStr)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(map[string]any{
+			"error": "Failed to decode cover art",
+		})
+	}
+
+	if contentType != "" {
+		c.Set("Content-Type", contentType)
+	}
+	c.Set("Cache-Control", "public, max-age=60")
+	return c.Send(data)
 }

@@ -481,6 +481,99 @@ When the RSS manager calls its broadcast callback with a `clientID`, the agent u
 > **Key Pattern: Broadcast vs Targeted Delivery in Distributed Mode**
 > In default mode, `broadcastToClient` sends RSS updates to a specific client channel. In connect mode, the agent has no client channels, so it uses `BroadcastJSON` instead. The relay server broadcasts to all browsers, but the RSS update includes a `block_id` so only the relevant block processes it. The per-client `is_new` flag is still correct because the server-side `seenPerClient` map tracks which GUIDs each client has seen, and the client-side JavaScript maintains its own `rssSeenEntries` Set.
 
+### MPRIS Forwarding in Connect Mode
+
+In connect mode, the MPRIS watcher runs on the host agent (which has access to the D-Bus session bus), but the HTTP API endpoints are served by the relay server. The relay server has no MPRIS watcher of its own — instead, it forwards MPRIS HTTP requests to the host agent via WebSocket using a **request-response pattern**.
+
+**Message types added for MPRIS forwarding:**
+
+| Message | Direction | Purpose |
+|---------|-----------|---------|
+| `mpris-request` | Server → Host | Forward HTTP API request (players, control, select, cover) |
+| `mpris-response` | Host → Server | Return API response to the waiting HTTP handler |
+
+**How it works:**
+
+```go
+// internal/relay/server.go — RelayServer struct
+type RelayServer struct {
+    // ...
+    pendingRequests   map[string]chan map[string]any  // Tracks in-flight MPRIS requests
+    pendingRequestsMu sync.Mutex
+}
+
+func (s *RelayServer) sendMPRISRequest(endpoint, method string, body map[string]any, query map[string]string) (map[string]any, error) {
+    requestID := generateRequestID()           // Unique ID: "mpris-1717200000000000000"
+    respCh := s.registerPendingRequest(requestID)
+
+    // Send mpris-request to host via WebSocket
+    s.hostConn.WriteMessage(ws.TextMessage, msgData)
+
+    // Block until response arrives or 5-second timeout
+    select {
+    case resp := <-respCh:
+        return resp, nil
+    case <-time.After(5 * time.Second):
+        s.cleanupPendingRequest(requestID)
+        return nil, fmt.Errorf("timeout waiting for MPRIS response")
+    }
+}
+```
+
+On the host agent side, incoming `mpris-request` messages are intercepted before normal WebSocket message handling:
+
+```go
+// internal/agent/agent.go — runConnection()
+for {
+    msgType, msg, err := conn.ReadMessage()
+    // ...
+    var msgMap map[string]json.RawMessage
+    if json.Unmarshal(msg, &msgMap) == nil {
+        var msgTypeStr string
+        json.Unmarshal(msgMap["type"], &msgTypeStr)
+
+        if msgTypeStr == "mpris-request" {
+            a.handleMPRISRequest(string(msg))  // Process locally, send response
+            continue
+        }
+    }
+    wsHandler.HandleMessage(a, 0, string(msg))
+}
+```
+
+The agent dispatches to the appropriate MPRIS watcher method (`ListPlayers`, `CallMethod`, `SetSelectedPlayer`, or file read for cover art) and sends back an `mpris-response` with the matching request ID.
+
+> **Key Pattern: Synchronous WebSocket RPC**
+> The HTTP handler blocks on a channel read while waiting for the WebSocket response. This turns the asynchronous WebSocket connection into a synchronous request-response mechanism. Each request gets its own buffered channel, so multiple concurrent MPRIS requests are supported. The 5-second timeout prevents indefinite blocking if the host agent becomes unresponsive.
+
+**Cover art special handling:** Since the relay server cannot access the host's filesystem, cover art is base64-encoded by the agent and sent in the response payload. The relay server decodes it and serves it with the correct `Content-Type` header:
+
+```go
+// internal/agent/agent.go
+func (a *Agent) handleMPRISCover(query map[string]string) map[string]any {
+    // ... read file, check security (/tmp/, /var/tmp/, ~/.cache/) ...
+    encoded := base64.StdEncoding.EncodeToString(data)
+    return map[string]any{
+        "content_type": contentType,
+        "data":         encoded,
+    }
+}
+```
+
+> **Concept: Base64 encoding for binary transport**
+> Base64 encoding converts binary data (image bytes) into ASCII text that can be safely transmitted in JSON. The overhead is ~33% (a 100KB image becomes ~133KB of text), but this is acceptable for cover art which is typically under 1MB. The alternative would be a separate binary WebSocket channel, which adds complexity.
+
+**Frontend auth token for cover art:** When authentication is enabled, the cover art endpoint (`/api/mpris/cover`) is behind auth middleware. The frontend appends the token as a query parameter:
+
+```javascript
+// static/client/client.js
+if (newCover && newCover.startsWith('file://')) {
+    newCover = '/api/mpris/cover?url=' + encodeURIComponent(newCover.substring(7));
+    newCover = addTokenToUrl(newCover);  // Appends ?token=xxx
+}
+coverImg.src = newCover;
+```
+
 ## Key Takeaways
 
 - Distributed deployment splits OmniPanel-go into a relay server and host agent
@@ -511,6 +604,13 @@ When the RSS manager calls its broadcast callback with a `clientID`, the agent u
 - Frontend detects auth requirement by probing `/api/config` (401 = auth needed)
 - Token is stored in localStorage (persistent) or sessionStorage (tab-only) based on user choice
 - All subsequent API requests include the token via Authorization headers and WebSocket URL params
+- MPRIS media player control works in connect mode via WebSocket request-response forwarding
+- The relay server sends `mpris-request` messages to the host agent for `/api/mpris/*` endpoints
+- The host agent processes MPRIS requests locally against D-Bus and replies with `mpris-response`
+- Cover art is base64-encoded by the agent and decoded by the relay server for HTTP serving
+- The frontend appends the auth token to cover art URLs via `addTokenToUrl()` when auth is enabled
+- MPRIS request forwarding uses a 5-second timeout to prevent indefinite blocking
+- Multiple concurrent MPRIS requests are supported via unique request IDs and separate channels
 - The relay server can run as a Docker container — see [Chapter 21](21-container-build.md) for the ko-based container build
 
 [← Back: Chapter 19](19-windows-build-and-ci.md) · [Next: Chapter 21 →](21-container-build.md)

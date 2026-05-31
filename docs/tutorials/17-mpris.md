@@ -312,7 +312,7 @@ func (w *Watcher) SetSelectedPlayer(playerName string) error {
 
 ## HTTP API Endpoints
 
-Four endpoints in `internal/routes/mpris.go`:
+Four endpoints in `internal/routes/mpris.go` (default mode) or `internal/relay/server.go` (serve mode):
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -340,9 +340,17 @@ func serveMPRISCoverArt(c *fiber.Ctx) error {
     filePath := c.Query("url")
     filePath = strings.TrimPrefix(filePath, "file://")
 
-    // Security: only allow files under /tmp
+    // Security: only allow files under /tmp, /var/tmp, or ~/.cache/
     cleanPath := filepath.Clean(filePath)
-    if !strings.HasPrefix(cleanPath, "/tmp/") {
+    allowedPrefixes := []string{"/tmp/", "/var/tmp/", os.Getenv("HOME") + "/.cache/"}
+    allowed := false
+    for _, prefix := range allowedPrefixes {
+        if strings.HasPrefix(cleanPath, prefix) {
+            allowed = true
+            break
+        }
+    }
+    if !allowed {
         return c.Status(fiber.StatusForbidden).JSON(...)
     }
 
@@ -351,7 +359,111 @@ func serveMPRISCoverArt(c *fiber.Ctx) error {
 }
 ```
 
-> **Key Pattern (Security):** The path is cleaned with `filepath.Clean()` and checked against `/tmp/` prefix before reading. This prevents directory traversal attacks (`../../../etc/passwd`).
+> **Key Pattern (Security):** The path is cleaned with `filepath.Clean()` and checked against allowed directory prefixes (`/tmp/`, `/var/tmp/`, `~/.cache/`) before reading. This prevents directory traversal attacks (`../../../etc/passwd`) while supporting cover art stored in common cache locations used by KDE Connect and other media players.
+
+## MPRIS in Distributed Deployments (Serve + Connect Mode)
+
+In distributed deployments, the relay server (serve mode) has no MPRIS watcher — the watcher runs on the host agent (connect mode). The relay server proxies MPRIS HTTP API requests to the host agent via WebSocket using a **request-response pattern**.
+
+### How It Works
+
+1. Browser makes HTTP request to `/api/mpris/*` on the relay server
+2. Relay server generates a unique request ID and registers a response channel
+3. Relay server sends an `mpris-request` message to the host agent via WebSocket
+4. Host agent processes the request locally against the D-Bus session
+5. Host agent sends an `mpris-response` message back with the matching request ID
+6. Relay server delivers the response to the waiting HTTP handler
+7. HTTP handler returns the response to the browser
+
+### Request-Response Message Format
+
+```json
+// mpris-request (server → host)
+{
+  "type": "mpris-request",
+  "data": {
+    "request_id": "mpris-1717200000000000000",
+    "endpoint": "/players",
+    "method": "GET",
+    "body": { "player": "spotify", "action": "play" },
+    "query": { "url": "/tmp/cover.jpg" }
+  }
+}
+
+// mpris-response (host → server)
+{
+  "type": "mpris-response",
+  "data": {
+    "request_id": "mpris-1717200000000000000",
+    "payload": { "enabled": true, "players": [...] }
+  }
+}
+```
+
+### Pending Request Tracking
+
+The relay server uses a map of request IDs to buffered channels to track in-flight requests:
+
+```go
+// internal/relay/server.go
+type RelayServer struct {
+    // ...
+    pendingRequests   map[string]chan map[string]any
+    pendingRequestsMu sync.Mutex
+}
+
+func (s *RelayServer) sendMPRISRequest(endpoint, method string, body map[string]any, query map[string]string) (map[string]any, error) {
+    requestID := generateRequestID()
+    respCh := s.registerPendingRequest(requestID)
+
+    // Send mpris-request to host via WebSocket
+    s.hostConn.WriteMessage(ws.TextMessage, msgData)
+
+    // Wait for response or timeout (5 seconds)
+    select {
+    case resp := <-respCh:
+        return resp, nil
+    case <-time.After(5 * time.Second):
+        s.cleanupPendingRequest(requestID)
+        return nil, fmt.Errorf("timeout waiting for MPRIS response")
+    }
+}
+```
+
+> **Key Pattern (Synchronous WebSocket RPC):** The HTTP handler blocks on a channel read while waiting for the WebSocket response. This turns the asynchronous WebSocket connection into a synchronous request-response mechanism. The 5-second timeout prevents indefinite blocking if the host agent becomes unresponsive.
+
+### Cover Art Over WebSocket
+
+Cover art cannot be served directly as binary over HTTP in distributed mode because the relay server doesn't have access to the host's filesystem. Instead, the host agent reads the file, base64-encodes it, and sends it in the `mpris-response` payload:
+
+```go
+// internal/agent/agent.go
+func (a *Agent) handleMPRISCover(query map[string]string) map[string]any {
+    // ... read file, check security ...
+    encoded := base64.StdEncoding.EncodeToString(data)
+    return map[string]any{
+        "content_type": contentType,
+        "data":         encoded,
+    }
+}
+```
+
+The relay server decodes the base64 data and serves it with the correct `Content-Type` header. Base64 encoding increases size by ~33%, but cover art images are typically under 1MB, making this acceptable.
+
+### Frontend Cover Art Auth Token
+
+In serve/connect mode with authentication enabled, the cover art endpoint (`/api/mpris/cover`) is behind auth middleware. The frontend must include the auth token when setting the cover art `<img>` src:
+
+```javascript
+// static/client/client.js
+if (newCover && newCover.startsWith('file://')) {
+    newCover = '/api/mpris/cover?url=' + encodeURIComponent(newCover.substring(7));
+    newCover = addTokenToUrl(newCover);  // Append ?token=xxx for auth
+}
+coverImg.src = newCover;
+```
+
+The `addTokenToUrl()` function appends the token as a query parameter, which the auth middleware reads to validate the request.
 
 ## Frontend Integration
 

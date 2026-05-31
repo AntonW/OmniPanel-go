@@ -17,6 +17,17 @@
 //   - Browser → Server → Host: input commands, speech config, RSS config, etc.
 //   - Host → Server → Browsers: data updates, speech results, command results, etc.
 //   - Control messages: host-register, heartbeat/heartbeat-ack
+//   - MPRIS forwarding: mpris-request (server→host), mpris-response (host→server)
+//
+// MPRIS Request-Response Pattern:
+//
+// In distributed deployments (serve + connect mode), the relay server forwards
+// MPRIS HTTP API requests to the host agent via WebSocket. The server generates
+// a unique request ID, sends an "mpris-request" message, and waits for the
+// matching "mpris-response" message. The response is delivered to a pending
+// request channel that the HTTP handler is blocking on. This synchronous pattern
+// enables the relay server to proxy MPRIS endpoints without running its own
+// MPRIS watcher. Cover art is base64-encoded for transport over WebSocket.
 package relay
 
 import (
@@ -128,9 +139,43 @@ func (s *RelayServer) handleHostMessage(raw []byte) {
 			s.hostMu.Unlock()
 		}
 		return
+	case "mpris-response":
+		s.handleMPRISResponse(parsed)
+		return
 	}
 
 	s.broadcastToBrowsersJSON(parsed)
+}
+
+// handleMPRISResponse processes an "mpris-response" message from the host agent.
+// It extracts the request_id and payload from the message, then delivers the
+// payload to the pending request channel registered by sendMPRISRequest.
+// This unblocks the HTTP handler that was waiting for the response.
+// If the request_id is missing or doesn't match any pending request, the response
+// is silently dropped.
+func (s *RelayServer) handleMPRISResponse(parsed map[string]json.RawMessage) {
+	var data map[string]json.RawMessage
+	if err := json.Unmarshal(parsed["data"], &data); err != nil {
+		slog.Warn("Failed to parse mpris-response data", "error", err)
+		return
+	}
+
+	var requestID string
+	if raw, ok := data["request_id"]; ok {
+		json.Unmarshal(raw, &requestID)
+	}
+
+	if requestID == "" {
+		slog.Warn("mpris-response missing request_id")
+		return
+	}
+
+	var payload map[string]any
+	if raw, ok := data["payload"]; ok {
+		json.Unmarshal(raw, &payload)
+	}
+
+	s.completePendingRequest(requestID, payload)
 }
 
 // handleBrowserConn manages a browser client connection.

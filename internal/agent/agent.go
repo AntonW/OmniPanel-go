@@ -49,6 +49,7 @@
 package agent
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -247,6 +248,17 @@ func (a *Agent) runConnection(conn *websocket.Conn) {
 		if msgType == websocket.BinaryMessage {
 			wsHandler.HandleAudioChunk(a, msg)
 		} else {
+			var msgMap map[string]json.RawMessage
+			if json.Unmarshal(msg, &msgMap) == nil {
+				var msgTypeStr string
+				json.Unmarshal(msgMap["type"], &msgTypeStr)
+
+				if msgTypeStr == "mpris-request" {
+					a.handleMPRISRequest(string(msg))
+					continue
+				}
+			}
+
 			wsHandler.HandleMessage(a, 0, string(msg))
 		}
 	}
@@ -434,4 +446,257 @@ func (a *Agent) GetMPRISWatcher() *mpris.Watcher {
 // GetRSSManager returns the RSS manager.
 func (a *Agent) GetRSSManager() *rssfeed.Manager {
 	return a.RSSManager
+}
+
+// handleMPRISRequest processes an "mpris-request" message forwarded from the
+// relay server. It parses the endpoint, method, body, and query parameters,
+// dispatches to the appropriate local MPRIS watcher method, and sends an
+// "mpris-response" message back with the result. This enables the relay server
+// to proxy MPRIS HTTP endpoints to the host agent in distributed deployments.
+func (a *Agent) handleMPRISRequest(raw string) {
+	var parsed map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
+		slog.Warn("Failed to parse mpris-request", "error", err)
+		return
+	}
+
+	var data map[string]json.RawMessage
+	if err := json.Unmarshal(parsed["data"], &data); err != nil {
+		slog.Warn("Failed to parse mpris-request data", "error", err)
+		return
+	}
+
+	var requestID, endpoint, method string
+	json.Unmarshal(data["request_id"], &requestID)
+	json.Unmarshal(data["endpoint"], &endpoint)
+	json.Unmarshal(data["method"], &method)
+
+	var response map[string]any
+
+	switch endpoint {
+	case "/players":
+		response = a.handleMPRISListPlayers()
+	case "/control":
+		var body map[string]any
+		if raw, ok := data["body"]; ok {
+			json.Unmarshal(raw, &body)
+		}
+		response = a.handleMPRISControl(body)
+	case "/select":
+		var body map[string]any
+		if raw, ok := data["body"]; ok {
+			json.Unmarshal(raw, &body)
+		}
+		response = a.handleMPRISSelect(body)
+	case "/cover":
+		var query map[string]string
+		if raw, ok := data["query"]; ok {
+			json.Unmarshal(raw, &query)
+		}
+		response = a.handleMPRISCover(query)
+	default:
+		response = map[string]any{
+			"error": "Unknown endpoint: " + endpoint,
+		}
+	}
+
+	respMsg := map[string]any{
+		"type": "mpris-response",
+		"data": map[string]any{
+			"request_id": requestID,
+			"payload":    response,
+		},
+	}
+
+	a.sendJSON(respMsg)
+}
+
+// handleMPRISListPlayers returns the list of connected MPRIS media players
+// with their current state (identity, playback status, metadata, capabilities).
+// Called by handleMPRISRequest for the "/players" endpoint.
+func (a *Agent) handleMPRISListPlayers() map[string]any {
+	if a.MPRISWatcher == nil {
+		return map[string]any{
+			"enabled": false,
+			"players": []string{},
+		}
+	}
+
+	players := a.MPRISWatcher.ListPlayers()
+	playerStates := make([]map[string]any, 0, len(players))
+
+	for _, name := range players {
+		state := a.MPRISWatcher.GetPlayerState(name)
+		if state != nil {
+			playerStates = append(playerStates, map[string]any{
+				"name":           state.PlayerName,
+				"identity":       state.Identity,
+				"playbackStatus": state.PlaybackStatus,
+				"title":          state.Title,
+				"artist":         state.Artist,
+				"album":          state.Album,
+				"artUrl":         state.ArtURL,
+				"canControl":     state.CanControl,
+				"volume":         state.Volume,
+			})
+		}
+	}
+
+	return map[string]any{
+		"enabled": true,
+		"players": playerStates,
+	}
+}
+
+// handleMPRISControl executes a playback command (play, pause, playpause,
+// stop, next, previous, volume) on the specified MPRIS player. If no player
+// is specified, uses the currently selected player. Returns success or error.
+// Called by handleMPRISRequest for the "/control" endpoint.
+func (a *Agent) handleMPRISControl(body map[string]any) map[string]any {
+	if a.MPRISWatcher == nil {
+		return map[string]any{
+			"error": "MPRIS is not enabled",
+		}
+	}
+
+	player, _ := body["player"].(string)
+	action, _ := body["action"].(string)
+
+	if player == "" {
+		player = a.MPRISWatcher.GetSelectedPlayer()
+	}
+	if player == "" {
+		players := a.MPRISWatcher.ListPlayers()
+		if len(players) == 0 {
+			return map[string]any{
+				"error": "No media players connected",
+			}
+		}
+		player = players[0]
+	}
+
+	var err error
+	switch action {
+	case "play":
+		err = a.MPRISWatcher.CallMethod(player, "Play")
+	case "pause":
+		err = a.MPRISWatcher.CallMethod(player, "Pause")
+	case "playpause":
+		err = a.MPRISWatcher.CallMethod(player, "PlayPause")
+	case "stop":
+		err = a.MPRISWatcher.CallMethod(player, "Stop")
+	case "next":
+		err = a.MPRISWatcher.CallMethod(player, "Next")
+	case "previous":
+		err = a.MPRISWatcher.CallMethod(player, "Previous")
+	case "volume":
+		volume, _ := body["volume"].(float64)
+		if volume < 0 || volume > 1 {
+			return map[string]any{
+				"error": "Volume must be between 0.0 and 1.0",
+			}
+		}
+		err = a.MPRISWatcher.SetVolume(player, volume)
+	default:
+		return map[string]any{
+			"error": "Unknown action: " + action,
+		}
+	}
+
+	if err != nil {
+		return map[string]any{
+			"error": err.Error(),
+		}
+	}
+
+	return map[string]any{
+		"success": true,
+		"player":  player,
+		"action":  action,
+	}
+}
+
+// handleMPRISSelect changes the active MPRIS player whose state is published
+// to the DataBus. After selection, the new player's metadata is immediately
+// fetched and broadcast. Called by handleMPRISRequest for the "/select" endpoint.
+func (a *Agent) handleMPRISSelect(body map[string]any) map[string]any {
+	if a.MPRISWatcher == nil {
+		return map[string]any{
+			"error": "MPRIS is not enabled",
+		}
+	}
+
+	player, _ := body["player"].(string)
+	if player == "" {
+		return map[string]any{
+			"error": "Player name is required",
+		}
+	}
+
+	if err := a.MPRISWatcher.SetSelectedPlayer(player); err != nil {
+		return map[string]any{
+			"error": err.Error(),
+		}
+	}
+
+	return map[string]any{
+		"success": true,
+		"player":  player,
+	}
+}
+
+// handleMPRISCover reads a local cover art file and returns it as a base64-encoded
+// string with the correct MIME type. File access is restricted to /tmp/, /var/tmp/,
+// and ~/.cache/ directories for security. Browsers cannot load file:// URLs directly,
+// so the relay server decodes this and serves it over HTTP.
+// Called by handleMPRISRequest for the "/cover" endpoint.
+func (a *Agent) handleMPRISCover(query map[string]string) map[string]any {
+	filePath, _ := query["url"]
+	if filePath == "" {
+		return map[string]any{
+			"error": "Missing url parameter",
+		}
+	}
+
+	filePath = strings.TrimPrefix(filePath, "file://")
+
+	cleanPath := filepath.Clean(filePath)
+	allowedPrefixes := []string{"/tmp/", "/var/tmp/", os.Getenv("HOME") + "/.cache/"}
+	allowed := false
+	for _, prefix := range allowedPrefixes {
+		if strings.HasPrefix(cleanPath, prefix) {
+			allowed = true
+			break
+		}
+	}
+	if !allowed {
+		return map[string]any{
+			"error": "Access denied",
+		}
+	}
+
+	data, err := os.ReadFile(cleanPath)
+	if err != nil {
+		return map[string]any{
+			"error": "Cover art not found",
+		}
+	}
+
+	ext := strings.ToLower(filepath.Ext(cleanPath))
+	contentType := "image/jpeg"
+	switch ext {
+	case ".png":
+		contentType = "image/png"
+	case ".gif":
+		contentType = "image/gif"
+	case ".webp":
+		contentType = "image/webp"
+	}
+
+	encoded := base64.StdEncoding.EncodeToString(data)
+
+	return map[string]any{
+		"content_type": contentType,
+		"data":         encoded,
+	}
 }

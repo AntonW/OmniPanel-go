@@ -88,6 +88,8 @@ Open any MPRIS-compatible media player:
 
 Open your panel in a browser. When you play music in your media player, the block should automatically show the title, artist, and cover art. The control buttons should work to play, pause, skip, and adjust volume.
 
+> **Note for distributed setups (serve + connect mode):** MPRIS works the same way — the media player block communicates with the host agent through the relay server. Make sure MPRIS is enabled in the host agent's `config.json` (not the server's config). The host agent must be connected to the relay server for MPRIS to work.
+
 ---
 
 ## Switching Between Media Players
@@ -137,6 +139,8 @@ Some browsers (Chrome, Firefox) store cover art in temporary files that the bloc
 1. Make sure MPRIS is enabled in `config.json`
 2. Check that your media player is actually playing something
 3. Try a different media player — some don't expose cover art via MPRIS
+4. **In serve/connect mode:** Make sure the host agent is connected to the relay server. Cover art is sent through the relay server, so a disconnected host means no cover art.
+5. **With authentication enabled:** The cover art endpoint requires the auth token. If you see a 401 error, check that your token is valid and the browser has stored it (look for the login page redirect).
 
 ### Buttons don't control my music
 
@@ -144,6 +148,7 @@ In MPRIS mode:
 1. Make sure your media player is running and playing
 2. Check the server logs for MPRIS errors
 3. Some players need to be "active" (have a window open) to accept commands
+4. **In serve/connect mode:** A 500 error on button clicks usually means the host agent is disconnected or MPRIS is not enabled on the host. Check the host agent logs for "MPRIS watcher failed to start" messages.
 
 In Keyboard mode:
 1. Make sure the media app responds to keyboard media keys
@@ -156,6 +161,7 @@ This means OmniPanel-go can't find any MPRIS players on your system:
 2. Restart OmniPanel-go after enabling MPRIS
 3. Start a media player (Spotify, VLC, etc.)
 4. On KDE Plasma, make sure the "Media Player" widget can see your player
+5. **In serve/connect mode:** This error appears when the relay server can't reach the host agent. Verify the host agent is running and connected (check the start page for the host IP indicator).
 
 ---
 

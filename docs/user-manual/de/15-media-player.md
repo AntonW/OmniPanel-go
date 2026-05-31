@@ -88,6 +88,8 @@ Starte OmniPanel-go nach dieser Änderung neu.
 
 Öffne dein Panel in einem Browser. Wenn du Musik in deinem Medienplayer abspielst, sollte der Block automatisch Titel, Künstler und Cover-Bild anzeigen. Die Steuerungstasten sollten funktionieren um abzuspielen, zu pausieren, zu überspringen und die Lautstärke anzupassen.
 
+> **Hinweis für verteilte Setups (serve + connect mode):** MPRIS funktioniert genauso — der Medienwiedergabe-Block kommuniziert über den Relay-Server mit dem Host-Agent. Stelle sicher dass MPRIS in der `config.json` des Host-Agent aktiviert ist (nicht in der Server-Config). Der Host-Agent muss mit dem Relay-Server verbunden sein damit MPRIS funktioniert.
+
 ---
 
 ## Zwischen Medienplayern wechseln
@@ -137,6 +139,8 @@ Manche Browser (Chrome, Firefox) speichern Cover-Bilder in temporären Dateien d
 1. Stelle sicher dass MPRIS in `config.json` aktiviert ist
 2. Prüfe ob dein Medienplayer tatsächlich etwas abspielt
 3. Probiere einen anderen Medienplayer — manche expose kein Cover-Bild über MPRIS
+4. **Im serve/connect mode:** Stelle sicher dass der Host-Agent mit dem Relay-Server verbunden ist. Cover-Bilder werden über den Relay-Server gesendet, also bedeutet ein getrennter Host kein Cover-Bild.
+5. **Mit aktivierter Authentifizierung:** Der Cover-Bild-Endpunkt benötigt das Auth-Token. Wenn du einen 401-Fehler siehst, prüfe ob dein Token gültig ist und der Browser es gespeichert hat (achte auf die Weiterleitung zur Login-Seite).
 
 ### Tasten steuern meine Musik nicht
 
@@ -144,6 +148,7 @@ Im MPRIS-Modus:
 1. Stelle sicher dass dein Medienplayer läuft und abspielt
 2. Prüfe die Server-Logs auf MPRIS-Fehler
 3. Manche Player müssen "aktiv" sein (ein offenes Fenster haben) um Befehle anzunehmen
+4. **Im serve/connect mode:** Ein 500-Fehler bei Tastenklicks bedeutet meist dass der Host-Agent getrennt ist oder MPRIS auf dem Host nicht aktiviert ist. Prüfe die Host-Agent-Logs auf "MPRIS watcher failed to start" Meldungen.
 
 Im Tastatur-Modus:
 1. Stelle sicher dass die Medien-App auf Tastatur-Medientasten reagiert
@@ -156,6 +161,7 @@ Das bedeutet OmniPanel-go kann keine MPRIS-Player auf deinem System finden:
 2. Starte OmniPanel-go nach dem Aktivieren von MPRIS neu
 3. Starte einen Medienplayer (Spotify, VLC, etc.)
 4. Unter KDE Plasma stelle sicher dass das "Medienwiedergabe"-Widget deinen Player sehen kann
+5. **Im serve/connect mode:** Dieser Fehler tritt auf wenn der Relay-Server den Host-Agent nicht erreichen kann. Überprüfe ob der Host-Agent läuft und verbunden ist (achte auf den Host-IP-Indikator auf der Startseite).
 
 ---
 

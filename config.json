@@ -1,6 +1,7 @@
 {
     "port": 3000,
     "numJoysticks": 5,
+    "auth_token": "fBtq9GXzRjCTob",
     "speech": {
         "enabled": false,
         "recording_location": "host",
@@ -19,7 +20,7 @@
         "speech_allowlist": []
     },
     "mpris": {
-        "enabled": false,
+        "enabled": true,
         "poll_interval": 1000
     }
 }

@@ -1042,6 +1042,8 @@ function handleCommandResult(data) {
  *    and play/pause icon based on the block's data-control-mode attribute.
  *    - "mpris" mode: reads from mpris_* DataBus keys, rewrites file:// URLs
  *      to /api/mpris/cover?url=... so browsers can load local cover art.
+ *      In serve/connect mode, the auth token is appended as a query parameter
+ *      via addTokenToUrl() since the cover endpoint is behind auth middleware.
  *    - "keyboard" mode: reads from custom data-media-* attribute keys.
  *
  * Also processes MPRIS player list updates:
@@ -1130,6 +1132,7 @@ function handleDataUpdate(data) {
                     let newCover = data[mprisCoverKey].value;
                     if (newCover && newCover.startsWith('file://')) {
                         newCover = '/api/mpris/cover?url=' + encodeURIComponent(newCover.substring(7));
+                        newCover = addTokenToUrl(newCover);
                     }
                     if (coverImg.src !== newCover && newCover) {
                         coverImg.src = newCover;
