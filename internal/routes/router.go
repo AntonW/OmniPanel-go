@@ -79,9 +79,16 @@ func NewRouter(s *state.AppState) *fiber.App {
 		app.Static("/themes", themesPath)
 	}
 
+	// User assets directory (images for block/workspace backgrounds).
+	// Browse: true generates an HTML directory listing so the frontend
+	// can parse available image filenames from the response. Without this,
+	// Fiber would call c.Next() on directory requests, causing them to fall
+	// through to subsequent middleware in relay mode.
 	assetsPath := filepath.Join(s.UserPath, "assets")
 	if _, err := os.Stat(assetsPath); err == nil {
-		app.Static("/assets", assetsPath)
+		app.Static("/assets", assetsPath, fiber.Static{
+			Browse: true,
+		})
 	}
 
 	return app

@@ -210,6 +210,13 @@ class Workspace {
         this.loadAssets(imageSelect);
     }
 
+    /**
+     * Loads available assets from /assets/ and populates the workspace background
+     * image dropdown. The server must return an HTML directory listing (Browse: true
+     * in Fiber) which is parsed to extract image filenames. Each asset is added as
+     * an <option> element to the provided select element.
+     * @param {HTMLSelectElement} imageSelect - The dropdown element to populate.
+     */
     async loadAssets(imageSelect) {
         try {
             const res = await fetch('/assets/');

@@ -64,7 +64,9 @@ func NewRouter(s *state.AppState) *fiber.App {
     // User directories served without auth (block templates, themes, assets)
     app.Static("/blocks", blocksPath)
     app.Static("/themes", themesPath)
-    app.Static("/assets", assetsPath)
+    app.Static("/assets", assetsPath, fiber.Static{
+        Browse: true,
+    })
 
     app.Get("/ws", ws.New(func(c *ws.Conn) {
         handleWS(c, s)
@@ -118,11 +120,16 @@ Routes are organized into three groups:
 
     assetsPath := filepath.Join(s.UserPath, "assets")
     if _, err := os.Stat(assetsPath); err == nil {
-        app.Static("/assets", assetsPath)
+        app.Static("/assets", assetsPath, fiber.Static{
+            Browse: true,
+        })
     }
 ```
 
-`app.Static` maps a URL prefix to a filesystem directory. A request to `/blocks/button.html` serves `user/blocks/button.html`. The `os.Stat` check prevents errors if these directories don't exist yet.
+`app.Static` maps a URL prefix to a filesystem directory. A request to `/blocks/button.html` serves `user/blocks/button.html`. The `os.Stat` check prevents errors if these directories don't exist yet. The `/assets` endpoint uses `Browse: true` to enable directory listing — visiting `/assets/` shows all files and subdirectories, making it easy to browse uploaded images and other assets without knowing exact filenames.
+
+> **Concept: Why `Browse: true` matters**
+> Without `Browse: true`, Fiber's static middleware cannot serve a directory (it looks for an index file first). When no index file exists, it calls `c.Next()` to pass the request to the next handler. In relay/serve mode, this means the request falls through to the auth middleware, which returns 401 Unauthorized. The frontend code in `block-renderer.js` and `workspace.js` fetches `/assets/` and parses the HTML directory listing to populate background image selectors — so `Browse: true` is required for the asset picker to work.
 
 ## The Generic File Server
 

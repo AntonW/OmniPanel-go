@@ -16,7 +16,12 @@ class BlockRenderer {
         this.currentPanelTheme = 'default';
     }
 
-    /** Fetches available assets from /assets/ for background image selectors. */
+    /**
+     * Fetches available assets from /assets/ for background image selectors.
+     * The server must return an HTML directory listing (Browse: true in Fiber)
+     * which is parsed to extract image filenames (png, jpg, jpeg, svg, webp, gif).
+     * Populates this.assets array for use in background image dropdowns.
+     */
     async loadAssets() {
         try {
             const res = await fetch('/assets/');

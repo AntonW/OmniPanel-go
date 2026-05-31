@@ -166,9 +166,15 @@ func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 		app.Static("/themes", themesPath)
 	}
 
+	// User assets directory (images for block/workspace backgrounds).
+	// Browse: true generates an HTML directory listing so the frontend
+	// can parse available image filenames from the response. This route
+	// is registered before auth middleware — assets contain no sensitive data.
 	assetsPath := filepath.Join(userPath, "assets")
 	if _, err := os.Stat(assetsPath); err == nil {
-		app.Static("/assets", assetsPath)
+		app.Static("/assets", assetsPath, fiber.Static{
+			Browse: true,
+		})
 	}
 
 	app.Get("/", s.serveStartPage)
