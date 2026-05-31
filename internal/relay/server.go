@@ -128,9 +128,11 @@ func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 
 	app.Get("/login", s.serveLoginPage)
 
-	// Return 204 for favicon requests so browsers don't show 401 errors.
+	// Redirect favicon.ico requests to the SVG logo so browsers display
+	// the OmniPanel icon in the tab. All HTML pages also include a
+	// <link rel="icon"> header for direct favicon discovery.
 	app.Get("/favicon.ico", func(c *fiber.Ctx) error {
-		return c.SendStatus(fiber.StatusNoContent)
+		return c.Redirect("/static/omnipanel-go-logo.svg", fiber.StatusMovedPermanently)
 	})
 
 	// Disable browser caching for JS/CSS so changes are always picked up.
