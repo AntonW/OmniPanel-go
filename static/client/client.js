@@ -2409,6 +2409,10 @@ function initRSSFeed(blockWrapper) {
  * (feed label, date) and description are rendered based on block settings
  * (show_feed_label, show_date, show_description). Descriptions are stripped of
  * HTML tags and truncated to description_max_length.
+ *
+ * In default mode, updates are sent to specific clients. In connect mode (distributed
+ * deployment), updates are broadcast to all browsers via the relay server, but each
+ * browser only processes updates for its matching block_id.
  * @param {Object} data - RSS update payload with block_id and entries array.
  * Each entry has: guid, title, link, published, description, feed_label, is_new.
  */

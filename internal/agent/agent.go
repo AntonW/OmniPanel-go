@@ -20,6 +20,14 @@
 //	Receives forwarded browser commands from server, executes locally
 //	Sends results back to server for broadcast to browsers
 //
+// RSS Updates in Connect Mode:
+//
+// Unlike default mode where broadcastToClient sends RSS updates to specific client
+// channels, the agent uses BroadcastJSON because it has no direct browser connections.
+// The relay server broadcasts RSS updates to all browsers, and each browser's client-side
+// code processes only updates for matching block_id. Per-client "new entry" tracking is
+// maintained server-side via seenPerClient map and client-side via rssSeenEntries Set.
+//
 // Connection flow:
 //
 //  1. Connect to ws://server/ws?type=host or wss://server/ws?type=host (with token if auth_token is set)
@@ -131,7 +139,7 @@ func New(cfg *config.Config, configPath, userPath, baseDir string) *Agent {
 	a.MPRISWatcher = mprisWatcher
 
 	a.RSSManager = rssfeed.New(func(clientID uint64, blockID string, entries []rssfeed.EntryWithNew) {
-		a.broadcastToClient(clientID, map[string]any{
+		a.BroadcastJSON(map[string]any{
 			"type": "rss-update",
 			"data": map[string]any{
 				"block_id": blockID,
@@ -345,27 +353,6 @@ func (a *Agent) StartDataBroadcast() {
 // PushData adds a custom metric to the DataBus.
 func (a *Agent) PushData(key string, value any, unit string) {
 	a.DataBus.Set(key, value, unit)
-}
-
-// broadcastToClient sends a JSON message to a specific client by ID.
-func (a *Agent) broadcastToClient(clientID uint64, msg map[string]any) {
-	data, err := json.Marshal(msg)
-	if err != nil {
-		slog.Warn("Failed to marshal RSS update", "error", err)
-		return
-	}
-
-	a.broadcastMu.RLock()
-	defer a.broadcastMu.RUnlock()
-	for ch, id := range a.clientIDs {
-		if id == clientID {
-			select {
-			case ch <- data:
-			default:
-			}
-			return
-		}
-	}
 }
 
 // GetConfig returns the current config.

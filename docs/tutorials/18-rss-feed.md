@@ -4,7 +4,7 @@ This chapter covers the RSS feed block — how the server polls feeds, pushes up
 
 ## Overview
 
-The RSS feed block allows users to display live entries from one or more RSS/Atom feeds on their panel. Unlike the DataBus (which broadcasts to all clients), RSS updates are pushed individually to each client with per-client "new entry" tracking — meaning each client independently determines which entries are new and highlights them accordingly.
+The RSS feed block allows users to display live entries from one or more RSS/Atom feeds on their panel. In default mode, RSS updates are pushed individually to each client with per-client "new entry" tracking — meaning each client independently determines which entries are new and highlights them accordingly. In connect mode (distributed deployment), updates are broadcast to all browsers via the relay server, but per-client tracking is still maintained server-side.
 
 ### Key Features
 
@@ -15,6 +15,8 @@ The RSS feed block allows users to display live entries from one or more RSS/Ato
 - **Configurable URL opening**: Clicking an entry opens the URL on the host or client device based on the `open_url_location` setting
 
 ## Architecture
+
+### Default Mode (Single Machine)
 
 ```
 ┌─────────────┐     rss-configure     ┌──────────────┐
@@ -34,6 +36,28 @@ The RSS feed block allows users to display live entries from one or more RSS/Ato
                                     │  Feed Sources   │
                                     │  (HTTP URLs)    │
                                     └─────────────────┘
+```
+
+### Connect Mode (Distributed Deployment)
+
+```
+┌─────────────┐     rss-configure     ┌──────────────┐     rss-configure     ┌──────────────┐
+│  Browser     │ ────────────────────▶ │  Relay       │ ────────────────────▶ │  Host Agent  │
+│  (Client)    │                       │  Server      │                       │              │
+│              │ ◀──────────────────── │              │ ◀──────────────────── │              │
+│              │    rss-update         │              │    rss-update         │  RSS Manager │
+│              │   (broadcast)         │              │   (BroadcastJSON)     │              │
+└─────────────┘                       └──────────────┘                       └──────┬───────┘
+                                                                                    │
+                                                                           ┌────────▼────────┐
+                                                                           │  gofeed Parser  │
+                                                                           │  (RSS/Atom)     │
+                                                                           └────────┬────────┘
+                                                                                    │
+                                                                           ┌────────▼────────┐
+                                                                           │  Feed Sources   │
+                                                                           │  (HTTP URLs)    │
+                                                                           └─────────────────┘
 ```
 
 ## The RSS Manager
@@ -201,7 +225,9 @@ func (m *Manager) fetchFeed(blockID string) {
 ```
 
 > **Key Pattern: Per-Client State Without Client Reference**
-> The Manager doesn't hold references to WebSocket connections. Instead, it tracks clients by their `uint64` ID and calls a `broadcast` callback. The `state` package owns the actual client channels and handles the delivery. This keeps the RSS package testable and decoupled from WebSocket internals.
+> The Manager doesn't hold references to WebSocket connections. Instead, it tracks clients by their `uint64` ID and calls a `broadcast` callback. The `state` package (default mode) or `agent` package (connect mode) owns the actual client channels and handles the delivery. This keeps the RSS package testable and decoupled from WebSocket internals.
+>
+> In default mode, the callback uses `broadcastToClient(clientID, ...)` to send to a specific client channel. In connect mode, the agent uses `BroadcastJSON(...)` because it has no direct browser connections — the relay server broadcasts to all browsers instead.
 
 > **Key Pattern: Newest Entry Stays New Until Superseded**
 > The server only marks an entry as "seen" (no longer new) if it is NOT the newest entry (`i > 0`). This means the most recent entry always arrives with `is_new=true` on every polling cycle, keeping the "new" highlight visible until an even newer entry arrives. Older entries are marked as seen after their first delivery, so they lose the highlight. This prevents the confusing behavior where entries would flash between "new" and "normal" on every refresh.
@@ -493,6 +519,8 @@ addFeed(block) {
 
 ## Data Flow Summary
 
+### Default Mode (Single Machine)
+
 1. **Block rendered** → `initRSSFeed()` sends `rss-configure` via WebSocket (retries every 100ms if socket not yet open)
 2. **Server receives** → `handleRSSConfigure(clientID, ...)` → `RSSManager.Configure(blockID, clientID, ...)`
 3. **Client registered** → requesting client added to `seenPerClient[blockID]` for per-client tracking
@@ -501,5 +529,21 @@ addFeed(block) {
 6. **Per-client push** → newest entry stays `is_new=true`, older entries marked as seen → `broadcast(clientID, blockID, entriesWithNew)` → `broadcastToClient()` → client channel
 7. **Client receives** → `handleRSSUpdate()` renders entries, adds GUIDs to seen set only when `is_new=false`
 8. **User clicks entry** → checks `open_url_location`: `"host"` sends `open-url` WebSocket → `handleOpenURL()` → `xdg-open` / `start`; `"client"` → `window.open()` in panel browser
+
+### Connect Mode (Distributed Deployment)
+
+In connect mode, the host agent has no direct browser connections. The data flow is:
+
+1. **Block rendered** → `initRSSFeed()` sends `rss-configure` to relay server → forwarded to host agent
+2. **Host agent receives** → `HandleMessage(agent, 0, ...)` → `handleRSSConfigure(agent, 0, ...)` → `RSSManager.Configure(blockID, 0, ...)`
+3. **Client registered** → `clientID=0` added to `seenPerClient[blockID]` (the agent only tracks one "virtual" client)
+4. **Immediate fetch** → `fetchFeed()` parses all feed URLs with gofeed
+5. **Entries merged** → sorted by date, deduplicated by GUID, limited to max
+6. **Broadcast to relay** → `broadcast(0, blockID, entriesWithNew)` → `BroadcastJSON()` → relay server → all browsers
+7. **Browsers receive** → each browser's `handleRSSUpdate()` renders entries for matching `block_id`
+8. **User clicks entry** → same as default mode (message relayed through server to host agent)
+
+> **Key Pattern: BroadcastJSON in Connect Mode**
+> In default mode, the `broadcastToClient` function sends RSS updates to a specific client channel. In connect mode, the agent has no client channels (browsers connect to the relay server, not the agent), so the RSS manager's broadcast callback uses `BroadcastJSON` instead. This sends the update to the relay server, which broadcasts it to all browsers. Each browser only processes updates for its matching `block_id`, so the behavior is correct. The per-client `is_new` tracking works because the server-side `seenPerClient` map and client-side `rssSeenEntries` Set maintain independent state.
 
 [← Back: Chapter 17](17-mpris.md) · [Next: Chapter 19 →](19-windows-build-and-ci.md)

@@ -472,6 +472,15 @@ The host agent retries indefinitely with exponential backoff. The backoff caps a
 
 On reconnection, the host agent sends `host-register` again. The server resets its host connection and resumes relaying messages. Subsystem state (speech config, RSS config) is maintained on the host side.
 
+### RSS Updates in Connect Mode
+
+In connect mode, the host agent has no direct browser connections — browsers connect to the relay server, not to the agent. This means the agent's `clientIDs` map is empty (no `RegisterClient` calls happen on the agent side).
+
+When the RSS manager calls its broadcast callback with a `clientID`, the agent uses `BroadcastJSON` to send the `rss-update` message to the relay server, which then broadcasts it to all connected browsers. Each browser's client-side code only processes the update for its matching `block_id`, so the per-client "new entry" tracking still works correctly — the server-side `seenPerClient` map maintains separate seen-entry sets per client ID, and the client-side `rssSeenEntries` Set tracks acknowledged GUIDs independently.
+
+> **Key Pattern: Broadcast vs Targeted Delivery in Distributed Mode**
+> In default mode, `broadcastToClient` sends RSS updates to a specific client channel. In connect mode, the agent has no client channels, so it uses `BroadcastJSON` instead. The relay server broadcasts to all browsers, but the RSS update includes a `block_id` so only the relevant block processes it. The per-client `is_new` flag is still correct because the server-side `seenPerClient` map tracks which GUIDs each client has seen, and the client-side JavaScript maintains its own `rssSeenEntries` Set.
+
 ## Key Takeaways
 
 - Distributed deployment splits OmniPanel-go into a relay server and host agent

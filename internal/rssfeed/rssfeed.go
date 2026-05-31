@@ -3,13 +3,18 @@
 // Each block on a panel can configure one or more feed URLs with a refresh interval
 // and maximum entry count. The server fetches feeds using gofeed, merges entries from
 // all configured sources, deduplicates by GUID, sorts by publication date, and pushes
-// updates to connected clients via targeted WebSocket messages.
+// updates to connected clients via WebSocket messages.
 //
 // Per-client seen-entry tracking determines which entries are "new". The newest entry
 // (most recent by publication date) always remains marked as new until an even newer
 // entry arrives. Older entries are marked as seen after their first delivery, so the
 // "new" highlight persists across polling cycles until superseded. This allows each
 // client to independently track which entries it has acknowledged.
+//
+// In default mode, updates are sent to specific clients via broadcastToClient. In
+// connect mode (distributed deployment), the agent uses BroadcastJSON to send updates
+// to the relay server, which broadcasts to all browsers. Per-client tracking is still
+// maintained via seenPerClient map (server-side) and rssSeenEntries Set (client-side).
 //
 // Feed URLs support an optional display label using the format "URL|Label". If no label
 // is provided, the feed's own title from the RSS metadata is used. The label is included
@@ -61,7 +66,7 @@ type EntryWithNew struct {
 	IsNew bool `json:"is_new"`
 }
 
-// Manager handles RSS feed polling and targeted WebSocket broadcasting.
+// Manager handles RSS feed polling and WebSocket broadcasting.
 //
 // It maintains a map of block configurations, fetched entries, and per-client
 // seen-entry tracking. When feeds are polled, entries are merged from all sources,
@@ -69,6 +74,10 @@ type EntryWithNew struct {
 // to MaxEntries. The newest entry always remains marked as new (is_new=true) until
 // a newer entry arrives. Older entries are marked as seen after first delivery.
 // Each client receives entries with an is_new flag based on its own seen-entry history.
+//
+// The broadcast callback is invoked per-client with entries and is_new flags. In
+// default mode, the callback sends to a specific client channel. In connect mode,
+// the callback broadcasts to all browsers via the relay server.
 type Manager struct {
 	mu            sync.RWMutex
 	configs       map[string]FeedConfig
@@ -81,9 +90,12 @@ type Manager struct {
 
 // New creates and initializes the RSS feed manager.
 //
-// The broadcast function is called when new entries are available for a specific
-// client. It receives the client ID, block ID, and the list of entries with
-// per-client is_new flags.
+// The broadcast function is called when new entries are available. It receives the
+// client ID, block ID, and the list of entries with per-client is_new flags.
+//
+// In default mode (state.AppState), the callback uses broadcastToClient to send to
+// a specific client channel. In connect mode (agent.Agent), the callback uses
+// BroadcastJSON to send to the relay server for broadcasting to all browsers.
 func New(broadcast func(clientID uint64, blockID string, entries []EntryWithNew)) *Manager {
 	return &Manager{
 		configs:       make(map[string]FeedConfig),
