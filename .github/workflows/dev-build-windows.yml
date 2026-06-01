@@ -88,7 +88,7 @@ jobs:
       - name: Extract likely linker errors on failure
         if: failure()
         run: |
-          $patterns = 'error:|undefined reference|cannot find|-lvosk|ld.exe|collect2|fatal error|# '
+          $patterns = 'undefined reference|cannot find|-lvosk|ld\.exe|collect2|fatal error|error:|cgo:|gcc: error|clang: error'
           if (Test-Path "bin/build.stderr.log") {
             Write-Host "===== stderr matches ====="
             Select-String -Path "bin/build.stderr.log" -Pattern $patterns -CaseSensitive:$false | Select-Object -Last 200 | ForEach-Object { $_.Line }
