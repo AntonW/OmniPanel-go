@@ -316,7 +316,7 @@ Four endpoints in `internal/routes/mpris.go` (default mode) or `internal/relay/s
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/mpris/players` | GET | List connected players with their current state |
+| `/api/mpris/players` | GET | List connected players with their current state (identity, playback status, metadata, volume, capabilities) |
 | `/api/mpris/control` | POST | Send playback command (play, pause, next, etc.) |
 | `/api/mpris/select` | POST | Set the active player. Body: `{ "player": "spotify" }` |
 | `/api/mpris/cover` | GET | Proxy local cover art files for browser access |
@@ -515,10 +515,25 @@ function renderMediaSourceTabs() {
 
 > **Concept (JSON in DataBus):** The `mpris_available_players` key stores a JSON string (not a parsed object) because the DataBus values are primitive types. The frontend parses it with `JSON.parse()` each time the player list changes.
 
-Media control buttons route to either the MPRIS API or keyboard simulation:
+Media control buttons route to either the MPRIS API or keyboard simulation. Volume buttons require special handling: they fetch the current volume from the selected player via `/api/mpris/players`, calculate a ±5% delta, and send a `volume` action to `/api/mpris/control`:
 
 ```javascript
+// static/client/client.js
 if (controlMode === 'mpris') {
+    if (action === 'volumedown' || action === 'volumeup') {
+        const volumeData = await (await fetch('/api/mpris/players')).json();
+        // Find the selected player; fall back to first available.
+        let currentPlayer = volumeData.players.find(p => p.name === mprisSelectedPlayer);
+        if (!currentPlayer) currentPlayer = volumeData.players[0];
+        const currentVolume = currentPlayer.volume || 0.5;
+        const delta = action === 'volumedown' ? -0.05 : 0.05;
+        const newVolume = Math.max(0, Math.min(1, currentVolume + delta));
+        await fetch('/api/mpris/control', {
+            method: 'POST',
+            body: JSON.stringify({ action: 'volume', volume: newVolume })
+        });
+        return;
+    }
     await fetch('/api/mpris/control', {
         method: 'POST',
         body: JSON.stringify({ action: 'playpause' })
@@ -530,6 +545,8 @@ if (controlMode === 'mpris') {
     }));
 }
 ```
+
+> **Key Pattern (Player Selection in Frontend):** The volume button handler uses `mprisSelectedPlayer` to find the correct player in the `/api/mpris/players` response. If no player is selected yet, it falls back to `players[0]`. This ensures volume adjustments are relative to the actual current volume of the active player, not an arbitrary default.
 
 ## Configuration
 

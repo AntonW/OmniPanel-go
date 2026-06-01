@@ -12,6 +12,7 @@ Der Medienwiedergabe-Block zeigt Informationen über das aktuell abgespielte Med
 - **Titel** — Song- oder Videoname
 - **Künstler** — Interpret oder Kanalname
 - **Fortschrittsbalken** — wie weit du im Track bist
+- **Lautstärke** — aktuelle Player-Lautstärke (wird in den Lautstärke-Tasten angezeigt)
 - **Steuerungstasten** — vorheriger, Play/Pause, nächster, Lautstärke runter, Lautstärke hoch
 
 ---

@@ -12,6 +12,7 @@ The Media Player block shows information about the currently playing media (musi
 - **Title** — song or video name
 - **Artist** — performer or channel name
 - **Progress bar** — how far through the track you are
+- **Volume** — current player volume (reflected in the volume buttons)
 - **Control buttons** — previous, play/pause, next, volume down, volume up
 
 ---

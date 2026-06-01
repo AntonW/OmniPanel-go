@@ -19,7 +19,8 @@ import (
 	"omnipanel-go/internal/state"
 )
 
-// listMPRISPlayers returns a list of currently connected MPRIS media players.
+// listMPRISPlayers returns a list of currently connected MPRIS media players
+// with their current state (identity, playback status, metadata, volume, capabilities).
 func listMPRISPlayers(c *fiber.Ctx) error {
 	s := c.Locals("state").(*state.AppState)
 
@@ -45,6 +46,7 @@ func listMPRISPlayers(c *fiber.Ctx) error {
 				"album":          state.Album,
 				"artUrl":         state.ArtURL,
 				"canControl":     state.CanControl,
+				"volume":         state.Volume,
 			})
 		}
 	}

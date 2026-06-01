@@ -1723,26 +1723,31 @@ function enableInputs() {
 
             if (!controlMode || !action) return;
 
-            if (controlMode === 'mpris') {
-                // Volume buttons need special handling: fetch current volume first,
-                // then send a set-volume command with a relative delta.
-                let mprisAction = action;
-                if (action === 'volumedown' || action === 'volumeup') {
-                    const volumeRes = await fetch('/api/mpris/players', { headers: addAuthHeaders() });
-                    if (handleUnauthorized(volumeRes)) return;
-                    const volumeData = await volumeRes.json();
-                    if (volumeData.players && volumeData.players.length > 0) {
-                        const currentVolume = volumeData.players[0].volume || 0.5;
-                        const delta = action === 'volumedown' ? -0.05 : 0.05;
-                        const newVolume = Math.max(0, Math.min(1, currentVolume + delta));
-                        await fetch('/api/mpris/control', {
-                            method: 'POST',
-                            headers: addAuthHeaders({ 'Content-Type': 'application/json' }),
-                            body: JSON.stringify({ action: 'volume', volume: newVolume })
-                        });
-                    }
-                    return;
-                }
+		if (controlMode === 'mpris') {
+			// Volume buttons need special handling: fetch current volume from the
+			// selected player, then send a set-volume command with a relative delta.
+			let mprisAction = action;
+			if (action === 'volumedown' || action === 'volumeup') {
+				const volumeRes = await fetch('/api/mpris/players', { headers: addAuthHeaders() });
+				if (handleUnauthorized(volumeRes)) return;
+				const volumeData = await volumeRes.json();
+				if (volumeData.players && volumeData.players.length > 0) {
+					// Find the selected player; fall back to first available.
+					let currentPlayer = volumeData.players.find(p => p.name === mprisSelectedPlayer);
+					if (!currentPlayer) {
+						currentPlayer = volumeData.players[0];
+					}
+					const currentVolume = currentPlayer.volume || 0.5;
+					const delta = action === 'volumedown' ? -0.05 : 0.05;
+					const newVolume = Math.max(0, Math.min(1, currentVolume + delta));
+					await fetch('/api/mpris/control', {
+						method: 'POST',
+						headers: addAuthHeaders({ 'Content-Type': 'application/json' }),
+						body: JSON.stringify({ action: 'volume', volume: newVolume })
+					});
+				}
+				return;
+			}
 
                 await fetch('/api/mpris/control', {
                     method: 'POST',
