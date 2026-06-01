@@ -241,10 +241,40 @@ foreach ($dep in @("libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll
 # sonst auch runtime/cgo treffen und unter '-Wall -Werror' des Go-Toolchains
 # zu 'cgo.exe: exit status 2' führen.
 # ---------------------------------------------------------------------------
+Write-Host "==> Stelle Vosk-Go-Modul-Dependencies sicher"
+& go mod download github.com/alphacep/vosk-api/go 2>&1 | Out-String | Write-Verbose
+if ($LASTEXITCODE -ne 0) {
+    Write-Warning "go mod download hatte nicht-Null-Exit-Code, aber versuche trotzdem weiterzumachen."
+}
+
 Write-Host "==> Ermittle Vosk-Go-Modulpfad"
-$VoskGoModDir = & go list -m -f '{{.Dir}}' github.com/alphacep/vosk-api/go 2>&1
+$VoskGoModDir = & go list -m -f '{{.Dir}}' github.com/alphacep/vosk-api/go 2>&1 | Select-Object -First 1
+$VoskGoModDir = $VoskGoModDir -replace '\s+$'  # Trim trailing whitespace
+
 if ($LASTEXITCODE -ne 0 -or -not $VoskGoModDir) {
-    throw "Konnte Vosk-Go-Modulpfad nicht ermitteln: $VoskGoModDir"
+    Write-Host "    Fehler: go list -m Output war leer oder fehlgeschlagen."
+    Write-Host "    Versuche Fallback: suche manuell im go/pkg/mod"
+    $GOPATH = & go env GOPATH 2>&1 | Select-Object -First 1
+    if (-not $GOPATH) {
+        throw "Konnte GOPATH nicht ermitteln. Bitte stelle sicher, dass Go installiert ist."
+    }
+    $modCacheDir = Join-Path $GOPATH "pkg/mod/github.com/alphacep"
+    if (Test-Path $modCacheDir) {
+        $vosk_dirs = Get-ChildItem -Path $modCacheDir -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name.StartsWith("vosk-api") }
+        foreach ($d in $vosk_dirs) {
+            # Suche nach go* Unterverzeichnis (vosk-api hat go als Submodule, z.B. go@v0.3.50)
+            # Nutze .FullName explizit: bei -ErrorAction SilentlyContinue wird Dir-Obj. nicht gut behandelt
+            $go_versions = @(Get-ChildItem -Path $d.FullName -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name.StartsWith("go") })
+            if ($go_versions.Count -gt 0) {
+                $VoskGoModDir = $go_versions[0].FullName
+                Write-Host "    Gefunden: $VoskGoModDir"
+                break
+            }
+        }
+    }
+    if (-not $VoskGoModDir) {
+        throw "Konnte Vosk-Go-Modulpfad weder via 'go list' noch im GOPATH-Cache finden."
+    }
 }
 Write-Host "    Vosk-Go-Modul: $VoskGoModDir"
 
