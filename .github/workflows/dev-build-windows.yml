@@ -145,4 +145,6 @@ jobs:
             bin/libwinpthread-1.dll
             bin/build.stdout.log
             bin/build.stderr.log
+            config.json
+            user/**
           if-no-files-found: warn
