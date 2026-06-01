@@ -135,7 +135,7 @@ jobs:
 
       - name: Prepare dev artifact bundle
         run: |
-          $bundle = ".artifact-bundle"
+          $bundle = "artifact-bundle"
           if (Test-Path $bundle) { Remove-Item -Recurse -Force $bundle }
           New-Item -ItemType Directory -Path $bundle | Out-Null
 
@@ -153,5 +153,5 @@ jobs:
         with:
           name: OmniPanel-go-windows-dev
           path: |
-            .artifact-bundle/**
+            artifact-bundle/**
           if-no-files-found: warn
