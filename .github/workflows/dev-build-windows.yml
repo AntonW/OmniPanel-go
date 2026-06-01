@@ -88,15 +88,45 @@ jobs:
       - name: Extract likely linker errors on failure
         if: failure()
         run: |
-          $patterns = 'undefined reference|cannot find|-lvosk|ld\.exe|collect2|fatal error|error:|cgo:|gcc: error|clang: error'
-          if (Test-Path "bin/build.stderr.log") {
-            Write-Host "===== stderr matches ====="
-            Select-String -Path "bin/build.stderr.log" -Pattern $patterns -CaseSensitive:$false | Select-Object -Last 200 | ForEach-Object { $_.Line }
+          $patterns = 'undefined reference|cannot find|-lvosk|ld\.exe|collect2|fatal error|error:|cgo:|runtime/cgo:|gcc: error|clang: error|exit status [0-9]+'
+
+          function Show-MatchesWithContext {
+            param(
+              [Parameter(Mandatory = $true)][string]$Path,
+              [Parameter(Mandatory = $true)][string]$Label,
+              [Parameter(Mandatory = $true)][string]$Pattern,
+              [int]$Context = 40,
+              [int]$MaxMatches = 5
+            )
+
+            if (-not (Test-Path $Path)) {
+              Write-Host "No $Path found"
+              return
+            }
+
+            Write-Host "===== $Label matches ====="
+            $hits = Select-String -Path $Path -Pattern $Pattern -CaseSensitive:$false
+            if (-not $hits) {
+              Write-Host "(no matches)"
+              return
+            }
+
+            $hits | Select-Object -Last 200 | ForEach-Object { $_.Line }
+
+            $lines = Get-Content $Path
+            $firstHits = $hits | Select-Object -First $MaxMatches
+            foreach ($h in $firstHits) {
+              $start = [Math]::Max(1, $h.LineNumber - $Context)
+              $end = [Math]::Min($lines.Count, $h.LineNumber + $Context)
+              Write-Host "===== $Label context around line $($h.LineNumber) ====="
+              for ($i = $start; $i -le $end; $i++) {
+                Write-Host ("{0,6}: {1}" -f $i, $lines[$i - 1])
+              }
+            }
           }
-          if (Test-Path "bin/build.stdout.log") {
-            Write-Host "===== stdout matches ====="
-            Select-String -Path "bin/build.stdout.log" -Pattern $patterns -CaseSensitive:$false | Select-Object -Last 200 | ForEach-Object { $_.Line }
-          }
+
+          Show-MatchesWithContext -Path "bin/build.stderr.log" -Label "stderr" -Pattern $patterns
+          Show-MatchesWithContext -Path "bin/build.stdout.log" -Label "stdout" -Pattern $patterns
 
       - name: Upload dev artifact
         uses: actions/upload-artifact@v4
