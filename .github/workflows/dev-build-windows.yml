@@ -148,7 +148,7 @@ jobs:
           Copy-Item -Path "README.md" -Destination $bundle -Force
           Copy-Item -Path "LICENSE" -Destination $bundle -Force
 
-       - name: Upload dev artifact
+      - name: Upload dev artifact
          uses: actions/upload-artifact@v4
          with:
            name: OmniPanel-go-windows-dev
