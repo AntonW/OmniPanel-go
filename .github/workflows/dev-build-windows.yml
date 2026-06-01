@@ -22,8 +22,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Stellt gcc/g++/dlltool/objdump in UCRT64 bereit
       - name: Setup MSYS2 (UCRT64)
+        id: msys2
         uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
@@ -32,18 +32,34 @@ jobs:
             mingw-w64-ucrt-x86_64-gcc
             mingw-w64-ucrt-x86_64-tools
 
+      - name: Check MSYS2 availability
+        shell: pwsh
+        run: |
+          Get-Command bash -ErrorAction SilentlyContinue
+          Get-Command gcc -ErrorAction SilentlyContinue
+
+      - name: Resolve MSYS2 UCRT bin
+        run: |
+          $msysRoot = "${{ steps.msys2.outputs.msys2-location }}"
+          $ucrtBin = Join-Path $msysRoot "ucrt64\bin"
+          "MSYS2_ROOT=$msysRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "MSYS2_UCRT_BIN=$ucrtBin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "MSYS2 root: $msysRoot"
+          Write-Host "UCRT bin : $ucrtBin"
+
       - name: Show tool versions
         run: |
-          & "C:\msys64\ucrt64\bin\gcc.exe" --version
-          & "C:\msys64\ucrt64\bin\g++.exe" --version
+          & (Join-Path $env:MSYS2_UCRT_BIN "gcc.exe") --version
+          & (Join-Path $env:MSYS2_UCRT_BIN "g++.exe") --version
+          & (Join-Path $env:MSYS2_UCRT_BIN "dlltool.exe") --version
+          & (Join-Path $env:MSYS2_UCRT_BIN "objdump.exe") --version
           go version
 
-      # Optional: für höhere GitHub API Limits beim Release-Metadatenabruf
       - name: Build with Vosk script
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./scripts/build-with-vosk.ps1 -Msys2UcrtBin "C:\msys64\ucrt64\bin"
+          ./scripts/build-with-vosk.ps1 -Msys2UcrtBin $env:MSYS2_UCRT_BIN
 
       - name: Upload dev artifact
         uses: actions/upload-artifact@v4
