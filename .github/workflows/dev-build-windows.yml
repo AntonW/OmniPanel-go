@@ -61,6 +61,30 @@ jobs:
         run: |
           ./scripts/build-with-vosk.ps1 -Msys2UcrtBin $env:MSYS2_UCRT_BIN
 
+      - name: Dump build stderr on failure
+        if: failure()
+        run: |
+          $p = "bin/build.stderr.log"
+          if (Test-Path $p) {
+            Write-Host "===== BEGIN build.stderr.log (tail 400) ====="
+            Get-Content $p -Tail 400
+            Write-Host "===== END build.stderr.log ====="
+          } else {
+            Write-Host "No $p found"
+          }
+
+      - name: Dump build stdout on failure
+        if: failure()
+        run: |
+          $p = "bin/build.stdout.log"
+          if (Test-Path $p) {
+            Write-Host "===== BEGIN build.stdout.log (tail 200) ====="
+            Get-Content $p -Tail 200
+            Write-Host "===== END build.stdout.log ====="
+          } else {
+            Write-Host "No $p found"
+          }
+
       - name: Upload dev artifact
         uses: actions/upload-artifact@v4
         with:
