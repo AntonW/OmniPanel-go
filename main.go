@@ -40,6 +40,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -48,10 +49,24 @@ import (
 	"omnipanel-go/internal/logger"
 	"omnipanel-go/internal/relay"
 	"omnipanel-go/internal/routes"
+	"omnipanel-go/internal/rssfeed"
 	"omnipanel-go/internal/starter"
 	"omnipanel-go/internal/state"
 	"omnipanel-go/internal/systray"
 )
+
+func serverAddrToHTTP(addr string) string {
+	if strings.HasPrefix(addr, "wss://") {
+		return "https://" + strings.TrimPrefix(addr, "wss://")
+	}
+	if strings.HasPrefix(addr, "ws://") {
+		return "http://" + strings.TrimPrefix(addr, "ws://")
+	}
+	if !strings.HasPrefix(addr, "http://") && !strings.HasPrefix(addr, "https://") {
+		return "http://" + addr
+	}
+	return addr
+}
 
 func main() {
 	subcommand := ""
@@ -109,8 +124,9 @@ func main() {
 
 // runDefault starts the application in default mode: HTTP server, all subsystems,
 // and a system tray icon (when a display server is available). The system tray
-// provides fullscreen toggle and graceful exit controls. The server runs in a
-// goroutine while the main thread waits for SIGINT or SIGTERM.
+// provides Open Panel (opens http://localhost:port), fullscreen toggle, and
+// graceful exit controls. The server runs in a goroutine while the main thread
+// waits for SIGINT or SIGTERM.
 func runDefault(cfg *config.Config, configPath, userPath, baseDir string) {
 	slog.Info("Starting OmniPanel-go server", "port", cfg.Port)
 
@@ -132,6 +148,9 @@ func runDefault(cfg *config.Config, configPath, userPath, baseDir string) {
 				} else {
 					appState.BroadcastJSON(map[string]any{"type": "exit-fullscreen"})
 				}
+			},
+			func() {
+				rssfeed.OpenURL(fmt.Sprintf("http://localhost:%d", cfg.Port))
 			},
 			func() {
 				quit <- syscall.SIGTERM
@@ -200,8 +219,9 @@ func runServe(cfg *config.Config, userPath, baseDir string) {
 
 // runConnect starts the application in connect mode: host agent that connects to a
 // relay server via WebSocket and runs all subsystems locally. A system tray icon
-// (when a display server is available) provides fullscreen toggle and graceful exit
-// controls. The exit callback sends to the quit channel to unblock the main goroutine.
+// (when a display server is available) provides Open Panel (opens the remote server
+// URL in the default browser), fullscreen toggle, and graceful exit controls.
+// The exit callback sends to the quit channel to unblock the main goroutine.
 func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg string) {
 	serverAddr := serverAddrArg
 	if serverAddr == "" {
@@ -230,6 +250,9 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
 				} else {
 					agt.BroadcastJSON(map[string]any{"type": "exit-fullscreen"})
 				}
+			},
+			func() {
+				rssfeed.OpenURL(serverAddrToHTTP(serverAddr))
 			},
 			func() {
 				quit <- syscall.SIGTERM

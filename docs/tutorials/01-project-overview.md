@@ -58,6 +58,7 @@ OmniPanel-go is a web-based control panel system that runs on Linux or Windows. 
 │                                                  │
 │  ┌────────────────────────────────────────────┐  │
 │  │  System Tray (default mode, with display)  │  │
+│  │  - Open Panel (localhost:port)             │  │
 │  │  - Toggle Fullscreen (broadcast)           │  │
 │  │  - Exit Application (SIGTERM)              │  │
 │  └────────────────────────────────────────────┘  │
@@ -102,7 +103,7 @@ Web Clients (browser):
 │  - RSSManager                                   │
 │  - Auto-reconnect with backoff                  │
 │  - System Tray (with display):                  │
-│      Toggle Fullscreen, Exit Application    │
+│      Open Panel (remote URL), Toggle Fullscreen, Exit Application    │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -166,7 +167,7 @@ OmniPanel-go/
 │   └── speech_commands.json     # Default speech commands
 └── internal/
     └── systray/                 # System tray icon (fyne.io/systray)
-        ├── systray.go           # Tray package with fullscreen toggle and exit
+        ├── systray.go           # Tray package with Open Panel, fullscreen toggle, and exit
         └── icon.png             # Embedded tray icon (64x64 PNG from SVG logo)
 ```
 
@@ -331,6 +332,9 @@ func runDefault(cfg *config.Config, configPath, userPath, baseDir string) {
                 }
             },
             func() {
+                rssfeed.OpenURL(fmt.Sprintf("http://localhost:%d", cfg.Port))
+            },
+            func() {
                 quit <- syscall.SIGTERM
             },
         )
@@ -355,7 +359,7 @@ func runDefault(cfg *config.Config, configPath, userPath, baseDir string) {
 }
 ```
 
-This is the traditional mode: HTTP server + all subsystems on the same machine. A system tray icon is created when a display server (X11 or Wayland) is detected, providing fullscreen toggle and exit controls. The `quit` channel is shared between signal handling and the tray's exit callback, so either Ctrl+C or "Exit Application" from the tray triggers the same graceful shutdown path.
+This is the traditional mode: HTTP server + all subsystems on the same machine. A system tray icon is created when a display server (X11 or Wayland) is detected, providing Open Panel (opens http://localhost:port in the default browser), fullscreen toggle, and exit controls. The `quit` channel is shared between signal handling and the tray's exit callback, so either Ctrl+C or "Exit Application" from the tray triggers the same graceful shutdown path.
 
 > **Concept: `systray.IsHeadless()`**
 > On Linux, the system tray requires a display server. `IsHeadless()` checks the `DISPLAY` and `WAYLAND_DISPLAY` environment variables. If neither is set (e.g., on a headless server or SSH session without X forwarding), the tray is skipped entirely and the application runs normally with only signal-based shutdown.
@@ -427,6 +431,9 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
                 }
             },
             func() {
+                rssfeed.OpenURL(serverAddrToHTTP(serverAddr))
+            },
+            func() {
                 quit <- syscall.SIGTERM
             },
         )
@@ -443,7 +450,7 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
 }
 ```
 
-The host agent creates all subsystems (joystick, speech, MPRIS, RSS, etc.) but no HTTP server. It connects to the relay server via WebSocket and auto-reconnects on disconnect with exponential backoff. Like default mode, a system tray icon is created when a display server is available. A shared `quit` channel receives both OS signals and the tray's exit callback, so either Ctrl+C or "Exit Application" triggers the same shutdown path calling `agt.Stop()`.
+The host agent creates all subsystems (joystick, speech, MPRIS, RSS, etc.) but no HTTP server. It connects to the relay server via WebSocket and auto-reconnects on disconnect with exponential backoff. Like default mode, a system tray icon is created when a display server is available. The Open Panel menu item converts the WebSocket server address to an HTTP URL (ws:// → http://, wss:// → https://) and opens it in the default browser. A shared `quit` channel receives both OS signals and the tray's exit callback, so either Ctrl+C or "Exit Application" triggers the same shutdown path calling `agt.Stop()`.
 
 ## Key Takeaways
 
@@ -459,8 +466,9 @@ The host agent creates all subsystems (joystick, speech, MPRIS, RSS, etc.) but n
 - The `starter` package copies default user content into an empty volume on first run (Docker containers)
 - `AppStateInterface` allows the same WebSocket handler code to work in both default and connect modes
 - Speech features (Vosk STT, host recording) require CGO and are excluded from container builds
-- The `systray` package provides a cross-platform system tray icon (using `fyne.io/systray`) with fullscreen toggle and exit controls in default and connect modes
+- The `systray` package provides a cross-platform system tray icon (using `fyne.io/systray`) with Open Panel, fullscreen toggle, and exit controls in default and connect modes
 - System tray is skipped on headless systems (no `DISPLAY` or `WAYLAND_DISPLAY` env vars on Linux)
+- In default mode, Open Panel opens `http://localhost:<port>`; in connect mode, it converts the WebSocket URL to HTTP (ws:// → http://, wss:// → https://) and opens the remote server
 - A shared `quit` channel handles both OS signals and tray exit callbacks in default and connect modes
 
 [Next: Chapter 2 — Configuration System →](02-configuration.md)

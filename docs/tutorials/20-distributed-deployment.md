@@ -46,7 +46,7 @@ Distributed deployment solves this by separating concerns:
 │  - RSSManager                                   │
 │  - Auto-reconnect with backoff                  │
 │  - System Tray (with display):                  │
-│      Enter/Exit Fullscreen, Exit Application    │
+│      Open Panel (remote URL), Enter/Exit Fullscreen, Exit Application    │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -107,7 +107,7 @@ The host agent:
 - Sends results back to the server for broadcast to browsers
 - Auto-reconnects on disconnect with exponential backoff (1s → 2s → 4s → max 30s)
 - Sends heartbeat every 15s to keep the connection alive
-- Creates a system tray icon (when a display server is available) with fullscreen toggle and exit controls
+- Creates a system tray icon (when a display server is available) with Open Panel (opens the remote server URL), fullscreen toggle, and exit controls
 
 ## Configuration
 
@@ -580,8 +580,9 @@ coverImg.src = newCover;
 - The host agent initiates an outbound WebSocket connection (no inbound ports needed)
 - Serve mode: Fiber HTTP server + WebSocket relay hub (no subsystems)
 - Connect mode: WebSocket client + all subsystems (no HTTP server)
-- Default and connect modes include a system tray icon (when a display server is detected) with fullscreen toggle and exit controls
+- Default and connect modes include a system tray icon (when a display server is detected) with Open Panel, fullscreen toggle, and exit controls
 - System tray is skipped on headless systems (no `DISPLAY` or `WAYLAND_DISPLAY` env vars on Linux)
+- In default mode, Open Panel opens `http://localhost:<port>`; in connect mode, the WebSocket server address is converted to HTTP (ws:// → http://, wss:// → https://) and opened in the default browser
 - In connect mode, the tray exit callback sends to a shared `quit` channel to trigger graceful shutdown
 - WebSocket URL supports plain `host:port` (defaults to `ws://`) or full URLs (`ws://` or `wss://`)
 - Use `wss://` when the relay server is behind a TLS-terminating reverse proxy
