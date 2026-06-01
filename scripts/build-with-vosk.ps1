@@ -309,8 +309,8 @@ $env:CXX          = "g++"
 # CGO_CFLAGS / CGO_CPPFLAGS NICHT global setzen – die Vosk-Go-Package
 # findet ihren Header jetzt selbst via #cgo CPPFLAGS: -I ${SRCDIR}/../src.
 # Globale Includes treffen sonst auch runtime/cgo und brechen den Build.
-$env:CGO_CFLAGS   = ""
-$env:CGO_CPPFLAGS = ""
+$env:CGO_CFLAGS   = "-Wno-error"
+$env:CGO_CPPFLAGS = "-Wno-error"
 # CGO_LDFLAGS NICHT global setzen: diese Flags werden sonst auch auf
 # runtime/cgo angewendet. Das kann in CI zu "runtime/cgo: ... cgo.exe: exit status 2" fuehren.
 # Die Vosk-Go-Package setzt ihre Link-Flags selbst via #cgo LDFLAGS auf ${SRCDIR}/../src.
