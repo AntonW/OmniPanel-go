@@ -47,7 +47,7 @@ Buttons to toggle fullscreen mode on all connected devices:
 > **Tip:** Fullscreen mode is great for immersion — your panel will look like a dedicated app rather than a webpage.
 
 > **Alternative: System Tray**
-> If you're running OmniPanel-go on a machine with a desktop environment, you can also toggle fullscreen from the system tray icon. Right-click the tray icon and select **Enter Fullscreen** or **Exit Fullscreen**. This works in both Default and Host Agent modes and sends the same command to all connected devices.
+> If you're running OmniPanel-go on a machine with a desktop environment, you can also toggle fullscreen from the system tray icon. Right-click the tray icon and select **Toggle Fullscreen**. This works in both Default and Host Agent modes and sends the same command to all connected devices.
 
 ### Connection Log
 

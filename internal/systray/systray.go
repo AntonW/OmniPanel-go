@@ -56,12 +56,16 @@ func (t *Tray) Quit() {
 	close(t.quitChan)
 }
 
+// onReady sets up the tray icon, title, tooltip, and menu items.
+// It registers click handlers for the fullscreen toggle and exit items.
+// The fullscreen item uses a static "Toggle Fullscreen" label — the internal
+// state tracks whether fullscreen is active, but the menu text does not change.
 func (t *Tray) onReady() {
 	systray.SetIcon(iconData)
 	systray.SetTitle("OmniPanel")
 	systray.SetTooltip("OmniPanel-go")
 
-	t.fullscreenItem = systray.AddMenuItem("Enter Fullscreen", "Toggle fullscreen on all clients")
+	t.fullscreenItem = systray.AddMenuItem("Toggle Fullscreen", "Toggle fullscreen on all clients")
 	t.exitItem = systray.AddMenuItem("Exit Application", "Shut down OmniPanel-go")
 
 	go func() {
@@ -77,16 +81,15 @@ func (t *Tray) onReady() {
 	}()
 }
 
+// toggleFullscreen flips the internal fullscreen state and calls the onFullscreen callback.
+// The menu item title and tooltip remain static ("Toggle Fullscreen") — the caller
+// (main.go) is responsible for broadcasting enter-fullscreen or exit-fullscreen to clients.
 func (t *Tray) toggleFullscreen() {
 	t.mu.Lock()
 	t.fullscreen = !t.fullscreen
-	if t.fullscreen {
-		t.fullscreenItem.SetTitle("Exit Fullscreen")
-		t.fullscreenItem.SetTooltip("Exit fullscreen on all clients")
-	} else {
-		t.fullscreenItem.SetTitle("Enter Fullscreen")
-		t.fullscreenItem.SetTooltip("Enter fullscreen on all clients")
-	}
+	t.fullscreenItem.SetTitle("Toggle fullscreen")
+	t.fullscreenItem.SetTooltip("Toggle fullscreen on all clients")
+
 	t.mu.Unlock()
 
 	if t.onFullscreen != nil {

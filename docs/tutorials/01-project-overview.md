@@ -58,7 +58,7 @@ OmniPanel-go is a web-based control panel system that runs on Linux or Windows. 
 │                                                  │
 │  ┌────────────────────────────────────────────┐  │
 │  │  System Tray (default mode, with display)  │  │
-│  │  - Enter/Exit Fullscreen (broadcast)       │  │
+│  │  - Toggle Fullscreen (broadcast)           │  │
 │  │  - Exit Application (SIGTERM)              │  │
 │  └────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────┘
@@ -102,7 +102,7 @@ Web Clients (browser):
 │  - RSSManager                                   │
 │  - Auto-reconnect with backoff                  │
 │  - System Tray (with display):                  │
-│      Enter/Exit Fullscreen, Exit Application    │
+│      Toggle Fullscreen, Exit Application    │
 └─────────────────────────────────────────────────┘
 ```
 

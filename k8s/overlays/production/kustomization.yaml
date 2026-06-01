@@ -5,9 +5,15 @@ resources:
   - ../../base
   - secret.yaml
 
+configMapGenerator:
+  - name: omnipanel-go-config
+    files:
+      - config.json
+
 images:
   - name: omnipanel-go
-    newTag: v1.0.0
+    newName: git.antonsblog.org/atwi/omnipanel-go
+    newTag: 58d0a8a
 
 patches:
   - target:
@@ -34,10 +40,10 @@ patches:
         value: letsencrypt
       - op: replace
         path: /spec/rules/0/host
-        value: omnipanel.mydomain.com
+        value: omni.antonsblog.org
       - op: replace
         path: /spec/tls/0/hosts/0
-        value: omnipanel.mydomain.com
+        value: omni.antonsblog.org
       - op: replace
         path: /spec/tls/0/secretName
-        value: omni-tls
+        value: omni-antonsblog-org-tls

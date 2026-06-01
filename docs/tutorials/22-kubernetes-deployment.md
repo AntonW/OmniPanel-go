@@ -29,7 +29,8 @@ k8s/
 └── overlays/
     └── production/
         ├── kustomization.yaml # Production overlay
-        └── secret.yaml        # Image pull secret
+        ├── secret.yaml        # Image pull secret
+        └── config.json        # Production configuration (mounted via configMapGenerator)
 ```
 
 ## Base Manifests
@@ -233,10 +234,15 @@ resources:
   - ../../base
   - secret.yaml
 
+configMapGenerator:
+  - name: omnipanel-go-config
+    files:
+      - config.json
+
 images:
   - name: omnipanel-go
     newName: git.antonsblog.org/atwi/omnipanel-go
-    newTag: v1.0.0
+    newTag: 58d0a8a
 
 patches:
   - target:
@@ -272,10 +278,10 @@ patches:
         value: omni-antonsblog-org-tls
 ```
 
-The overlay changes the image tag, hostname, adds image pull secrets, and configures cert-manager for automatic TLS certificate provisioning without modifying the base manifests.
+The overlay adds a `configMapGenerator` to mount a local `config.json` file, changes the image registry and tag, hostname, adds image pull secrets, and configures cert-manager for automatic TLS certificate provisioning without modifying the base manifests.
 
 > **Key Pattern: Production overlay**
-> The production overlay demonstrates kustomize best practices: separate `secret.yaml` for registry credentials, `images` block for tag management, and `patches` for environment-specific overrides. The `cert-manager.io/cluster-issuer` annotation triggers automatic TLS certificate generation when cert-manager is installed in the cluster.
+> The production overlay demonstrates kustomize best practices: `configMapGenerator` for mounting a local `config.json` file (overrides the base ConfigMap), separate `secret.yaml` for registry credentials, `images` block for tag management, and `patches` for environment-specific overrides. The `cert-manager.io/cluster-issuer` annotation triggers automatic TLS certificate generation when cert-manager is installed in the cluster.
 
 ## Deploying
 
@@ -371,7 +377,8 @@ kubectl create secret tls omnipanel-go-tls --cert=tls.crt --key=tls.key
 ## Key Takeaways
 
 - kustomize manifests in `k8s/` provide a complete Kubernetes deployment for serve mode
-- ConfigMap mounts `config.json` for configuration without rebuilding the image
+- Base ConfigMap mounts `config.json` for configuration without rebuilding the image
+- Production overlay uses `configMapGenerator` to mount a local `config.json` file, overriding the base ConfigMap
 - `Recreate` strategy is required because the PVC is `ReadWriteOnce`
 - `workingDir: /var/run/ko` is required for ko container file resolution
 - `/health` endpoint bypasses authentication for Kubernetes probes
