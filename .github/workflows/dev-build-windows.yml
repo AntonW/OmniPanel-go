@@ -67,7 +67,7 @@ jobs:
           $p = "bin/build.stderr.log"
           if (Test-Path $p) {
             Write-Host "===== BEGIN build.stderr.log (tail 400) ====="
-            Get-Content $p -Tail 400
+            Get-Content $p -Tail 4000
             Write-Host "===== END build.stderr.log ====="
           } else {
             Write-Host "No $p found"
@@ -79,7 +79,7 @@ jobs:
           $p = "bin/build.stdout.log"
           if (Test-Path $p) {
             Write-Host "===== BEGIN build.stdout.log (tail 200) ====="
-            Get-Content $p -Tail 200
+            Get-Content $p -Tail 2000
             Write-Host "===== END build.stdout.log ====="
           } else {
             Write-Host "No $p found"
