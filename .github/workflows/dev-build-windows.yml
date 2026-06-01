@@ -22,6 +22,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.3'
+
       - name: Setup MSYS2 (UCRT64)
         id: msys2
         uses: msys2/setup-msys2@v2
