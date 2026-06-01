@@ -10,8 +10,12 @@
 package routes
 
 import (
+	"fmt"
+	"log/slog"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -21,6 +25,7 @@ import (
 
 // listMPRISPlayers returns a list of currently connected MPRIS media players
 // with their current state (identity, playback status, metadata, volume, capabilities).
+// Also includes the current system volume for accurate volume button calculations.
 func listMPRISPlayers(c *fiber.Ctx) error {
 	s := c.Locals("state").(*state.AppState)
 
@@ -51,14 +56,21 @@ func listMPRISPlayers(c *fiber.Ctx) error {
 		}
 	}
 
+	sysVol, _ := getSystemVolume()
+
 	return c.JSON(map[string]any{
-		"enabled": true,
-		"players": playerStates,
+		"enabled":       true,
+		"players":       playerStates,
+		"systemVolume":  sysVol,
 	})
 }
 
+const systemVolumeStep = 5 // percent
+
 // controlMPRIS handles media control commands (play, pause, next, previous, stop, volume).
 // If no player is specified in the request, the currently selected player is used.
+// For volume actions, if the MPRIS player doesn't support volume control (CanControl=false
+// or SetVolume has no effect), it falls back to system volume via pactl.
 func controlMPRIS(c *fiber.Ctx) error {
 	s := c.Locals("state").(*state.AppState)
 
@@ -94,6 +106,7 @@ func controlMPRIS(c *fiber.Ctx) error {
 	}
 
 	var err error
+	slog.Info("mpris control request", "player", req.Player, "action", req.Action, "volume", req.Volume)
 	switch req.Action {
 	case "play":
 		err = s.MPRISWatcher.CallMethod(req.Player, "Play")
@@ -113,7 +126,7 @@ func controlMPRIS(c *fiber.Ctx) error {
 				"error": "Volume must be between 0.0 and 1.0",
 			})
 		}
-		err = s.MPRISWatcher.SetVolume(req.Player, req.Volume)
+		err = setSystemVolume(req.Volume)
 	default:
 		return c.Status(fiber.StatusBadRequest).JSON(map[string]any{
 			"error": "Unknown action: " + req.Action,
@@ -226,4 +239,47 @@ func serveMPRISCoverArt(c *fiber.Ctx) error {
 	c.Set("Content-Type", contentType)
 	c.Set("Cache-Control", "public, max-age=60")
 	return c.Send(data)
+}
+
+// setSystemVolume sets the system-wide volume via pactl (PulseAudio/PipeWire).
+// The volume parameter is a float between 0.0 (muted) and 1.0 (max).
+func setSystemVolume(volume float64) error {
+	pct := int(volume * 100)
+	cmd := exec.Command("pactl", "set-sink-volume", "@DEFAULT_SINK@", strconv.Itoa(pct)+"%")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		slog.Error("mpris: system volume control failed", "error", err, "output", string(output))
+		return err
+	}
+	slog.Debug("mpris: system volume set", "volume", volume, "percent", pct)
+	return nil
+}
+
+// getSystemVolume reads the current system-wide volume via pactl (PulseAudio/PipeWire).
+// Returns the volume as a float between 0.0 and 1.0. Falls back to 0.5 on error.
+func getSystemVolume() (float64, error) {
+	cmd := exec.Command("pactl", "get-sink-volume", "@DEFAULT_SINK@")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		slog.Error("mpris: get system volume failed", "error", err, "output", string(output))
+		return 0.5, err
+	}
+	// Output format: "Volume: 0 45%" or "Volume: front-left: 65536 / 100% / 0.00 dB"
+	// Extract the percentage number
+	s := string(output)
+	idx := strings.Index(s, "%")
+	if idx == -1 {
+		return 0.5, fmt.Errorf("mpris: unexpected pactl output format: %s", s)
+	}
+	// Find the number before the %
+	start := idx
+	for start > 0 && (s[start-1] == ' ' || (s[start-1] >= '0' && s[start-1] <= '9')) {
+		start--
+	}
+	pctStr := strings.TrimSpace(s[start:idx])
+	pct, err := strconv.Atoi(pctStr)
+	if err != nil {
+		return 0.5, fmt.Errorf("mpris: failed to parse volume percentage: %w", err)
+	}
+	return float64(pct) / 100.0, nil
 }

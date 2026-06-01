@@ -638,7 +638,12 @@ func (w *Watcher) SetVolume(playerName string, volume float64) error {
 
 	propsIface := "org.freedesktop.DBus.Properties"
 	call := obj.Call(propsIface+".Set", 0, mprisPlayerIface, "Volume", dbus.MakeVariant(volume))
-	return call.Store()
+	if err := call.Store(); err != nil {
+		w.logger.Error("mpris: set volume failed", "player", playerName, "volume", volume, "error", err)
+		return err
+	}
+	w.logger.Debug("mpris: volume set", "player", playerName, "volume", volume)
+	return nil
 }
 
 // ListPlayers returns the names of all currently connected players.

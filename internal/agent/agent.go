@@ -54,8 +54,10 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -513,6 +515,7 @@ func (a *Agent) handleMPRISRequest(raw string) {
 
 // handleMPRISListPlayers returns the list of connected MPRIS media players
 // with their current state (identity, playback status, metadata, capabilities).
+// Also includes the current system volume for accurate volume button calculations.
 // Called by handleMPRISRequest for the "/players" endpoint.
 func (a *Agent) handleMPRISListPlayers() map[string]any {
 	if a.MPRISWatcher == nil {
@@ -542,9 +545,12 @@ func (a *Agent) handleMPRISListPlayers() map[string]any {
 		}
 	}
 
+	sysVol, _ := getSystemVolume()
+
 	return map[string]any{
-		"enabled": true,
-		"players": playerStates,
+		"enabled":       true,
+		"players":       playerStates,
+		"systemVolume":  sysVol,
 	}
 }
 
@@ -576,6 +582,7 @@ func (a *Agent) handleMPRISControl(body map[string]any) map[string]any {
 	}
 
 	var err error
+	slog.Info("mpris control (agent)", "player", player, "action", action, "volume", body["volume"])
 	switch action {
 	case "play":
 		err = a.MPRISWatcher.CallMethod(player, "Play")
@@ -596,7 +603,7 @@ func (a *Agent) handleMPRISControl(body map[string]any) map[string]any {
 				"error": "Volume must be between 0.0 and 1.0",
 			}
 		}
-		err = a.MPRISWatcher.SetVolume(player, volume)
+		err = setSystemVolume(volume)
 	default:
 		return map[string]any{
 			"error": "Unknown action: " + action,
@@ -699,4 +706,44 @@ func (a *Agent) handleMPRISCover(query map[string]string) map[string]any {
 		"content_type": contentType,
 		"data":         encoded,
 	}
+}
+
+// setSystemVolume sets the system-wide volume via pactl (PulseAudio/PipeWire).
+// The volume parameter is a float between 0.0 (muted) and 1.0 (max).
+func setSystemVolume(volume float64) error {
+	pct := int(volume * 100)
+	cmd := exec.Command("pactl", "set-sink-volume", "@DEFAULT_SINK@", strconv.Itoa(pct)+"%")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		slog.Error("mpris: system volume control failed", "error", err, "output", string(output))
+		return err
+	}
+	slog.Debug("mpris: system volume set", "volume", volume, "percent", pct)
+	return nil
+}
+
+// getSystemVolume reads the current system-wide volume via pactl (PulseAudio/PipeWire).
+// Returns the volume as a float between 0.0 and 1.0. Falls back to 0.5 on error.
+func getSystemVolume() (float64, error) {
+	cmd := exec.Command("pactl", "get-sink-volume", "@DEFAULT_SINK@")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		slog.Error("mpris: get system volume failed", "error", err, "output", string(output))
+		return 0.5, err
+	}
+	s := string(output)
+	idx := strings.Index(s, "%")
+	if idx == -1 {
+		return 0.5, fmt.Errorf("mpris: unexpected pactl output format: %s", s)
+	}
+	start := idx
+	for start > 0 && (s[start-1] == ' ' || (s[start-1] >= '0' && s[start-1] <= '9')) {
+		start--
+	}
+	pctStr := strings.TrimSpace(s[start:idx])
+	pct, err := strconv.Atoi(pctStr)
+	if err != nil {
+		return 0.5, fmt.Errorf("mpris: failed to parse volume percentage: %w", err)
+	}
+	return float64(pct) / 100.0, nil
 }
