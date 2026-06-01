@@ -234,24 +234,67 @@ foreach ($dep in @("libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll
     $srcDep = Get-ChildItem -Path $ExtractRoot -Recurse -File -Filter $dep | Select-Object -First 1
     if ($srcDep) { Copy-Item -Force $srcDep.FullName (Join-Path $BinDir $dep) }
 }
+# ---------------------------------------------------------------------------
+# Lege vosk_api.h und libvosk.dll.a in das src/-Verzeichnis, das die
+# Vosk-Go-Package per '#cgo CPPFLAGS: -I ${SRCDIR}/../src' erwartet.
+# Dadurch werden KEINE globalen CGO_CFLAGS/CGO_CPPFLAGS benötigt, die
+# sonst auch runtime/cgo treffen und unter '-Wall -Werror' des Go-Toolchains
+# zu 'cgo.exe: exit status 2' führen.
+# ---------------------------------------------------------------------------
+Write-Host "==> Ermittle Vosk-Go-Modulpfad"
+$VoskGoModDir = & go list -m -f '{{.Dir}}' github.com/alphacep/vosk-api/go 2>&1
+if ($LASTEXITCODE -ne 0 -or -not $VoskGoModDir) {
+    throw "Konnte Vosk-Go-Modulpfad nicht ermitteln: $VoskGoModDir"
+}
+Write-Host "    Vosk-Go-Modul: $VoskGoModDir"
+
+# ${SRCDIR}/../src relativ zum Go-Paket-Verzeichnis
+$VoskModParent = Split-Path -Parent $VoskGoModDir
+$VoskModSrcDir = Join-Path $VoskModParent "src"
+
+Write-Host "    Ziel src/: $VoskModSrcDir"
+New-Item -ItemType Directory -Force -Path $VoskModSrcDir | Out-Null
+
+# Schreibschutz im Modul-Cache aufheben (Go setzt Dateien auf read-only)
+Get-ChildItem $VoskModSrcDir -ErrorAction SilentlyContinue | ForEach-Object {
+    $_.Attributes = $_.Attributes -band (-bnot [System.IO.FileAttributes]::ReadOnly)
+}
+# Verzeichnis selbst ebenfalls beschreibbar machen
+try { attrib -R "$VoskModSrcDir" /D } catch {}
+
+Copy-Item -Force $HeaderPath (Join-Path $VoskModSrcDir "vosk_api.h")
+Write-Host "    vosk_api.h kopiert nach $VoskModSrcDir"
+
+if (Test-Path $LibAPath) {
+    Copy-Item -Force $LibAPath (Join-Path $VoskModSrcDir "libvosk.dll.a")
+    Write-Host "    libvosk.dll.a kopiert nach $VoskModSrcDir"
+} elseif (Test-Path $LibPath) {
+    Copy-Item -Force $LibPath (Join-Path $VoskModSrcDir "libvosk.lib")
+    Write-Host "    libvosk.lib kopiert nach $VoskModSrcDir"
+}
+
 $env:CGO_ENABLED  = "1"
 $env:CC           = "gcc"
 $env:CXX          = "g++"
-$IncludeDirCgo = $IncludeDir -replace "\\", "/"
-$LibDirCgo     = $LibDir -replace "\\", "/"
-$env:CGO_CFLAGS   = "-I$IncludeDirCgo -Wno-error"
-$env:CGO_CPPFLAGS = "-I$IncludeDirCgo -Wno-error"
-# Keep CGO_LDFLAGS to search path only; package-specific #cgo LDFLAGS add -lvosk.
-$env:CGO_LDFLAGS  = "-L$LibDirCgo"
+# CGO_CFLAGS / CGO_CPPFLAGS NICHT global setzen – die Vosk-Go-Package
+# findet ihren Header jetzt selbst via #cgo CPPFLAGS: -I ${SRCDIR}/../src.
+# Globale Includes treffen sonst auch runtime/cgo und brechen den Build.
+$env:CGO_CFLAGS   = ""
+$env:CGO_CPPFLAGS = ""
+# CGO_LDFLAGS: nur Suchpfad, kein -lvosk (Package ergänzt -lvosk selbst).
+$LibDirCgo        = $LibDir -replace "\\", "/"
+$VoskModSrcDirCgo = $VoskModSrcDir -replace "\\", "/"
+$env:CGO_LDFLAGS  = "-L$LibDirCgo -L$VoskModSrcDirCgo"
 $env:LIBRARY_PATH = $LibDir
 $env:Path         = "$BinDir;$env:Path"
 
 Write-Host "==> Build startet"
-Write-Host "    stdout: $StdOutLog"
-Write-Host "    stderr: $StdErrLog"
-Write-Host "    CGO_CFLAGS:   $env:CGO_CFLAGS"
-Write-Host "    CGO_CPPFLAGS: $env:CGO_CPPFLAGS"
-Write-Host "    CGO_LDFLAGS:  $env:CGO_LDFLAGS"
+Write-Host "    stdout:       $StdOutLog"
+Write-Host "    stderr:       $StdErrLog"
+Write-Host "    CGO_CFLAGS:   '$env:CGO_CFLAGS'"
+Write-Host "    CGO_CPPFLAGS: '$env:CGO_CPPFLAGS'"
+Write-Host "    CGO_LDFLAGS:  '$env:CGO_LDFLAGS'"
+Write-Host "    VoskModSrc:   $VoskModSrcDir"
 
 if (Test-Path $StdOutLog) { Remove-Item -Force $StdOutLog }
 if (Test-Path $StdErrLog) { Remove-Item -Force $StdErrLog }
