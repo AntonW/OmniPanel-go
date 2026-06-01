@@ -58,6 +58,15 @@ The Start Page (served at `/`) is the central hub of OmniPanel-go. It combines w
 
 The page is organized into three sections: Tools, Host Controls, and Available Panels.
 
+The `<head>` section includes a favicon link for browser tab icon discovery:
+
+```html
+<link rel="icon" href="/omnipanel-go-logo.svg" type="image/svg+xml">
+```
+
+> **Concept: Favicon via `<link>` tag**
+> All HTML pages (`static/index.html`, `static/client/index.html`, `static/editor/editor.html`, `static/login.html`) include this `<link>` tag so browsers can discover the SVG favicon directly. Additionally, `internal/relay/server.go` registers a `/favicon.ico` route that redirects to `/omnipanel-go-logo.svg` as a fallback for browsers that request the legacy `.ico` path.
+
 ## CSS (`static/index.css`)
 
 The start page supports both light and dark themes via CSS custom properties and a `data-theme` attribute:

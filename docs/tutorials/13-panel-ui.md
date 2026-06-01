@@ -18,8 +18,9 @@ The HTML is minimal — just a skeleton with embedded CSS:
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Omnipanel</title>
+    <link rel="icon" href="/omnipanel-go-logo.svg" type="image/svg+xml">
     <script src="/client/client.js"></script>
     <style>
         /* CSS for fullscreen prompt, command toast, etc. */
@@ -405,13 +406,19 @@ const SWIPE_COOLDOWN = 500;
 ```javascript
 function enableThreeFingerSwipe() {
     loadPanelList();
-    
+
     let cumulativeDeltaX = 0;
     let lastCenterX = 0;
-    
+
     document.addEventListener('pointerdown', (e) => {
+        // Clear stale pointers from a previous gesture cycle. Without this,
+        // orphaned pointerId entries could accumulate and trigger false
+        // 3-finger detection when new pointers arrive.
+        if (swipeState.activePointers.size === 0) {
+            swipeState.activePointers.clear();
+        }
         swipeState.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        
+
         if (swipeState.activePointers.size === 3 && !swipeState.isTracking) {
             swipeState.isTracking = true;
             isSwipeGestureActive = true;
@@ -425,9 +432,10 @@ function enableThreeFingerSwipe() {
 
 The gesture system:
 1. Tracks all active pointers in a `Map` keyed by `pointerId`
-2. Activates when exactly 3 fingers are on screen
-3. Calculates the center point of all 3 fingers by averaging their X coordinates
-4. Sets `isSwipeGestureActive = true` when 3-finger tracking starts, which suppresses block interactions (joystick, mousepad, push-to-talk) to allow the swipe gesture to take priority
+2. Clears stale pointers from interrupted prior gestures before starting a new one
+3. Activates when exactly 3 fingers are on screen
+4. Calculates the center point of all 3 fingers by averaging their X coordinates
+5. Sets `isSwipeGestureActive = true` when 3-finger tracking starts, which suppresses block interactions (joystick, mousepad, push-to-talk) to allow the swipe gesture to take priority
 
 ```javascript
     document.addEventListener('pointermove', (e) => {
@@ -462,10 +470,10 @@ The gesture system:
 
 ```javascript
     function handlePointerEnd(e) {
-        if (!swipeState.isTracking) return;
-        
         swipeState.activePointers.delete(e.pointerId);
-        
+
+        if (!swipeState.isTracking) return;
+
         if (swipeState.activePointers.size < 2) {
             if (Math.abs(cumulativeDeltaX) > SWIPE_THRESHOLD) {
                 if (cumulativeDeltaX > 0) {
@@ -476,7 +484,7 @@ The gesture system:
             } else {
                 hideSwipeFeedback();
             }
-            
+
             swipeState.isTracking = false;
             isSwipeGestureActive = false;
             swipeState.activePointers.clear();
@@ -485,6 +493,9 @@ The gesture system:
     }
 }
 ```
+
+> **Key Pattern (JavaScript): Delete-before-check in pointer cleanup**
+> The `handlePointerEnd` function deletes the pointer from the map *before* checking `isTracking`. This ensures that even if an early return fires (e.g., from a non-tracking pointer), the stale pointerId is still removed. Without this order, orphaned entries could accumulate and cause the stale-pointer bug fixed in the `pointerdown` handler above.
 
 The gesture triggers when:
 - At least 2 fingers have lifted (gesture is ending)
