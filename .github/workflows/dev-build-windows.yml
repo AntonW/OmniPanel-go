@@ -84,6 +84,19 @@ jobs:
           } else {
             Write-Host "No $p found"
           }
+          
+      - name: Extract likely linker errors on failure
+        if: failure()
+        run: |
+          $patterns = 'error:|undefined reference|cannot find|-lvosk|ld.exe|collect2|fatal error|# '
+          if (Test-Path "bin/build.stderr.log") {
+            Write-Host "===== stderr matches ====="
+            Select-String -Path "bin/build.stderr.log" -Pattern $patterns -CaseSensitive:$false | Select-Object -Last 200 | ForEach-Object { $_.Line }
+          }
+          if (Test-Path "bin/build.stdout.log") {
+            Write-Host "===== stdout matches ====="
+            Select-String -Path "bin/build.stdout.log" -Pattern $patterns -CaseSensitive:$false | Select-Object -Last 200 | ForEach-Object { $_.Line }
+          }
 
       - name: Upload dev artifact
         uses: actions/upload-artifact@v4
