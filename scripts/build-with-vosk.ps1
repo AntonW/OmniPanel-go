@@ -237,15 +237,21 @@ foreach ($dep in @("libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll
 $env:CGO_ENABLED  = "1"
 $env:CC           = "gcc"
 $env:CXX          = "g++"
-$env:CGO_CFLAGS   = "-I$IncludeDir -Wno-error"
-$env:CGO_CPPFLAGS = "-I$IncludeDir -Wno-error"
-$env:CGO_LDFLAGS  = "-L$LibDir -lvosk"
+$IncludeDirCgo = $IncludeDir -replace "\\", "/"
+$LibDirCgo     = $LibDir -replace "\\", "/"
+$env:CGO_CFLAGS   = "-I$IncludeDirCgo -Wno-error"
+$env:CGO_CPPFLAGS = "-I$IncludeDirCgo -Wno-error"
+# Keep CGO_LDFLAGS to search path only; package-specific #cgo LDFLAGS add -lvosk.
+$env:CGO_LDFLAGS  = "-L$LibDirCgo"
 $env:LIBRARY_PATH = $LibDir
 $env:Path         = "$BinDir;$env:Path"
 
 Write-Host "==> Build startet"
 Write-Host "    stdout: $StdOutLog"
 Write-Host "    stderr: $StdErrLog"
+Write-Host "    CGO_CFLAGS:   $env:CGO_CFLAGS"
+Write-Host "    CGO_CPPFLAGS: $env:CGO_CPPFLAGS"
+Write-Host "    CGO_LDFLAGS:  $env:CGO_LDFLAGS"
 
 if (Test-Path $StdOutLog) { Remove-Item -Force $StdOutLog }
 if (Test-Path $StdErrLog) { Remove-Item -Force $StdErrLog }
