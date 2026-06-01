@@ -311,10 +311,10 @@ $env:CXX          = "g++"
 # Globale Includes treffen sonst auch runtime/cgo und brechen den Build.
 $env:CGO_CFLAGS   = ""
 $env:CGO_CPPFLAGS = ""
-# CGO_LDFLAGS: nur Suchpfad, kein -lvosk (Package ergänzt -lvosk selbst).
-$LibDirCgo        = $LibDir -replace "\\", "/"
-$VoskModSrcDirCgo = $VoskModSrcDir -replace "\\", "/"
-$env:CGO_LDFLAGS  = "-L$LibDirCgo -L$VoskModSrcDirCgo"
+# CGO_LDFLAGS NICHT global setzen: diese Flags werden sonst auch auf
+# runtime/cgo angewendet. Das kann in CI zu "runtime/cgo: ... cgo.exe: exit status 2" fuehren.
+# Die Vosk-Go-Package setzt ihre Link-Flags selbst via #cgo LDFLAGS auf ${SRCDIR}/../src.
+$env:CGO_LDFLAGS  = ""
 $env:LIBRARY_PATH = $LibDir
 $env:Path         = "$BinDir;$env:Path"
 
