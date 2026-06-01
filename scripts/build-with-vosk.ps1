@@ -239,6 +239,7 @@ $env:CC           = "gcc"
 $env:CXX          = "g++"
 $env:CGO_CFLAGS   = "-I$IncludeDir -Wno-error"
 $env:CGO_CPPFLAGS = "-I$IncludeDir -Wno-error"
+$env:CGO_LDFLAGS  = "-L$LibDir -lvosk"
 $env:LIBRARY_PATH = $LibDir
 $env:Path         = "$BinDir;$env:Path"
 
