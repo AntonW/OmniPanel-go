@@ -1,0 +1,60 @@
+name: Dev Build (Windows + Vosk)
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-dev-build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Stellt gcc/g++/dlltool/objdump in UCRT64 bereit
+      - name: Setup MSYS2 (UCRT64)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-tools
+
+      - name: Show tool versions
+        run: |
+          & "C:\msys64\ucrt64\bin\gcc.exe" --version
+          & "C:\msys64\ucrt64\bin\g++.exe" --version
+          go version
+
+      # Optional: für höhere GitHub API Limits beim Release-Metadatenabruf
+      - name: Build with Vosk script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./scripts/build-with-vosk.ps1 -Msys2UcrtBin "C:\msys64\ucrt64\bin"
+
+      - name: Upload dev artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OmniPanel-go-windows-dev
+          path: |
+            bin/OmniPanel-go.exe
+            bin/libvosk.dll
+            bin/libstdc++-6.dll
+            bin/libgcc_s_seh-1.dll
+            bin/libwinpthread-1.dll
+            bin/build.stdout.log
+            bin/build.stderr.log
+          if-no-files-found: warn
