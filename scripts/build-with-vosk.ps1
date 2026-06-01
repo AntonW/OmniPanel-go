@@ -304,10 +304,12 @@ if (Test-Path $LibAPath) {
 }
 
 $env:CGO_ENABLED  = "1"
+$RunnerGcc    = "C:\mingw64\bin\gcc.exe"
+$RunnerGxx    = "C:\mingw64\bin\g++.exe"
 $PreferredGcc = Join-Path $Msys2UcrtBin "gcc.exe"
 $PreferredGxx = Join-Path $Msys2UcrtBin "g++.exe"
-$env:CC       = if (Test-Path $PreferredGcc) { $PreferredGcc } else { "gcc" }
-$env:CXX      = if (Test-Path $PreferredGxx) { $PreferredGxx } else { "g++" }
+$env:CC       = if (Test-Path $RunnerGcc) { $RunnerGcc } elseif (Test-Path $PreferredGcc) { $PreferredGcc } else { "gcc" }
+$env:CXX      = if (Test-Path $RunnerGxx) { $RunnerGxx } elseif (Test-Path $PreferredGxx) { $PreferredGxx } else { "g++" }
 # CGO_CFLAGS / CGO_CPPFLAGS NICHT global setzen – die Vosk-Go-Package
 # findet ihren Header jetzt selbst via #cgo CPPFLAGS: -I ${SRCDIR}/../src.
 # Globale Includes treffen sonst auch runtime/cgo und brechen den Build.
