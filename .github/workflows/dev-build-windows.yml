@@ -133,15 +133,25 @@ jobs:
           Show-MatchesWithContext -Path "bin/build.stderr.log" -Label "stderr" -Pattern $patterns
           Show-MatchesWithContext -Path "bin/build.stdout.log" -Label "stdout" -Pattern $patterns
 
+      - name: Prepare dev artifact bundle
+        run: |
+          $bundle = ".artifact-bundle"
+          if (Test-Path $bundle) { Remove-Item -Recurse -Force $bundle }
+          New-Item -ItemType Directory -Path $bundle | Out-Null
+
+          # All files from bin go to artifact root.
+          Copy-Item -Path "bin/*" -Destination $bundle -Recurse -Force
+
+          Copy-Item -Path "config.json" -Destination $bundle -Force
+          Copy-Item -Path "user" -Destination $bundle -Recurse -Force
+          Copy-Item -Path "static" -Destination $bundle -Recurse -Force
+          Copy-Item -Path "README.md" -Destination $bundle -Force
+          Copy-Item -Path "LICENSE" -Destination $bundle -Force
+
       - name: Upload dev artifact
         uses: actions/upload-artifact@v4
         with:
           name: OmniPanel-go-windows-dev
           path: |
-            bin/**
-            config.json
-            user/**
-            static/**
-            README.md
-            LICENSE
+            .artifact-bundle/**
           if-no-files-found: warn
