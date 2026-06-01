@@ -147,4 +147,7 @@ jobs:
             bin/build.stderr.log
             config.json
             user/**
+            static/**
+            README.md
+            LICENSE
           if-no-files-found: warn
