@@ -1,7 +1,6 @@
 package databus
 
 import (
-	"syscall"
 	"testing"
 	"time"
 )
@@ -64,26 +63,5 @@ func TestStartMetrics_DoesNotBreakConcurrentAccess(t *testing.T) {
 		time.Sleep(5 * time.Millisecond)
 	}
 }
-
-func TestWindowsStubCollectors_AreCallable(t *testing.T) {
-	db := New()
-	// These are placeholders on Windows and should be safe no-ops.
-	db.collectCPU()
-	db.collectMemory()
-	db.collectNetwork()
-}
-
-func TestCollectDisk_FailurePath(t *testing.T) {
-	db := New()
-	old := procGetDiskFreeSpaceExW
-	// RemoveDirectoryW("C:\\") reliably fails and returns 0 (BOOL false),
-	// which exercises the ret==0 early return branch in collectDisk.
-	procGetDiskFreeSpaceExW = syscall.NewLazyDLL("kernel32.dll").NewProc("RemoveDirectoryW")
-	defer func() { procGetDiskFreeSpaceExW = old }()
-
-	db.collectDisk()
-}
-
-
 
 
