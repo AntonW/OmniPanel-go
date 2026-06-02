@@ -101,7 +101,7 @@ app.MPRISWatcher = mediaWatcher
 ### Linux (MPRIS)
 
 ```go
-// internal/mpris/mpris.go
+// internal/mediacontrol/mpris.go
 func (w *Watcher) Start() error {
     w.mu.Lock()
 
@@ -134,7 +134,7 @@ func (w *Watcher) Start() error {
 ### Windows (SMTC)
 
 ```go
-// internal/mpris/watcher_windows.go
+// internal/mediacontrol/watcher_windows.go
 func (w *Watcher) Start() error {
     w.mu.Lock()
     if w.running {
@@ -183,7 +183,7 @@ When a player is discovered, it is automatically selected if no player has been 
 ### Windows (SMTC)
 
 ```go
-// internal/mpris/watcher_windows.go
+// internal/mediacontrol/watcher_windows.go
 func (w *Watcher) pollSessions() {
     asyncOp, err := control.GlobalSystemMediaTransportControlsSessionManagerRequestAsync()
     if err != nil {
@@ -272,8 +272,8 @@ func (w *Watcher) publishToDataBus(state *PlayerState) {
 
     keyPrefix := "mediacontrol_"
 
-    w.databus.SetSource(keyPrefix+"player_name", state.PlayerName, "", "mpris")
-    w.databus.SetSource(keyPrefix+"identity", state.Identity, "", "mpris")
+    w.databus.SetSource(keyPrefix+"player_name", state.PlayerName, "", "mediacontrol")
+    w.databus.SetSource(keyPrefix+"identity", state.Identity, "", "mediacontrol")
     // ... title, artist, album, cover_url, progress, volume, capabilities
 }
 ```
@@ -379,7 +379,7 @@ func serveMediaCoverArt(c *fiber.Ctx) error {
 
 > **Key Pattern (Security):** The path is cleaned with `filepath.Clean()` and checked against allowed directory prefixes before reading. Linux allows `/tmp/`, `/var/tmp/`, and `~/.cache/`; Windows also allows `os.TempDir()`. This blocks directory traversal (`../../../etc/passwd`) while still allowing cover art cache files.
 
-> **Concept (Go Build Tags):** OmniPanel-go uses build tags to compile platform-specific files. `internal/mpris/mpris.go` has `//go:build !windows` (Linux D-Bus), while `internal/mpris/watcher_windows.go` has `//go:build windows` (SMTC). Both expose the same `Watcher` API to the rest of the app.
+> **Concept (Go Build Tags):** OmniPanel-go uses build tags to compile platform-specific files. `internal/mediacontrol/mpris.go` has `//go:build !windows` (Linux D-Bus), while `internal/mediacontrol/watcher_windows.go` has `//go:build windows` (SMTC). Both expose the same `Watcher` API to the rest of the app.
 
 ## Media Integration in Distributed Deployments (Serve + Connect Mode)
 

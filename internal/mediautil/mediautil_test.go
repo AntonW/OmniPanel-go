@@ -11,7 +11,7 @@ import (
 
 type fakeWatcher struct {
 	players         []string
-	states          map[string]*mpris.PlayerState
+	states          map[string]*mediacontrol.PlayerState
 	selected        string
 	setSelectedErr  error
 	callErr         error
@@ -21,7 +21,7 @@ type fakeWatcher struct {
 }
 
 func (f *fakeWatcher) ListPlayers() []string { return f.players }
-func (f *fakeWatcher) GetPlayerState(playerName string) *mpris.PlayerState {
+func (f *fakeWatcher) GetPlayerState(playerName string) *mediacontrol.PlayerState {
 	return f.states[playerName]
 }
 func (f *fakeWatcher) GetSelectedPlayer() string { return f.selected }
@@ -53,7 +53,7 @@ func TestBuildPlayersResponse_Disabled(t *testing.T) {
 func TestBuildPlayersResponse_WithPlayersSkipsNilStates(t *testing.T) {
 	w := &fakeWatcher{
 		players: []string{"spotify", "vlc"},
-		states: map[string]*mpris.PlayerState{
+		states: map[string]*mediacontrol.PlayerState{
 			"spotify": {
 				PlayerName:     "spotify",
 				Identity:       "Spotify",
