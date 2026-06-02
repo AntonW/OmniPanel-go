@@ -520,4 +520,4 @@ User releases mic button
 - Binary WebSocket frames carry audio data efficiently without base64 encoding
 - The entire system is stateless from the client's perspective — the server holds all state
 
-[← Back: Chapter 15](15-host-ui.md) · [Next: Chapter 17 →](17-mpris.md)
+[← Back: Chapter 15](15-host-ui.md) · [Next: Chapter 17 →](17-media-player.md)

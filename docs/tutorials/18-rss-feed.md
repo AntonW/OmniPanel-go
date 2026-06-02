@@ -546,4 +546,4 @@ In connect mode, the host agent has no direct browser connections. The data flow
 > **Key Pattern: BroadcastJSON in Connect Mode**
 > In default mode, the `broadcastToClient` function sends RSS updates to a specific client channel. In connect mode, the agent has no client channels (browsers connect to the relay server, not the agent), so the RSS manager's broadcast callback uses `BroadcastJSON` instead. This sends the update to the relay server, which broadcasts it to all browsers. Each browser only processes updates for its matching `block_id`, so the behavior is correct. The per-client `is_new` tracking works because the server-side `seenPerClient` map and client-side `rssSeenEntries` Set maintain independent state.
 
-[← Back: Chapter 17](17-mpris.md) · [Next: Chapter 19 →](19-windows-build-and-ci.md)
+[← Back: Chapter 17](17-media-player.md) · [Next: Chapter 19 →](19-windows-build-and-ci.md)

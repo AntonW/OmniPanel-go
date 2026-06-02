@@ -35,7 +35,7 @@ Das ist der automatische Modus. OmniPanel-go verbindet sich automatisch mit dem 
 
 **Voraussetzungen:**
 - Linux-Desktop (KDE Plasma, GNOME, etc.) mit MPRIS-kompatiblem Player oder Windows 10/11 mit App, die Mediensteuerung bereitstellt
-- Medien-Watcher in `config.json` aktivieren (Abschnitt `mpris`, siehe unten)
+- Medienintegration in `config.json` aktivieren (Abschnitt unten)
 
 ### Tastatur-Modus (Alle Plattformen)
 
@@ -50,20 +50,20 @@ Dieser Modus sendet Tastatur-Medientasten (wie die Play/Pause-Taste auf deiner T
 
 ## Automatischen Medienmodus einrichten
 
-### Schritt 1: MPRIS in der Config aktivieren
+### Schritt 1: Medienintegration in der Config aktivieren
 
-Öffne `config.json` und füge den `mpris`-Abschnitt hinzu oder aktualisiere ihn:
+Öffne `config.json` und füge den `media_player`-Abschnitt hinzu oder aktualisiere ihn:
 
 ```json
 {
-  "mpris": {
+  "media_player": {
     "enabled": true,
     "poll_interval": 1000
   }
 }
 ```
 
-- `enabled`: Auf `true` setzen um MPRIS-Überwachung zu aktivieren
+- `enabled`: Auf `true` setzen um Medienplayer-Überwachung zu aktivieren
 - `poll_interval`: Wie oft nach Updates gesucht wird, in Millisekunden (1000 = 1 Sekunde). Minimum ist 500ms.
 
 Starte OmniPanel-go nach dieser Änderung neu.
@@ -90,7 +90,7 @@ Starte OmniPanel-go nach dieser Änderung neu.
 
 Öffne dein Panel in einem Browser. Wenn du Musik in deinem Medienplayer abspielst, sollte der Block automatisch Titel, Künstler und Cover-Bild anzeigen. Die Steuerungstasten sollten funktionieren um abzuspielen, zu pausieren, zu überspringen und die Lautstärke anzupassen.
 
-> **Hinweis für verteilte Setups (serve + connect mode):** Der automatische Medienmodus funktioniert genauso — der Medienwiedergabe-Block kommuniziert über den Relay-Server mit dem Host-Agent. Aktiviere `mpris` in der `config.json` des Host-Agent (nicht in der Server-Config). Der Host-Agent muss mit dem Relay-Server verbunden sein.
+> **Hinweis für verteilte Setups (serve + connect mode):** Der automatische Medienmodus funktioniert genauso — der Medienwiedergabe-Block kommuniziert über den Relay-Server mit dem Host-Agent. Aktiviere `media_player` in der `config.json` des Host-Agent (nicht in der Server-Config). Der Host-Agent muss mit dem Relay-Server verbunden sein.
 
 ---
 
@@ -158,12 +158,12 @@ Im Tastatur-Modus:
 
 ### "Keine Medienplayer verbunden"
 
-Das bedeutet, OmniPanel-go kann keine aktiven Mediensitzungen auf deinem System finden:
-1. Stelle sicher dass `mpris.enabled` auf `true` in `config.json` steht
-2. Starte OmniPanel-go nach dem Aktivieren von MPRIS neu
-3. Starte einen Medienplayer (Spotify, VLC, etc.)
-4. Unter KDE Plasma stelle sicher dass das "Medienwiedergabe"-Widget deinen Player sehen kann
-5. **Im serve/connect mode:** Dieser Fehler tritt auf wenn der Relay-Server den Host-Agent nicht erreichen kann. Überprüfe ob der Host-Agent läuft und verbunden ist (achte auf den Host-IP-Indikator auf der Startseite).
+Das bedeutet, dass OmniPanel-go keine aktiven Mediensitzungen auf deinem System finden kann:
+1. Stelle sicher dass `media_player.enabled` auf `true` in `config.json` steht
+2. Starte OmniPanel-go nach Aktivierung der Medienintegration neu
+3. Starte einen Mediaplayer (Spotify, VLC, etc.)
+4. In KDE Plasma stelle sicher dass das "Mediaplayer"-Widget deinen Player erkennt
+5. **In serve/connect mode:** Dieser Fehler tritt auf wenn der Relay-Server den Host-Agent nicht erreicht. Überprüfe dass der Host-Agent läuft und verbunden ist (überprüfe die Startseite für den Host IP-Indikator).
 
 ---
 

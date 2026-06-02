@@ -255,7 +255,7 @@ func (s *AppState) Close() {
     s.KeyboardManager.Close()
     slog.Info("Closing speech manager...")
     s.SpeechManager.Close()
-    slog.Info("Closing MPRIS watcher...")
+    slog.Info("Closing media player watcher...")
     if s.MPRISWatcher != nil {
         s.MPRISWatcher.Close()
     }

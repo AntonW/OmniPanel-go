@@ -21,7 +21,7 @@ func TestLoad_WithEnvOverride(t *testing.T) {
   "server_address": "ws://file-host:3000",
   "auth_token": "file-token",
   "user_path": "file-user",
-  "mpris": {"enabled": true, "poll_interval": 1000}
+  "media_player": {"enabled": true, "poll_interval": 1000}
 }`
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 		t.Fatalf("WriteFile error = %v", err)
@@ -47,8 +47,8 @@ func TestLoad_WithEnvOverride(t *testing.T) {
 	if cfg.UserPath != "env-user" {
 		t.Fatalf("UserPath = %q", cfg.UserPath)
 	}
-	if !cfg.MPRIS.Enabled || cfg.MPRIS.PollInterval != 1000 {
-		t.Fatalf("MPRIS config not loaded from file: %#v", cfg.MPRIS)
+	if !cfg.MediaPlayer.Enabled || cfg.MediaPlayer.PollInterval != 1000 {
+		t.Fatalf("MediaPlayer config not loaded from file: %#v", cfg.MediaPlayer)
 	}
 }
 
@@ -89,7 +89,7 @@ func TestSave_WritesFileAndSafeWriteRejectsSecondWrite(t *testing.T) {
 			Enabled:      true,
 			RecordingLoc: "client",
 		},
-		MPRIS: MPRISConfig{Enabled: true, PollInterval: 900},
+		MediaPlayer: MediaPlayerConfig{Enabled: true, PollInterval: 900},
 	}
 
 	if err := cfg.Save(path); err != nil {

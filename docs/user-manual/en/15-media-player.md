@@ -35,7 +35,7 @@ This is the automatic mode. OmniPanel-go automatically connects to the platform 
 
 **Requirements:**
 - Linux desktop (KDE Plasma, GNOME, etc.) with an MPRIS-compatible player, or Windows 10/11 with an app that exposes media controls
-- MPRIS/media watcher enabled in `config.json` (see below)
+- Media player integration enabled in `config.json` (see below)
 
 ### Keyboard Mode (Any Platform)
 
@@ -50,20 +50,20 @@ This mode sends keyboard media keys (like the Play/Pause button on your keyboard
 
 ## Setting Up Automatic Media Mode
 
-### Step 1: Enable MPRIS in Config
+### Step 1: Enable Media Player Integration in Config
 
-Open `config.json` and add or update the `mpris` section:
+Open `config.json` and add or update the `media_player` section:
 
 ```json
 {
-  "mpris": {
+  "media_player": {
     "enabled": true,
     "poll_interval": 1000
   }
 }
 ```
 
-- `enabled`: Set to `true` to turn on MPRIS monitoring
+- `enabled`: Set to `true` to turn on media player monitoring
 - `poll_interval`: How often to check for updates, in milliseconds (1000 = 1 second). Minimum is 500ms.
 
 Restart OmniPanel-go after changing this setting.
@@ -90,7 +90,7 @@ Open a media app that supports platform media controls:
 
 Open your panel in a browser. When you play music in your media player, the block should automatically show the title, artist, and cover art. The control buttons should work to play, pause, skip, and adjust volume.
 
-> **Note for distributed setups (serve + connect mode):** Automatic media mode works the same way — the media player block communicates with the host agent through the relay server. Enable `mpris` in the host agent's `config.json` (not the server config). The host agent must be connected to the relay server.
+> **Note for distributed setups (serve + connect mode):** Automatic media mode works the same way — the media player block communicates with the host agent through the relay server. Enable `media_player` in the host agent's `config.json` (not the server config). The host agent must be connected to the relay server.
 
 ---
 
@@ -159,8 +159,8 @@ In Keyboard mode:
 ### "No media players connected"
 
 This means OmniPanel-go can't find active media sessions on your system:
-1. Make sure `mpris.enabled` is `true` in `config.json`
-2. Restart OmniPanel-go after enabling MPRIS
+1. Make sure `media_player.enabled` is `true` in `config.json`
+2. Restart OmniPanel-go after enabling media player integration
 3. Start a media player (Spotify, VLC, etc.)
 4. On KDE Plasma, make sure the "Media Player" widget can see your player
 5. **In serve/connect mode:** This error appears when the relay server can't reach the host agent. Verify the host agent is running and connected (check the start page for the host IP indicator).

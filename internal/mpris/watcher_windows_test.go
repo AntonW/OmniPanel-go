@@ -75,10 +75,10 @@ func TestNewConfigGuard(t *testing.T) {
 	if New(nil, databus.New(), slog.Default()) != nil {
 		t.Fatal("New should return nil for nil config")
 	}
-	if New(&config.MPRISConfig{Enabled: false}, databus.New(), slog.Default()) != nil {
+	if New(&config.MediaPlayerConfig{Enabled: false}, databus.New(), slog.Default()) != nil {
 		t.Fatal("New should return nil when disabled")
 	}
-	w := New(&config.MPRISConfig{Enabled: true, PollInterval: 1000}, databus.New(), nil)
+	w := New(&config.MediaPlayerConfig{Enabled: true, PollInterval: 1000}, databus.New(), nil)
 	if w == nil {
 		t.Fatal("New should create watcher when enabled")
 	}

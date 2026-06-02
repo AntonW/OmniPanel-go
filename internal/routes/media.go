@@ -1,5 +1,6 @@
-// Package routes provides HTTP handlers for media player control (MPRIS on Linux,
-// SMTC on Windows). It exposes four endpoints:
+// Package routes provides HTTP handlers for media player control.
+// On Linux, it uses MPRIS over D-Bus; on Windows, it uses SMTC (System Media Transport Controls).
+// It exposes four endpoints:
 //   - GET /api/media/players — list connected players and their current state
 //   - POST /api/media/control — send playback commands (play, pause, next, etc.)
 //   - POST /api/media/select — select which player's state is published to the DataBus
@@ -21,8 +22,8 @@ import (
 	"omnipanel-go/internal/state"
 )
 
-// listMPRISPlayers returns connected media sessions and their current state.
-// It is used by /api/media/players for both Linux (MPRIS) and Windows (SMTC).
+// listMPRISPlayers returns connected media players and their current state.
+// Works with both MPRIS on Linux and SMTC on Windows.
 // The response also includes current system master volume for +/- volume buttons.
 func listMPRISPlayers(c *fiber.Ctx) error {
 	s := c.Locals("state").(*state.AppState)

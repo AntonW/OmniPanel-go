@@ -1,14 +1,14 @@
-# Chapter 17: MPRIS Media Player Integration
+# Chapter 17: Media Player Integration
 
 ## What This Package Does
 
 The `mpris` package provides the media watcher backend used by the Media Player block. On Linux it uses MPRIS over D-Bus; on Windows it uses SMTC (System Media Transport Controls). Both implementations publish the same `mpris_*` compatibility keys to the `DataBus` so the frontend logic stays the same.
 
-> **Platform Note:** Linux uses `github.com/godbus/dbus/v5` (`internal/mpris/mpris.go`), while Windows uses WinRT/COM SMTC APIs (`internal/mpris/watcher_windows.go`). The REST API is platform-neutral (`/api/media/*`), but DataBus keys remain `mpris_*` for backward compatibility.
+> **Platform Note:** Linux uses `github.com/godbus/dbus/v5` (`internal/mpris/mpris.go`), while Windows uses WinRT/COM SMTC APIs (`internal/mpris/watcher_windows.go`). The REST API is platform-neutral (`/api/media/*`). DataBus keys use the `mpris_*` prefix to keep frontend code consistent with the media watcher terminology.
 
 ## Key Concepts
 
-### What Is MPRIS?
+### What Is MPRIS? (Linux)
 
 MPRIS (Media Player Remote Interfacing Specification) is a D-Bus interface standard used by Linux media players. It allows external programs to:
 - Discover what media players are running
@@ -18,13 +18,18 @@ MPRIS (Media Player Remote Interfacing Specification) is a D-Bus interface stand
 
 > **Concept (D-Bus):** D-Bus is an inter-process communication system on Linux. Think of it like a message bus where applications can publish services and other applications can connect to them. The "session bus" is per-user (your desktop session), while the "system bus" is system-wide. MPRIS players register themselves on the session bus with names like `org.mpris.MediaPlayer2.spotify`.
 
+### What Is SMTC? (Windows)
+
+SMTC (System Media Transport Controls) is the Windows equivalent of MPRIS. It's a WinRT API that provides access to media player metadata and controls on Windows 10/11. Any SMTC-registered player (Spotify, Firefox, VLC, Edge, etc.) can be monitored and controlled.
+
 ### How the Watcher Works
 
-The MPRIS watcher operates in two phases:
+The media watcher operates in two phases:
 
-1. **Initial discovery** — When the server starts, it scans the D-Bus session bus for any already-running MPRIS players
-2. **Signal monitoring** — It subscribes to D-Bus `NameOwnerChanged` signals to detect when new players appear or existing ones disappear
-3. **Polling loop** — Every N milliseconds (configurable), it queries each discovered player for state updates
+1. **Initial discovery** — When the server starts, it discovers already-running media sessions
+2. **Polling loop** — Every N milliseconds (configurable), it queries each discovered session for state updates
+
+On **Linux**, it additionally uses **signal monitoring** to detect when new players appear or existing ones disappear via D-Bus `NameOwnerChanged` signals.
 
 ## The Data Structures
 
@@ -32,12 +37,12 @@ The MPRIS watcher operates in two phases:
 // internal/mpris/types.go
 type PlayerState struct {
     Identity       string  // Human-readable name (e.g., "Spotify", "VLC")
-    PlayerName     string  // D-Bus service suffix (e.g., "spotify", "vlc")
+    PlayerName     string  // D-Bus service suffix (Linux) or AppUserModelId (Windows)
     PlaybackStatus string  // "Playing", "Paused", or "Stopped"
-    Title          string  // Track title from xesam:title
-    Artist         string  // Track artist from xesam:artist (joined with ", ")
-    Album          string  // Album name from xesam:album
-    ArtURL         string  // Cover art URL from mpris:artUrl (may be file://)
+    Title          string  // Track title
+    Artist         string  // Track artist (joined with ", " if multiple)
+    Album          string  // Album name
+    ArtURL         string  // Cover art URL (may be file:// on Linux)
     Length         int64   // Track duration in microseconds
     Position       int64   // Current playback position in microseconds
     Volume         float64 // Volume 0.0 (muted) to 1.0 (max)
@@ -52,24 +57,24 @@ type PlayerState struct {
 ```go
 type Watcher struct {
     mu             sync.RWMutex
-    config         *config.MPRISConfig
+    config         *config.MediaPlayerConfig
     databus        *databus.DataBus
     logger         *slog.Logger
-    conn           *dbus.Conn
+    conn           *dbus.Conn           // Linux only
     players        map[string]*PlayerState
-    selectedPlayer string // D-Bus name suffix of the active player
+    selectedPlayer string // Name suffix of the active player
     stopCh         chan struct{}
     running        bool
 }
 ```
 
-The `Watcher` holds a D-Bus connection, a map of discovered players, a `selectedPlayer` field that tracks which player's state is published to the DataBus, and a stop channel for clean shutdown. The `sync.RWMutex` protects concurrent access to the players map.
+The `Watcher` holds references to discovered players, a `selectedPlayer` field that tracks which player's state is published to the DataBus, and a stop channel for clean shutdown. The `sync.RWMutex` protects concurrent access to the players map.
 
 ## Initialization
 
 ```go
-// internal/mpris/mpris.go (Linux)
-func New(cfg *config.MPRISConfig, db *databus.DataBus, logger *slog.Logger) *Watcher {
+// internal/mpris/mpris.go (Linux) and watcher_windows.go (Windows)
+func New(cfg *config.MediaPlayerConfig, db *databus.DataBus, logger *slog.Logger) *Watcher {
     if cfg == nil || !cfg.Enabled {
         return nil
     }
@@ -78,20 +83,22 @@ func New(cfg *config.MPRISConfig, db *databus.DataBus, logger *slog.Logger) *Wat
 }
 ```
 
-`New` returns `nil` if MPRIS is disabled in config. The caller (`state.New`) checks for `nil` before calling `Start()`.
+`New` returns `nil` if media integration is disabled in config. The caller (`state.New`) checks for `nil` before calling `Start()`.
 
 ```go
 // internal/state/state.go
-mprisWatcher := mpris.New(&cfg.MPRIS, db, slog.Default())
-if mprisWatcher != nil {
-    if err := mprisWatcher.Start(); err != nil {
-        slog.Warn("MPRIS watcher failed to start", "error", err)
+mediaWatcher := mpris.New(&cfg.MediaPlayer, db, slog.Default())
+if mediaWatcher != nil {
+    if err := mediaWatcher.Start(); err != nil {
+        slog.Warn("Media watcher failed to start", "error", err)
     }
 }
-app.MPRISWatcher = mprisWatcher
+app.MPRISWatcher = mediaWatcher
 ```
 
 ## Starting the Watcher
+
+### Linux (MPRIS)
 
 ```go
 // internal/mpris/mpris.go
@@ -122,9 +129,37 @@ func (w *Watcher) Start() error {
 }
 ```
 
-> **Key Pattern (Mutex):** The mutex is explicitly unlocked before calling `discoverExistingPlayers()` and launching goroutines. This is critical because `discoverExistingPlayers()` calls `discoverPlayer()` which also acquires the mutex. Using `defer w.mu.Unlock()` here would cause a deadlock since `sync.Mutex` is not reentrant.
+> **Key Pattern (Mutex):** The mutex is explicitly unlocked before calling `discoverExistingPlayers()` and launching goroutines. This is critical because these operations may acquire the same mutex. Using `defer w.mu.Unlock()` here would cause a deadlock since `sync.Mutex` is not reentrant.
+
+### Windows (SMTC)
+
+```go
+// internal/mpris/watcher_windows.go
+func (w *Watcher) Start() error {
+    w.mu.Lock()
+    if w.running {
+        w.mu.Unlock()
+        return nil
+    }
+    w.running = true
+    w.mu.Unlock()
+
+    if err := ole.RoInitialize(1); err != nil {
+        // WinRT may already be initialized; some errors are benign
+    }
+
+    if err := os.MkdirAll(w.tempDir, 0o755); err != nil {
+        w.logger.Warn("SMTC: cannot create temp dir for cover art", "path", w.tempDir, "error", err)
+    }
+
+    go w.runPollLoop()
+    return nil
+}
+```
 
 ## Player Discovery
+
+### Linux (MPRIS)
 
 ```go
 func (w *Watcher) discoverExistingPlayers() {
@@ -143,25 +178,32 @@ func (w *Watcher) discoverExistingPlayers() {
 }
 ```
 
+When a player is discovered, it is automatically selected if no player has been selected yet. After updating the player's state, `publishPlayersList()` is called to broadcast the full player list to the DataBus.
+
+### Windows (SMTC)
+
 ```go
-func (w *Watcher) discoverPlayer(playerName string) {
-    state := &PlayerState{PlayerName: playerName}
-
-    w.mu.Lock()
-    w.players[playerName] = state
-    if w.selectedPlayer == "" {
-        w.selectedPlayer = playerName  // Auto-select first player
+// internal/mpris/watcher_windows.go
+func (w *Watcher) pollSessions() {
+    asyncOp, err := control.GlobalSystemMediaTransportControlsSessionManagerRequestAsync()
+    if err != nil {
+        return
     }
-    w.mu.Unlock()
 
-    w.updatePlayer(playerName)
-    w.publishPlayersList()  // Notify frontend of available players
+    manager, err := awaitAsync(asyncOp)
+    if err != nil {
+        return
+    }
+    defer manager.Release()
+
+    sessionsVec, err := manager.GetSessions()
+    // ... iterate through sessions and build PlayerState for each
 }
 ```
 
-When a player is discovered, it is automatically selected if no player has been selected yet. After updating the player's state, `publishPlayersList()` is called to broadcast the full player list to the DataBus.
+Windows actively polls the SMTC session manager during each poll cycle. There's no real-time signal monitoring like on Linux.
 
-## Signal Monitoring
+## Signal Monitoring (Linux Only)
 
 ```go
 func (w *Watcher) watchPlayerListChanges() {
@@ -187,7 +229,7 @@ func (w *Watcher) watchPlayerListChanges() {
 
 > **Concept (D-Bus Signals):** D-Bus signals are asynchronous notifications. `NameOwnerChanged` fires whenever a D-Bus service appears or disappears. By subscribing to this signal, the watcher detects new media players in real-time without polling.
 
-When a player disconnects, `removePlayer()` removes it from the map. If the disconnected player was the selected one, the watcher automatically picks another available player. The player list is re-published and the new selected player's state is immediately fetched.
+When a player disconnects, `removePlayer()` removes it from the map. If the disconnected player was the selected one, the watcher automatically picks another available player.
 
 ## Polling Player State
 
@@ -206,42 +248,15 @@ func (w *Watcher) runPollLoop() {
         case <-w.stopCh:
             return
         case <-ticker.C:
-            w.pollPlayers()
+            w.pollPlayers()  // or w.pollSessions() on Windows
         }
     }
 }
 ```
 
-Each poll queries the D-Bus properties for every known player:
+Each poll queries the properties for every known player/session.
 
-```go
-func (w *Watcher) getPlayerProperties(obj dbus.BusObject) (map[string]any, error) {
-    result := make(map[string]any)
-
-    // PlaybackStatus: "Playing", "Paused", "Stopped"
-    status, _ := obj.GetProperty(mprisPlayerIface + ".PlaybackStatus")
-    result["PlaybackStatus"], _ = status.Value().(string)
-
-    // Metadata: title, artist, album, artUrl, length
-    metadata, _ := obj.GetProperty(mprisPlayerIface + ".Metadata")
-    meta := parseMetadata(metadata)
-    result["Title"] = meta["Title"]
-    result["Artist"] = meta["Artist"]
-    // ...
-
-    // Position (microseconds)
-    position, _ := obj.GetProperty(mprisPlayerIface + ".Position")
-    result["Position"], _ = position.Value().(int64)
-
-    // Volume (0.0 - 1.0)
-    volume, _ := obj.GetProperty(mprisPlayerIface + ".Volume")
-    result["Volume"], _ = volume.Value().(float64)
-
-    return result, nil
-}
-```
-
-> **Key Pattern (D-Bus Variants):** D-Bus properties are returned as `dbus.Variant` types, which wrap any Go value. You must call `.Value()` and then type-assert to the expected type. The type assertion returns `(value, ok)` — if the property has a different type than expected, `ok` is `false` and the default zero value is used. This is why the code uses blank identifiers (`_`) for errors: missing properties are silently skipped.
+> **Key Pattern (D-Bus Variants):** D-Bus properties are returned as `dbus.Variant` types, which wrap any Go value. You must call `.Value()` and then type-assert to the expected type. The type assertion returns `(value, ok)` — if the property has a different type than expected, `ok` is `false` and the default zero value is used.
 
 ## Publishing to DataBus
 
@@ -295,7 +310,7 @@ func (w *Watcher) SetSelectedPlayer(playerName string) error {
     w.mu.Lock()
     if _, exists := w.players[playerName]; !exists {
         w.mu.Unlock()
-        return fmt.Errorf("mpris: player %q not found", playerName)
+        return fmt.Errorf("media: player %q not found", playerName)
     }
     oldSelected := w.selectedPlayer
     w.selectedPlayer = playerName
@@ -308,7 +323,7 @@ func (w *Watcher) SetSelectedPlayer(playerName string) error {
 }
 ```
 
-> **Key Pattern (Lock Release Before I/O):** The mutex is released before calling `updatePlayer()`, which acquires its own read lock. Holding the write lock during `updatePlayer()` would cause a deadlock since `sync.RWMutex` is not reentrant.
+> **Key Pattern (Lock Release Before I/O):** The mutex is released before calling `updatePlayer()`, which acquires its own lock. Holding the write lock during `updatePlayer()` would cause a deadlock since `sync.RWMutex` is not reentrant.
 
 ## HTTP API Endpoints
 
@@ -333,10 +348,10 @@ if req.Player == "" {
 
 ### Cover Art Proxy
 
-Browsers cannot load `file://` URLs directly for security reasons. MPRIS players often store cover art as local temp files (e.g., `file:///tmp/plasma-browser-integration_artwork_*.jpg`). The cover endpoint reads the local file and serves it over HTTP:
+Browsers cannot load `file://` URLs directly for security reasons. Media players often store cover art as local temp files. The cover endpoint reads the local file and serves it over HTTP:
 
 ```go
-func serveMPRISCoverArt(c *fiber.Ctx) error {
+func serveMediaCoverArt(c *fiber.Ctx) error {
     filePath := c.Query("url")
     filePath = strings.TrimPrefix(filePath, "file://")
 
@@ -366,9 +381,9 @@ func serveMPRISCoverArt(c *fiber.Ctx) error {
 
 > **Concept (Go Build Tags):** OmniPanel-go uses build tags to compile platform-specific files. `internal/mpris/mpris.go` has `//go:build !windows` (Linux D-Bus), while `internal/mpris/watcher_windows.go` has `//go:build windows` (SMTC). Both expose the same `Watcher` API to the rest of the app.
 
-## MPRIS in Distributed Deployments (Serve + Connect Mode)
+## Media Integration in Distributed Deployments (Serve + Connect Mode)
 
-In distributed deployments, the relay server (serve mode) has no MPRIS watcher — the watcher runs on the host agent (connect mode). The relay server proxies MPRIS HTTP API requests to the host agent via WebSocket using a **request-response pattern**.
+In distributed deployments, the relay server (serve mode) has no media watcher — the watcher runs on the host agent (connect mode). The relay server proxies media HTTP API requests to the host agent via WebSocket using a **request-response pattern**.
 
 ### How It Works
 
@@ -430,7 +445,7 @@ func (s *RelayServer) sendMPRISRequest(endpoint, method string, body map[string]
         return resp, nil
     case <-time.After(5 * time.Second):
         s.cleanupPendingRequest(requestID)
-        return nil, fmt.Errorf("timeout waiting for MPRIS response")
+        return nil, fmt.Errorf("timeout waiting for media response")
     }
 }
 ```
@@ -472,7 +487,7 @@ The `addTokenToUrl()` function appends the token as a query parameter, which the
 
 ## Frontend Integration
 
-The frontend `handleDataUpdate()` function in `static/client/client.js` processes MPRIS data:
+The frontend `handleDataUpdate()` function in `static/client/client.js` processes media data:
 
 ```javascript
 // static/client/client.js
@@ -550,13 +565,13 @@ if (controlMode === 'mpris') {
 
 > **Key Pattern (JavaScript Fallback Values):** The volume button handler uses `volumeData.systemVolume ?? 0.5` so a missing field does not break controls. This is a common JS pattern: provide a safe default when API data may be unavailable.
 
-> **Key Pattern (Go Compatibility Contract):** Backend routes are now `/api/media/*`, but DataBus keys intentionally remain `mpris_*`. Keeping stable key names avoids breaking existing panel blocks and frontend templates while the transport/API naming evolves.
+> **Key Pattern (Go Compatibility Contract):** Backend HTTP routes use the generic `/api/media/*` naming, but DataBus keys use the `mpris_*` prefix to clearly indicate media player state. This allows the frontend and blocks to reference media data by its technical origin.
 
 ## Configuration
 
 ```json
 {
-  "mpris": {
+  "media_player": {
     "enabled": true,
     "poll_interval": 1000
   }
@@ -565,7 +580,8 @@ if (controlMode === 'mpris') {
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `enabled` | bool | false | Enable MPRIS D-Bus monitoring |
+| `enabled` | bool | false | Enable media player monitoring (MPRIS on Linux, SMTC on Windows) |
 | `poll_interval` | int | 1000 | Polling frequency in milliseconds (min 500) |
 
 [← Back: Chapter 16](16-data-flow.md) · [Next: Chapter 18 →](18-rss-feed.md)
+

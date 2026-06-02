@@ -11,27 +11,22 @@ The `config` package handles loading, saving, and discovering the application's 
 type SpeechConfig struct {
     Enabled            bool     `mapstructure:"enabled" json:"enabled"`
     RecordingLoc       string   `mapstructure:"recording_location" json:"recording_location"`
-    TriggerMode        string   `mapstructure:"trigger_mode" json:"trigger_mode"`
-    WakeWord           string   `mapstructure:"wake_word" json:"wake_word"`
-    STTEngine          string   `mapstructure:"stt_engine" json:"stt_engine"`
-    VoskModelPath      string   `mapstructure:"vosk_model_path" json:"vosk_model_path"`
-    VoskRuntimeURL     string   `mapstructure:"vosk_runtime_url" json:"vosk_runtime_url"`
-    LlamaCppURL        string   `mapstructure:"llama_cpp_url" json:"llama_cpp_url"`
-    LlamaCppAPIKey     string   `mapstructure:"llama_cpp_api_key" json:"llama_cpp_api_key"`
-    LlamaCppAPIMode    string   `mapstructure:"llama_cpp_api_mode" json:"llama_cpp_api_mode"`
-    LlamaCppModel      string   `mapstructure:"llama_cpp_model" json:"llama_cpp_model"`
-    LlamaCppPrompt     string   `mapstructure:"llama_cpp_prompt" json:"llama_cpp_prompt"`
-    TTSEnabled         bool     `mapstructure:"tts_enabled" json:"tts_enabled"`
-    SpeechAllowlist    []string `mapstructure:"speech_allowlist" json:"speech_allowlist"`
+    // ...other speech fields...
+}
+
+type MediaPlayerConfig struct {
+    Enabled      bool `mapstructure:"enabled" json:"enabled"`
+    PollInterval int  `mapstructure:"poll_interval" json:"poll_interval"`
 }
 
 type Config struct {
-    Port         uint16       `mapstructure:"port"`
-    NumJoysticks uint8        `mapstructure:"numJoysticks"`
-    ServerAddress string      `mapstructure:"server_address"`
-    AuthToken    string       `mapstructure:"auth_token"`
-    UserPath     string       `mapstructure:"user_path"`
-    Speech       SpeechConfig `mapstructure:"speech"`
+    Port         uint16              `mapstructure:"port"`
+    NumJoysticks uint8               `mapstructure:"numJoysticks"`
+    ServerAddress string             `mapstructure:"server_address"`
+    AuthToken    string              `mapstructure:"auth_token"`
+    UserPath     string              `mapstructure:"user_path"`
+    Speech       SpeechConfig        `mapstructure:"speech"`
+    MediaPlayer  MediaPlayerConfig   `mapstructure:"media_player"`
 }
 ```
 

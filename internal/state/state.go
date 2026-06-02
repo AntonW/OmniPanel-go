@@ -74,8 +74,8 @@ type AppState struct {
 	KeyboardManager *devices.KeyboardManager
 	DataBus         *databus.DataBus
 	SpeechManager   *speech.SpeechManager
-	// MPRISWatcher monitors MPRIS-compliant media players (Spotify, VLC, etc.)
-	// via the D-Bus session bus and publishes their state to the DataBus.
+	// MPRISWatcher monitors media players (Spotify, VLC, etc.) via D-Bus on Linux
+	// or SMTC on Windows, and publishes their state to the DataBus.
 	MPRISWatcher *mpris.Watcher
 	// RSSManager handles RSS/Atom feed polling and pushes updates to WebSocket clients.
 	RSSManager *rssfeed.Manager
@@ -116,7 +116,7 @@ func New(cfg *config.Config, configPath, userPath, baseDir string) *AppState {
 	sm := speech.New(&cfg.Speech, app, jsMgr, userPath)
 	app.SpeechManager = sm
 
-	mprisWatcher := mpris.New(&cfg.MPRIS, db, slog.Default())
+	mprisWatcher := mpris.New(&cfg.MediaPlayer, db, slog.Default())
 	if mprisWatcher != nil {
 		if err := mprisWatcher.Start(); err != nil {
 			slog.Warn("MPRIS watcher failed to start", "error", err)
@@ -302,7 +302,8 @@ func (s *AppState) GetSpeechManager() *speech.SpeechManager {
 	return s.SpeechManager
 }
 
-// GetMPRISWatcher returns the MPRIS watcher.
+// GetMPRISWatcher returns the media player watcher instance.
+// On Linux this uses MPRIS; on Windows it uses SMTC.
 func (s *AppState) GetMPRISWatcher() *mpris.Watcher {
 	return s.MPRISWatcher
 }

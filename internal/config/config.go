@@ -55,11 +55,11 @@ type SpeechConfig struct {
 	SpeechAllowlist []string `mapstructure:"speech_allowlist" json:"speech_allowlist"`
 }
 
-// MPRISConfig holds media player integration settings.
-type MPRISConfig struct {
-	// Enabled toggles MPRIS D-Bus monitoring on or off.
+// MediaPlayerConfig holds media player integration settings (Linux MPRIS or Windows SMTC).
+type MediaPlayerConfig struct {
+	// Enabled toggles media player monitoring on or off.
 	Enabled bool `mapstructure:"enabled" json:"enabled"`
-	// PollInterval is the D-Bus property polling frequency in milliseconds.
+	// PollInterval is the polling frequency in milliseconds for player state updates.
 	// Minimum effective value is 500ms.
 	PollInterval int `mapstructure:"poll_interval" json:"poll_interval"`
 }
@@ -87,8 +87,8 @@ type Config struct {
 	UserPath string `mapstructure:"user_path"`
 	// Speech holds speech recognition settings.
 	Speech SpeechConfig `mapstructure:"speech"`
-	// MPRIS holds media player integration settings for Linux desktop environments.
-	MPRIS MPRISConfig `mapstructure:"mpris"`
+	// MediaPlayer holds media player integration settings (Linux MPRIS or Windows SMTC).
+	MediaPlayer MediaPlayerConfig `mapstructure:"media_player"`
 }
 
 // Load reads configuration from the given path and applies OMNIPANEL_*
@@ -143,7 +143,7 @@ func (c *Config) Save(path string) error {
 	v.Set("auth_token", c.AuthToken)
 	v.Set("user_path", c.UserPath)
 	v.Set("speech", c.Speech)
-	v.Set("mpris", c.MPRIS)
+	v.Set("media_player", c.MediaPlayer)
 
 	return v.SafeWriteConfigAs(path)
 }

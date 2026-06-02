@@ -101,7 +101,7 @@ const (
 // platform-independent.
 type Watcher struct {
 	mu             sync.RWMutex
-	config         *config.MPRISConfig
+	config         *config.MediaPlayerConfig
 	databus        *databus.DataBus
 	logger         *slog.Logger
 	players        map[string]*PlayerState
@@ -112,7 +112,7 @@ type Watcher struct {
 }
 
 // New creates a new SMTC watcher. Returns nil if media integration is disabled.
-func New(cfg *config.MPRISConfig, db *databus.DataBus, logger *slog.Logger) *Watcher {
+func New(cfg *config.MediaPlayerConfig, db *databus.DataBus, logger *slog.Logger) *Watcher {
 	if cfg == nil || !cfg.Enabled {
 		return nil
 	}

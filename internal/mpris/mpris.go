@@ -46,7 +46,7 @@ const (
 // mpris_available_players as a JSON array.
 type Watcher struct {
 	mu             sync.RWMutex
-	config         *config.MPRISConfig
+	config         *config.MediaPlayerConfig
 	databus        *databus.DataBus
 	logger         *slog.Logger
 	conn           *dbus.Conn
@@ -56,8 +56,8 @@ type Watcher struct {
 	running        bool
 }
 
-// New creates a new MPRIS watcher. Returns nil if MPRIS is disabled in config.
-func New(cfg *config.MPRISConfig, db *databus.DataBus, logger *slog.Logger) *Watcher {
+// New creates a new MPRIS watcher. Returns nil if media integration is disabled in config.
+func New(cfg *config.MediaPlayerConfig, db *databus.DataBus, logger *slog.Logger) *Watcher {
 	if cfg == nil || !cfg.Enabled {
 		return nil
 	}

@@ -1,7 +1,7 @@
 // Package agent implements the host agent mode for distributed deployment.
 //
 // The host agent connects to a central relay server via WebSocket and runs all
-// subsystems locally (joystick, mousepad, keyboard, databus, speech, MPRIS, RSS).
+// subsystems locally (joystick, mousepad, keyboard, databus, speech, media player, RSS).
 // This allows the host machine to be behind a firewall — it initiates an outbound
 // WebSocket connection to the relay server, which then forwards browser commands
 // to the host and relays host responses back to browsers.
@@ -16,7 +16,7 @@
 //
 //	WebSocket client to relay server (ws:// or wss://)
 //	No HTTP server — all UI served by the central server
-//	All subsystems run locally: joystick, mousepad, keyboard, databus, speech, MPRIS, RSS
+//	All subsystems run locally: joystick, mousepad, keyboard, databus, speech, media player, RSS
 //	Receives forwarded browser commands from server, executes locally
 //	Sends results back to server for broadcast to browsers
 //
@@ -134,7 +134,7 @@ func New(cfg *config.Config, configPath, userPath, baseDir string) *Agent {
 	sm := speech.New(&cfg.Speech, a, jsMgr, userPath)
 	a.SpeechManager = sm
 
-	mprisWatcher := mpris.New(&cfg.MPRIS, db, slog.Default())
+	mprisWatcher := mpris.New(&cfg.MediaPlayer, db, slog.Default())
 	if mprisWatcher != nil {
 		if err := mprisWatcher.Start(); err != nil {
 			slog.Warn("MPRIS watcher failed to start", "error", err)
@@ -441,7 +441,8 @@ func (a *Agent) GetSpeechManager() *speech.SpeechManager {
 	return a.SpeechManager
 }
 
-// GetMPRISWatcher returns the MPRIS watcher.
+// GetMPRISWatcher returns the media player watcher instance.
+// On Linux this uses MPRIS; on Windows it uses SMTC.
 func (a *Agent) GetMPRISWatcher() *mpris.Watcher {
 	return a.MPRISWatcher
 }
