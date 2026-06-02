@@ -47,7 +47,7 @@ Buttons to toggle fullscreen mode on all connected devices:
 > **Tip:** Fullscreen mode is great for immersion — your panel will look like a dedicated app rather than a webpage.
 
 > **Alternative: System Tray**
-> If you're running OmniPanel-go on a machine with a desktop environment, you can also toggle fullscreen from the system tray icon. Right-click the tray icon and select **Toggle Fullscreen**. This works in both Default and Host Agent modes and sends the same command to all connected devices. The tray also offers an **Open Panel** option that opens the web UI in your default browser — `http://localhost:3000` in Default mode, or the remote server URL in Host Agent mode.
+> If you're running OmniPanel-go with a desktop session, you can also toggle fullscreen from the system tray icon. Right-click the tray icon and select **Toggle Fullscreen**. This works in both Default and Host Agent modes and sends the same command to all connected devices. On Windows and macOS, tray startup is attempted by default; on Linux, you need a graphical session (`DISPLAY` or `WAYLAND_DISPLAY`). The tray also offers an **Open Panel** option that opens the web UI in your default browser — `http://localhost:3000` in Default mode, or the remote server URL in Host Agent mode.
 
 ### Connection Log
 

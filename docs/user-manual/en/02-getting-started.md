@@ -93,13 +93,13 @@ The container automatically copies default panels, blocks, and themes into your 
 
 ### System Tray Icon
 
-When running in **Default** or **Host Agent** mode on a machine with a display (desktop environment), OmniPanel-go shows a system tray icon in your taskbar/notification area. Right-click it to access:
+When running in **Default** or **Host Agent** mode with a desktop session, OmniPanel-go shows a system tray icon in your taskbar/notification area. On Windows and macOS, tray startup is attempted by default. On Linux, a graphical session is required (`DISPLAY` or `WAYLAND_DISPLAY`). Right-click it to access:
 
 - **Open Panel** — opens OmniPanel-go in your default web browser. In Default mode, it opens `http://localhost:3000`. In Host Agent mode, it opens the remote server URL you connected to.
 - **Toggle Fullscreen** — toggles fullscreen mode on all connected client devices (tablets, phones).
 - **Exit Application** — gracefully shuts down OmniPanel-go, equivalent to pressing Ctrl+C in the terminal.
 
-> **Note:** On headless systems (servers without a desktop environment, SSH sessions without display forwarding), the system tray is automatically disabled. You can still use Ctrl+C to stop the application.
+> **Note:** On headless Linux systems (for example servers without a desktop environment or SSH sessions without display forwarding), the system tray is automatically disabled. You can still use Ctrl+C to stop the application.
 
 ### Log Output
 

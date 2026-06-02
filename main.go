@@ -123,7 +123,10 @@ func main() {
 }
 
 // runDefault starts the application in default mode: HTTP server, all subsystems,
-// and a system tray icon (when a display server is available). The system tray
+// and a system tray icon when the current platform has a desktop session.
+// On Linux and other Unix-like systems, tray startup requires DISPLAY or
+// WAYLAND_DISPLAY. On Windows and macOS, tray support is assumed by default.
+// The system tray
 // provides Open Panel (opens http://localhost:port), fullscreen toggle, and
 // graceful exit controls. The server runs in a goroutine while the main thread
 // waits for SIGINT or SIGTERM.
@@ -160,7 +163,7 @@ func runDefault(cfg *config.Config, configPath, userPath, baseDir string) {
 		defer tray.Quit()
 		slog.Info("System tray initialized")
 	} else {
-		slog.Info("No display server detected, skipping system tray")
+		slog.Info("No desktop session detected, skipping system tray")
 	}
 
 	addr := fmt.Sprintf("0.0.0.0:%d", cfg.Port)
@@ -219,7 +222,9 @@ func runServe(cfg *config.Config, userPath, baseDir string) {
 
 // runConnect starts the application in connect mode: host agent that connects to a
 // relay server via WebSocket and runs all subsystems locally. A system tray icon
-// (when a display server is available) provides Open Panel (opens the remote server
+// is shown when the current platform has a desktop session (Linux/Unix: requires
+// DISPLAY or WAYLAND_DISPLAY; Windows/macOS: enabled by default). It provides Open
+// Panel (opens the remote server
 // URL in the default browser), fullscreen toggle, and graceful exit controls.
 // The exit callback sends to the quit channel to unblock the main goroutine.
 func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg string) {
@@ -262,7 +267,7 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
 		defer tray.Quit()
 		slog.Info("System tray initialized")
 	} else {
-		slog.Info("No display server detected, skipping system tray")
+		slog.Info("No desktop session detected, skipping system tray")
 	}
 
 	go func() {

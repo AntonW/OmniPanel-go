@@ -107,7 +107,16 @@ The host agent:
 - Sends results back to the server for broadcast to browsers
 - Auto-reconnects on disconnect with exponential backoff (1s → 2s → 4s → max 30s)
 - Sends heartbeat every 15s to keep the connection alive
-- Creates a system tray icon (when a display server is available) with Open Panel (opens the remote server URL), fullscreen toggle, and exit controls
+- Creates a system tray icon when a desktop session is available (Linux/Unix: needs `DISPLAY` or `WAYLAND_DISPLAY`; Windows/macOS: tray startup is attempted by default), with Open Panel (opens the remote server URL), fullscreen toggle, and exit controls
+
+> **Concept (Go): Platform-aware tray detection**
+> `internal/systray/systray.go` keeps headless detection strict for Linux/Unix (`DISPLAY`/`WAYLAND_DISPLAY`) but returns non-headless for Windows/macOS so desktop users get tray behavior by default.
+
+> **Concept (JavaScript): One fullscreen protocol, multiple triggers**
+> In `static/client/client.js`, fullscreen behavior is driven by WebSocket message type (`enter-fullscreen` / `exit-fullscreen`). The source can be the start page or the native tray menu, but browser behavior stays identical.
+
+> **Key Pattern (JavaScript): Message contract decouples UI**
+> Frontend logic depends on the shared message contract, not on which host-side UI initiated it. This keeps distributed deployments predictable when users mix browser controls and tray controls.
 
 ## Configuration
 
@@ -580,8 +589,8 @@ coverImg.src = newCover;
 - The host agent initiates an outbound WebSocket connection (no inbound ports needed)
 - Serve mode: Fiber HTTP server + WebSocket relay hub (no subsystems)
 - Connect mode: WebSocket client + all subsystems (no HTTP server)
-- Default and connect modes include a system tray icon (when a display server is detected) with Open Panel, fullscreen toggle, and exit controls
-- System tray is skipped on headless systems (no `DISPLAY` or `WAYLAND_DISPLAY` env vars on Linux)
+- Default and connect modes include a system tray icon when a desktop session is available (Linux/Unix: `DISPLAY` or `WAYLAND_DISPLAY`; Windows/macOS: attempted by default)
+- System tray is skipped on Linux/Unix headless sessions (no `DISPLAY` and no `WAYLAND_DISPLAY`)
 - In default mode, Open Panel opens `http://localhost:<port>`; in connect mode, the WebSocket server address is converted to HTTP (ws:// → http://, wss:// → https://) and opened in the default browser
 - In connect mode, the tray exit callback sends to a shared `quit` channel to trigger graceful shutdown
 - WebSocket URL supports plain `host:port` (defaults to `ws://`) or full URLs (`ws://` or `wss://`)

@@ -93,13 +93,13 @@ Der Container kopiert beim ersten Start automatisch Standard-Panels, Blöcke und
 
 ### System-Tray-Symbol
 
-Wenn OmniPanel-go im **Standard**- oder **Host-Agent**-Modus auf einem Rechner mit grafischer Oberfläche läuft, erscheint ein Symbol in der Taskleiste bzw. im Benachrichtigungsbereich. Klicke mit der rechten Maustaste darauf für:
+Wenn OmniPanel-go im **Standard**- oder **Host-Agent**-Modus mit Desktop-Sitzung läuft, erscheint ein Symbol in der Taskleiste bzw. im Benachrichtigungsbereich. Unter Windows und macOS wird das Tray standardmäßig versucht zu starten. Unter Linux ist eine grafische Sitzung erforderlich (`DISPLAY` oder `WAYLAND_DISPLAY`). Klicke mit der rechten Maustaste darauf für:
 
 - **Panel öffnen** — öffnet OmniPanel-go in deinem Standard-Webbrowser. Im Standard-Modus wird `http://localhost:3000` geöffnet. Im Host-Agent-Modus wird die Remote-Server-URL geöffnet, mit der du verbunden bist.
 - **Vollbild umschalten** — schaltet den Vollbildmodus auf allen verbundenen Client-Geräten (Tablets, Handys) um.
 - **Anwendung beenden** — fährt OmniPanel-go ordnungsgemäß herunter, genau wie Strg+C im Terminal.
 
-> **Hinweis:** Auf headless-Systemen (Server ohne Desktop-Umgebung, SSH-Sitzungen ohne Display-Weiterleitung) wird das System-Tray automatisch deaktiviert. Du kannst die Anwendung weiterhin mit Strg+C beenden.
+> **Hinweis:** Auf headless-Linux-Systemen (z. B. Server ohne Desktop-Umgebung oder SSH-Sitzungen ohne Display-Weiterleitung) wird das System-Tray automatisch deaktiviert. Du kannst die Anwendung weiterhin mit Strg+C beenden.
 
 ### Log-Ausgabe
 

@@ -1289,6 +1289,13 @@ async function keepScreenAlive() {
     }
 }
 
+/**
+ * connect opens the panel WebSocket connection and installs message handlers.
+ *
+ * Fullscreen control messages (`enter-fullscreen` / `exit-fullscreen`) can come
+ * from multiple host-side triggers: start page buttons and the native system tray.
+ * The client treats both sources identically to keep behavior consistent.
+ */
 function connect() {
     if (socket && (socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN)) {
         return;
@@ -1323,6 +1330,7 @@ function connect() {
             location.reload();
         }
 
+        // Fullscreen commands are transport-level events; source (tray/UI) is intentionally abstracted.
         if (msg.type === 'enter-fullscreen') {
             showFullscreenPopup();
         } else if (msg.type === 'exit-fullscreen') {

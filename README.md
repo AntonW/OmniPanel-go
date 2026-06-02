@@ -64,7 +64,7 @@ OmniPanel-go v3 is a Go application that serves as:
 | **WebSocket** | Real-time communication on `/ws` for button/slider/joystick/keyboard events + binary audio frames |
 | **Relay Server** | Central server mode (`serve` subcommand) — serves WebUI and relays WebSocket messages between browsers and a single host agent |
 | **Host Agent** | Distributed mode (`connect` subcommand) — WebSocket client with all subsystems, auto-reconnects with exponential backoff |
-| **System Tray** | Cross-platform tray icon (default + connect modes, `fyne.io/systray`) with Open Panel (opens web UI in browser), fullscreen toggle, and graceful exit. Skipped on headless systems |
+| **System Tray** | Cross-platform tray icon (default + connect modes, `fyne.io/systray`) with Open Panel (opens web UI in browser), fullscreen toggle, and graceful exit. Linux/Unix requires `DISPLAY` or `WAYLAND_DISPLAY`; Windows/macOS attempt tray startup by default |
 | **Starter Init** | Copies default user content (blocks, panels, themes, assets) into an empty volume on first run (Docker containers) |
 | **Virtual Joystick** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: vJoy driver (CGO, requires `vJoyInterface.dll`) |
 | **Virtual Mouse** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: SendInput API (CGO) |

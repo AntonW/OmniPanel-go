@@ -8,6 +8,7 @@ package systray
 import (
 	_ "embed"
 	"os"
+	"runtime"
 	"sync"
 
 	"fyne.io/systray"
@@ -30,8 +31,13 @@ type Tray struct {
 	quitChan       chan struct{}
 }
 
-// IsHeadless returns true if no display server is detected (Linux only).
+// IsHeadless returns true when a desktop session is not available.
+// On Windows and macOS, tray support is assumed by default.
 func IsHeadless() bool {
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+		return false
+	}
+
 	display := os.Getenv("DISPLAY")
 	wayland := os.Getenv("WAYLAND_DISPLAY")
 	return display == "" && wayland == ""

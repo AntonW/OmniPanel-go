@@ -359,10 +359,16 @@ func runDefault(cfg *config.Config, configPath, userPath, baseDir string) {
 }
 ```
 
-This is the traditional mode: HTTP server + all subsystems on the same machine. A system tray icon is created when a display server (X11 or Wayland) is detected, providing Open Panel (opens http://localhost:port in the default browser), fullscreen toggle, and exit controls. The `quit` channel is shared between signal handling and the tray's exit callback, so either Ctrl+C or "Exit Application" from the tray triggers the same graceful shutdown path.
+This is the traditional mode: HTTP server + all subsystems on the same machine. A system tray icon is created when a desktop session is available. On Linux/Unix, this means a display server (X11 or Wayland) is detected. On Windows and macOS, tray support is assumed by default. The tray provides Open Panel (opens http://localhost:port in the default browser), fullscreen toggle, and exit controls. The `quit` channel is shared between signal handling and the tray's exit callback, so either Ctrl+C or "Exit Application" from the tray triggers the same graceful shutdown path.
 
-> **Concept: `systray.IsHeadless()`**
-> On Linux, the system tray requires a display server. `IsHeadless()` checks the `DISPLAY` and `WAYLAND_DISPLAY` environment variables. If neither is set (e.g., on a headless server or SSH session without X forwarding), the tray is skipped entirely and the application runs normally with only signal-based shutdown.
+> **Concept (Go): `systray.IsHeadless()`**
+> In `internal/systray/systray.go`, `IsHeadless()` is platform-aware. On Linux/Unix, it checks `DISPLAY` and `WAYLAND_DISPLAY`; if both are empty (for example on a headless server or SSH session without X forwarding), the tray is skipped. On Windows and macOS, it returns `false` so tray initialization is attempted by default.
+>
+> **Concept (JavaScript): Fullscreen is handled by the panel client**
+> In `static/client/client.js`, the panel listens for WebSocket messages `enter-fullscreen` and `exit-fullscreen`. Those messages can be triggered by either start-page buttons or tray actions, but the browser client only needs to react to message type.
+>
+> **Key Pattern (JavaScript): Transport event over UI source**
+> `socket.onmessage` in `static/client/client.js` routes behavior by `msg.type` instead of by where the action originated. This keeps fullscreen behavior consistent across backend triggers (UI buttons and tray menu).
 
 ### Serve Mode: `runServe()`
 
@@ -450,7 +456,7 @@ func runConnect(cfg *config.Config, configPath, userPath, baseDir, serverAddrArg
 }
 ```
 
-The host agent creates all subsystems (joystick, speech, MPRIS, RSS, etc.) but no HTTP server. It connects to the relay server via WebSocket and auto-reconnects on disconnect with exponential backoff. Like default mode, a system tray icon is created when a display server is available. The Open Panel menu item converts the WebSocket server address to an HTTP URL (ws:// → http://, wss:// → https://) and opens it in the default browser. A shared `quit` channel receives both OS signals and the tray's exit callback, so either Ctrl+C or "Exit Application" triggers the same shutdown path calling `agt.Stop()`.
+The host agent creates all subsystems (joystick, speech, MPRIS, RSS, etc.) but no HTTP server. It connects to the relay server via WebSocket and auto-reconnects on disconnect with exponential backoff. Like default mode, a system tray icon is created when a desktop session is available (Linux/Unix requires `DISPLAY` or `WAYLAND_DISPLAY`; Windows and macOS try tray startup by default). The Open Panel menu item converts the WebSocket server address to an HTTP URL (ws:// → http://, wss:// → https://) and opens it in the default browser. A shared `quit` channel receives both OS signals and the tray's exit callback, so either Ctrl+C or "Exit Application" triggers the same shutdown path calling `agt.Stop()`.
 
 ## Key Takeaways
 
@@ -467,7 +473,7 @@ The host agent creates all subsystems (joystick, speech, MPRIS, RSS, etc.) but n
 - `AppStateInterface` allows the same WebSocket handler code to work in both default and connect modes
 - Speech features (Vosk STT, host recording) require CGO and are excluded from container builds
 - The `systray` package provides a cross-platform system tray icon (using `fyne.io/systray`) with Open Panel, fullscreen toggle, and exit controls in default and connect modes
-- System tray is skipped on headless systems (no `DISPLAY` or `WAYLAND_DISPLAY` env vars on Linux)
+- System tray is skipped when no desktop session is available (Linux/Unix: no `DISPLAY` and no `WAYLAND_DISPLAY`; Windows/macOS: tray is attempted by default)
 - In default mode, Open Panel opens `http://localhost:<port>`; in connect mode, it converts the WebSocket URL to HTTP (ws:// → http://, wss:// → https://) and opens the remote server
 - A shared `quit` channel handles both OS signals and tray exit callbacks in default and connect modes
 
