@@ -69,7 +69,7 @@ import (
 	"omnipanel-go/internal/databus"
 	"omnipanel-go/internal/devices"
 	"omnipanel-go/internal/mediautil"
-	"omnipanel-go/internal/mpris"
+	"omnipanel-go/internal/mediacontrol"
 	"omnipanel-go/internal/rssfeed"
 	"omnipanel-go/internal/speech"
 	wsHandler "omnipanel-go/internal/websocket"
@@ -93,7 +93,7 @@ type Agent struct {
 	KeyboardManager *devices.KeyboardManager
 	DataBus         *databus.DataBus
 	SpeechManager   *speech.SpeechManager
-	MPRISWatcher    *mpris.Watcher
+	MPRISWatcher    *mediacontrol.Watcher
 	RSSManager      *rssfeed.Manager
 
 	broadcastMu  sync.RWMutex
@@ -134,7 +134,7 @@ func New(cfg *config.Config, configPath, userPath, baseDir string) *Agent {
 	sm := speech.New(&cfg.Speech, a, jsMgr, userPath)
 	a.SpeechManager = sm
 
-	mprisWatcher := mpris.New(&cfg.MediaPlayer, db, slog.Default())
+	mprisWatcher := mediacontrol.New(&cfg.MediaPlayer, db, slog.Default())
 	if mprisWatcher != nil {
 		if err := mprisWatcher.Start(); err != nil {
 			slog.Warn("MPRIS watcher failed to start", "error", err)
@@ -443,7 +443,7 @@ func (a *Agent) GetSpeechManager() *speech.SpeechManager {
 
 // GetMPRISWatcher returns the media player watcher instance.
 // On Linux this uses MPRIS; on Windows it uses SMTC.
-func (a *Agent) GetMPRISWatcher() *mpris.Watcher {
+func (a *Agent) GetMPRISWatcher() *mediacontrol.Watcher {
 	return a.MPRISWatcher
 }
 

@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"omnipanel-go/internal/mpris"
+	"omnipanel-go/internal/mediacontrol"
 )
 
 // Watcher is the minimal media-watcher contract used by route and agent helpers.
 type Watcher interface {
 	ListPlayers() []string
-	GetPlayerState(playerName string) *mpris.PlayerState
+	GetPlayerState(playerName string) *mediacontrol.PlayerState
 	GetSelectedPlayer() string
 	SetSelectedPlayer(playerName string) error
 	CallMethod(playerName, method string) error

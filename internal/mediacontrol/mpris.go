@@ -1,21 +1,24 @@
-// Package mpris provides MPRIS2 D-Bus integration for monitoring and controlling
-// media players on Linux desktop environments (KDE Plasma, GNOME, etc.).
+// Package mediacontrol provides media player management with platform-specific integrations.
 //
+// On Linux: MPRIS2 D-Bus integration for monitoring and controlling media players
+// on Linux desktop environments (KDE Plasma, GNOME, etc.).
 // It automatically discovers MPRIS-compliant players (Spotify, VLC, Firefox, etc.)
 // via the session D-Bus and exposes their state (title, artist, cover art, progress,
 // playback status) through the application's DataBus for frontend consumption.
+//
+// On Windows: System Media Transport Controls (SMTC) integration for Windows 10/11.
+// SMTC automatically discovers media-enabled applications (Spotify, browsers, VLC, etc.)
+// and exposes their state through the DataBus.
 //
 // When multiple players are running, only the selected player's state is published
 // to the mpris_* DataBus keys. The frontend renders source selection tabs on the
 // cover art overlay when more than one player is available, letting the user switch
 // between players. The full list of available players is published to the
 // mpris_available_players DataBus key as a JSON array.
-//
-// On Windows, use watcher_windows.go (SMTC) instead.
 
 //go:build !windows
 
-package mpris
+package mediacontrol
 
 import (
 	"encoding/json"

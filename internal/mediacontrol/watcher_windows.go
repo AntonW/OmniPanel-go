@@ -12,7 +12,7 @@
 
 //go:build windows
 
-package mpris
+package mediacontrol
 
 import (
 	"encoding/json"
@@ -439,7 +439,9 @@ func (w *Watcher) extractSMTCThumbnail(thumbRef *streams.IRandomAccessStreamRefe
 	isItf, err := streamUnk.QueryInterface(ole.NewGUID(guidIInputStream))
 	streamUnk.Release()
 	if err != nil {
-		slog.Debug("smtc: QI to IInputStream failed", "appID", appID, "error", err)
+		// Some SMTC sources (like YouTube on Chrome) may not support IInputStream
+		// This is expected behavior and not an error
+		slog.Debug("smtc: thumbnail stream does not support IInputStream interface", "appID", appID, "error", err)
 		return ""
 	}
 

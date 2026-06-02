@@ -1,6 +1,6 @@
 //go:build windows
 
-package mpris
+package mediacontrol
 
 import (
 	"encoding/json"

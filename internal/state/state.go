@@ -32,7 +32,7 @@ import (
 	"omnipanel-go/internal/config"
 	"omnipanel-go/internal/databus"
 	"omnipanel-go/internal/devices"
-	"omnipanel-go/internal/mpris"
+	"omnipanel-go/internal/mediacontrol"
 	"omnipanel-go/internal/rssfeed"
 	"omnipanel-go/internal/speech"
 )
@@ -54,7 +54,7 @@ type AppStateInterface interface {
 	GetKeyboardManager() *devices.KeyboardManager
 	GetDataBus() *databus.DataBus
 	GetSpeechManager() *speech.SpeechManager
-	GetMPRISWatcher() *mpris.Watcher
+	GetMPRISWatcher() *mediacontrol.Watcher
 	GetRSSManager() *rssfeed.Manager
 }
 
@@ -76,7 +76,7 @@ type AppState struct {
 	SpeechManager   *speech.SpeechManager
 	// MPRISWatcher monitors media players (Spotify, VLC, etc.) via D-Bus on Linux
 	// or SMTC on Windows, and publishes their state to the DataBus.
-	MPRISWatcher *mpris.Watcher
+	MPRISWatcher *mediacontrol.Watcher
 	// RSSManager handles RSS/Atom feed polling and pushes updates to WebSocket clients.
 	RSSManager *rssfeed.Manager
 
@@ -116,7 +116,7 @@ func New(cfg *config.Config, configPath, userPath, baseDir string) *AppState {
 	sm := speech.New(&cfg.Speech, app, jsMgr, userPath)
 	app.SpeechManager = sm
 
-	mprisWatcher := mpris.New(&cfg.MediaPlayer, db, slog.Default())
+	mprisWatcher := mediacontrol.New(&cfg.MediaPlayer, db, slog.Default())
 	if mprisWatcher != nil {
 		if err := mprisWatcher.Start(); err != nil {
 			slog.Warn("MPRIS watcher failed to start", "error", err)
@@ -304,7 +304,7 @@ func (s *AppState) GetSpeechManager() *speech.SpeechManager {
 
 // GetMPRISWatcher returns the media player watcher instance.
 // On Linux this uses MPRIS; on Windows it uses SMTC.
-func (s *AppState) GetMPRISWatcher() *mpris.Watcher {
+func (s *AppState) GetMPRISWatcher() *mediacontrol.Watcher {
 	return s.MPRISWatcher
 }
 

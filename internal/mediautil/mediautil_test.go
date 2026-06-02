@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"omnipanel-go/internal/mpris"
+	"omnipanel-go/internal/mediacontrol"
 )
 
 type fakeWatcher struct {

@@ -1,6 +1,6 @@
-// Package mpris provides media player integration.
+// Package mediacontrol provides media player integration.
 // This file contains platform-independent types shared across all implementations.
-package mpris
+package mediacontrol
 
 // PlayerState holds the current state of a media player.
 // On Linux this is populated via MPRIS2/D-Bus; on Windows via SMTC (System Media Transport Controls).

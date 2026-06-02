@@ -9,7 +9,7 @@ import (
 	"omnipanel-go/internal/config"
 	"omnipanel-go/internal/databus"
 	"omnipanel-go/internal/devices"
-	"omnipanel-go/internal/mpris"
+	"omnipanel-go/internal/mediacontrol"
 	"omnipanel-go/internal/rssfeed"
 	"omnipanel-go/internal/speech"
 )
