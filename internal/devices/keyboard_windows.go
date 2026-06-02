@@ -118,7 +118,7 @@ var KeyNameToCode = map[string]int{
 	"semicolon": VK_OEM_1, "apostrophe": VK_OEM_7,
 	"grave": VK_OEM_3, "backslash": VK_OEM_5,
 	"comma": VK_OEM_COMMA, "dot": VK_OEM_PERIOD, "slash": VK_OEM_2,
-	"escape": VK_ESCAPE, "capslock": VK_CAPITAL,
+	"escape": VK_ESCAPE, "esc": VK_ESCAPE, "capslock": VK_CAPITAL,
 	"f1": VK_F1, "f2": VK_F2, "f3": VK_F3, "f4": VK_F4,
 	"f5": VK_F5, "f6": VK_F6, "f7": VK_F7, "f8": VK_F8,
 	"f9": VK_F9, "f10": VK_F10, "f11": VK_F11, "f12": VK_F12,

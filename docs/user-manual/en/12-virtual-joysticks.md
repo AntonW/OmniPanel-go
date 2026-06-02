@@ -179,7 +179,7 @@ Use these names in the Keyboard Key setting:
 | Numbers | `0` through `9` |
 | Function keys | `f1` through `f12` |
 | Modifiers | `ctrl`, `shift`, `alt`, `meta` |
-| Special keys | `space`, `enter`, `escape`, `tab`, `backspace`, `capslock` |
+| Special keys | `space`, `enter`, `escape`, `esc`, `tab`, `backspace`, `capslock` |
 | Punctuation | `minus`, `equal`, `comma`, `dot`, `slash`, `semicolon`, `apostrophe`, `grave`, `backslash`, `leftbracket`, `rightbracket` |
 
 Combine modifiers with `+`: `ctrl+a`, `ctrl+shift+a`, `alt+f4`, `meta+e`.

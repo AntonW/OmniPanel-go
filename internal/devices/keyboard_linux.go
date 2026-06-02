@@ -130,7 +130,7 @@ var KeyNameToCode = map[string]int{
 	"semicolon": KEY_SEMICOLON, "apostrophe": KEY_APOSTROPHE,
 	"grave": KEY_GRAVE, "backslash": KEY_BACKSLASH,
 	"comma": KEY_COMMA, "dot": KEY_DOT, "slash": KEY_SLASH,
-	"escape": KEY_ESC, "capslock": KEY_CAPSLOCK,
+	"escape": KEY_ESC, "esc": KEY_ESC, "capslock": KEY_CAPSLOCK,
 	"f1": KEY_F1, "f2": KEY_F2, "f3": KEY_F3, "f4": KEY_F4,
 	"f5": KEY_F5, "f6": KEY_F6, "f7": KEY_F7, "f8": KEY_F8,
 	"f9": KEY_F9, "f10": KEY_F10, "f11": KEY_F11, "f12": KEY_F12,

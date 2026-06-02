@@ -530,7 +530,7 @@ var KeyNameToCode = map[string]int{
     "0": KEY_0, "1": KEY_1, // ... all digits
     "ctrl": KEY_LEFTCTRL, "shift": KEY_LEFTSHIFT,
     "alt": KEY_LEFTALT, "meta": KEY_LEFTMETA,
-    "escape": KEY_ESC, "enter": KEY_ENTER, "space": KEY_SPACE,
+    "escape": KEY_ESC, "esc": KEY_ESC, "enter": KEY_ENTER, "space": KEY_SPACE,
     // ... function keys, punctuation, etc.
 }
 ```
