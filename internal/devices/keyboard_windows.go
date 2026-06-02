@@ -134,6 +134,11 @@ const (
 )
 
 // KeyNameToCode maps human-readable key names to Windows virtual key codes.
+// Names are lowercase. Covers letters, digits, function keys, modifiers
+// (ctrl/shift/alt/meta and left/right variants), navigation cluster
+// (insert/delete/home/end/pageup/pagedown), arrow keys (up/down/left/right),
+// numpad keys (numpad0–numpad9 and operators), media/launch keys, and common
+// short aliases (esc, del, ins, pgup, pgdn, return, win, super).
 var KeyNameToCode = map[string]int{
 	"a": 0x41, "b": 0x42, "c": 0x43, "d": 0x44, "e": 0x45,
 	"f": 0x46, "g": 0x47, "h": 0x48, "i": 0x49, "j": 0x4A,

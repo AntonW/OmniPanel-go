@@ -524,18 +524,49 @@ The keyboard implementation creates a virtual keyboard device that injects key p
 Both platforms use a `KeyNameToCode` map to translate human-readable key names to platform-specific codes:
 
 ```go
-// internal/devices/keyboard_linux.go
+// internal/devices/keyboard_linux.go  (mirrored in keyboard_windows.go)
 var KeyNameToCode = map[string]int{
-    "a": KEY_A, "b": KEY_B, // ... all letters
-    "0": KEY_0, "1": KEY_1, // ... all digits
+    // Letters and digits
+    "a": KEY_A, "b": KEY_B, /* ... z */
+    "0": KEY_0, /* ... 9 */
+    // Modifiers — aliases map to left-hand variants
     "ctrl": KEY_LEFTCTRL, "shift": KEY_LEFTSHIFT,
     "alt": KEY_LEFTALT, "meta": KEY_LEFTMETA,
-    "escape": KEY_ESC, "esc": KEY_ESC, "enter": KEY_ENTER, "space": KEY_SPACE,
-    // ... function keys, punctuation, etc.
+    "win": KEY_LEFTMETA, "super": KEY_LEFTMETA, "windows": KEY_LEFTMETA,
+    // Special / editing
+    "escape": KEY_ESC, "esc": KEY_ESC,
+    "enter": KEY_ENTER, "return": KEY_ENTER,
+    "space": KEY_SPACE, "tab": KEY_TAB, "backspace": KEY_BACKSPACE,
+    // Function keys
+    "f1": KEY_F1, /* ... f12 */
+    // Navigation cluster
+    "insert": KEY_INSERT, "ins": KEY_INSERT,
+    "delete": KEY_DELETE, "del": KEY_DELETE,
+    "home": KEY_HOME, "end": KEY_END,
+    "pageup": KEY_PAGEUP, "pgup": KEY_PAGEUP,
+    "pagedown": KEY_PAGEDOWN, "pgdn": KEY_PAGEDOWN,
+    // Arrow keys
+    "up": KEY_UP, "down": KEY_DOWN, "left": KEY_LEFT, "right": KEY_RIGHT,
+    // Numpad
+    "numpad0": KEY_KP0, /* ... numpad9 */
+    "numpadenter": KEY_KPENTER, "numpaddot": KEY_KPDOT,
+    "numpadplus": KEY_KPPLUS, "numpadminus": KEY_KPMINUS,
+    "numpadmultiply": KEY_KPASTERISK, "numpaddivide": KEY_KPSLASH,
+    // Media
+    "volumeup": KEY_VOLUMEUP, "volumedown": KEY_VOLUMEDOWN,
+    "mute": KEY_MUTE, "playpause": KEY_PLAYPAUSE,
+    "nextsong": KEY_NEXTSONG, "previoussong": KEY_PREVIOUSSONG,
+    // ... punctuation, printscreen, scrolllock, etc.
 }
 ```
 
-This map is shared between the WebSocket handler and the platform implementations, enabling a consistent key naming scheme across the application.
+This map is shared between the WebSocket handler and the platform implementations, enabling a consistent key naming scheme across the application. Key names are case-insensitive (lowercased by the handler) and use short aliases wherever natural (`esc`, `del`, `ins`, `pgup`, `pgdn`, `return`, `win`, `super`).
+
+> **Concept (Go): alias-first key map design**
+> Instead of requiring callers to know the canonical name (`escape`), the map registers every common variant as a separate entry pointing to the same code. Adding `"esc": KEY_ESC` next to `"escape": KEY_ESC` costs one map entry and removes a whole class of user-facing errors (like the `Unknown keyboard key key=esc` warning).
+
+> **Key Pattern (Go): exhaustive key registration on Linux**
+> Every key in `KeyNameToCode` must also appear in `allKeys` on Linux, otherwise uinput won't register the event bit and the kernel will silently drop it. When adding new key names, always add the corresponding `KEY_*` constant to both `KeyNameToCode` and `allKeys`.
 
 ### Linux Virtual Keyboard (keyboard_linux.go)
 
@@ -547,11 +578,23 @@ The Linux keyboard uses the same `uinput` subsystem as the joystick and mousepad
 package devices
 
 // allKeys contains all key codes to register with uinput.
+// Grouped: standard (letters, digits, punctuation, modifiers),
+// function keys, navigation cluster, arrow keys, numpad, media/system.
 var allKeys = []uint16{
     KEY_ESC, KEY_1, KEY_2, /* ... all standard keys ... */
     KEY_LEFTMETA, KEY_RIGHTMETA,
+    // Navigation cluster
+    KEY_INSERT, KEY_DELETE, KEY_HOME, KEY_END, KEY_PAGEUP, KEY_PAGEDOWN,
+    // Arrow keys
+    KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT,
+    // Numpad
+    KEY_KP0, /* ... KEY_KP9 */ KEY_KPDOT, KEY_KPENTER,
+    KEY_KPPLUS, KEY_KPMINUS, KEY_KPASTERISK, KEY_KPSLASH,
+    // Media / system
+    KEY_MUTE, KEY_VOLUMEDOWN, KEY_VOLUMEUP, KEY_PLAYPAUSE,
+    KEY_BRIGHTNESSUP, KEY_BRIGHTNESSDOWN, KEY_PRINT, KEY_SYSRQ,
 }
-
+```
 func newKeyboard(index int) (*linuxKeyboard, error) {
     fd, err := unix.Open(uinputPath, unix.O_WRONLY|unix.O_NONBLOCK, 0)
     // ... enable EV_KEY, register all keys via UI_SET_KEYBIT ...
@@ -715,11 +758,13 @@ func (m *MousepadManager) SendMove(index int, dx, dy int32) {
 - **Build tags** select platform-specific implementations at compile time
 - **Interfaces** (`Joystick`, `Mousepad`, `Keyboard`) enable swapping implementations without changing calling code
 - **Platform-agnostic constants** (`MouseBtnLeft`, etc.) and key name maps (`KeyNameToCode`) prevent native codes from leaking into higher layers
+- **`KeyNameToCode`** covers letters, digits, F1–F12, modifiers, navigation cluster, arrow keys, numpad, media, and common short aliases (`esc`, `del`, `ins`, `pgup`, `pgdn`, `return`, `win`, `super`)
+- **Linux:** every key in `KeyNameToCode` must also appear in `allKeys`, otherwise uinput drops it silently
 - **Linux:** `uinput` kernel subsystem, `ioctl` for configuration, `unsafe.Slice` for zero-copy event writing — used for joystick, mouse, and keyboard
 - **Windows:** vJoy driver (CGO) for joysticks, SendInput API (CGO) for mouse and keyboard — no driver needed for mouse/keyboard
 - Every event batch ends with `EV_SYN / SYN_REPORT` (Linux) or a single `SendInput` call (Windows)
 - Virtual devices must be explicitly destroyed on cleanup (Linux) or released (Windows vJoy)
 - Stub implementations allow graceful degradation on unsupported platforms
-- Keyboard combos use `+`-separated strings parsed at runtime (e.g., `"ctrl+shift+a"`)
+- Keyboard combos use `+`-separated strings parsed at runtime (e.g., `"ctrl+shift+esc"`, `"win+d"`)
 
 [← Back: Chapter 7](07-commands.md) · [Next: Chapter 9 →](09-speech-overview.md)

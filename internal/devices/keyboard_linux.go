@@ -145,8 +145,11 @@ const (
 // KeyNameToCode maps human-readable key names to Linux input codes.
 // Names are lowercase and used by the WebSocket handler to parse key strings
 // from the client. Modifier aliases (ctrl, shift, alt, meta) map to their
-// left-hand variants. This map covers all keys registered in allKeys plus
-// media keys (volume, play/pause, etc.) and screenshot keys.
+// left-hand variants. Covers letters, digits, function keys, modifiers,
+// navigation cluster (insert/delete/home/end/pageup/pagedown), arrow keys
+// (up/down/left/right), numpad keys (numpad0–numpad9 and operators),
+// media keys, and common short aliases (esc, del, ins, pgup, pgdn, return,
+// win, super).
 var KeyNameToCode = map[string]int{
 	"a": KEY_A, "b": KEY_B, "c": KEY_C, "d": KEY_D, "e": KEY_E,
 	"f": KEY_F, "g": KEY_G, "h": KEY_H, "i": KEY_I, "j": KEY_J,
@@ -203,6 +206,9 @@ var KeyNameToCode = map[string]int{
 }
 
 // allKeys contains all key codes to register with uinput.
+// Grouped into: standard keys (letters, digits, punctuation, modifiers),
+// function keys, navigation cluster (insert/delete/home/end/pageup/pagedown),
+// arrow keys, numpad keys, and media/system keys.
 var allKeys = []uint16{
 	KEY_ESC, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0,
 	KEY_MINUS, KEY_EQUAL, KEY_BACKSPACE, KEY_TAB,
