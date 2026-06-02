@@ -176,10 +176,17 @@ Any app that exposes system media controls will work. On Linux this means MPRIS2
 | Spotify (desktop) | Yes | Full | Best experience |
 | VLC | Yes | Full | Works great |
 | Firefox | Yes | Full | Via Plasma Browser Integration |
-| Chrome/Chromium | Sometimes | Full | Cover art depends on site |
+| Chrome/Chromium | Partial | Full | Streaming services show art; YouTube does not |
 | Rhythmbox | Yes | Full | GNOME default |
 | Audacious | Yes | Full | Lightweight player |
 | Clementine | Yes | Full | Feature-rich player |
+
+> **Note about YouTube on Chrome/Edge:** YouTube videos don't show cover art because:
+> - The media information comes from the browser's MediaSession API, which doesn't provide artwork for YouTube
+> - Windows SMTC (System Media Transport Controls) doesn't receive thumbnails from YouTube in Chrome/Edge
+> - You'll see the music note placeholder instead of a video thumbnail
+>
+> This is a limitation of how the browser and YouTube share media information. Other streaming services (Spotify, Apple Music, etc.) work within browsers because they provide proper MediaSession artwork.
 
 ---
 

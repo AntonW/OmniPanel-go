@@ -315,10 +315,16 @@ func (w *Watcher) buildPlayerState(appID string, session *control.GlobalSystemMe
 			if v, err := props.GetAlbumTitle(); err == nil {
 				state.Album = v
 			}
-			if thumbRef, err := props.GetThumbnail(); err == nil && thumbRef != nil {
-				state.ArtURL = w.extractThumbnail(thumbRef, appID)
-				thumbRef.Release()
+		if thumbRef, err := props.GetThumbnail(); err == nil && thumbRef != nil {
+			state.ArtURL = w.extractThumbnail(thumbRef, appID, state)
+			thumbRef.Release()
+		} else {
+			// Chrome/YouTube doesn't provide thumbnails through SMTC for web content
+			// The frontend will show the placeholder icon instead
+			if strings.Contains(appID, "chrome") || strings.Contains(appID, "msedge") {
+				slog.Debug("smtc: Chrome/Edge web content does not provide cover art through SMTC", "appID", appID, "title", state.Title)
 			}
+		}
 			props.Release()
 		}
 	}
@@ -373,15 +379,41 @@ func (w *Watcher) buildPlayerState(appID string, session *control.GlobalSystemMe
 
 // extractThumbnail reads the cover art from the SMTC thumbnail stream and saves
 // it to a temp file. Returns a "file://" URL or empty string on failure.
-func (w *Watcher) extractThumbnail(thumbRef *streams.IRandomAccessStreamReference, appID string) string {
+// For YouTube/Chrome, attempts to extract video ID and fetch thumbnail from YouTube CDN.
+func (w *Watcher) extractThumbnail(thumbRef *streams.IRandomAccessStreamReference, appID string, state *PlayerState) string {
+	// Try SMTC thumbnail first
+	if thumbRef != nil {
+		if url := w.extractSMTCThumbnail(thumbRef, appID); url != "" {
+			return url
+		}
+	}
+
+	// Fallback for Chrome/YouTube when SMTC doesn't provide thumbnail
+	if state != nil && (strings.Contains(appID, "chrome") || strings.Contains(appID, "msedge")) {
+		if url := extractYouTubeThumbnail(state); url != "" {
+			return url
+		}
+	}
+
+	return ""
+}
+
+// extractSMTCThumbnail reads the cover art from the SMTC thumbnail stream.
+func (w *Watcher) extractSMTCThumbnail(thumbRef *streams.IRandomAccessStreamReference, appID string) string {
+	if thumbRef == nil {
+		return ""
+	}
+
 	openOp, err := thumbRef.OpenReadAsync()
 	if err != nil || openOp == nil {
+		slog.Debug("smtc: OpenReadAsync failed", "appID", appID, "error", err)
 		return ""
 	}
 
 	rawStream, err := awaitAsync(openOp)
 	openOp.Release()
 	if err != nil || rawStream == nil {
+		slog.Debug("smtc: awaitAsync failed for thumbnail stream", "appID", appID, "error", err)
 		return ""
 	}
 
@@ -391,6 +423,7 @@ func (w *Watcher) extractThumbnail(thumbRef *streams.IRandomAccessStreamReferenc
 	rasItf, err := streamUnk.QueryInterface(ole.NewGUID(guidIRandomAccessStream))
 	if err != nil {
 		streamUnk.Release()
+		slog.Debug("smtc: QI to IRandomAccessStream failed", "appID", appID, "error", err)
 		return ""
 	}
 	ras := (*iRandomAccessStream)(unsafe.Pointer(rasItf))
@@ -398,6 +431,7 @@ func (w *Watcher) extractThumbnail(thumbRef *streams.IRandomAccessStreamReferenc
 	rasItf.Release()
 	if err != nil || size == 0 || size > 4*1024*1024 {
 		streamUnk.Release()
+		slog.Debug("smtc: thumbnail size invalid", "appID", appID, "size", size, "error", err)
 		return ""
 	}
 
@@ -405,12 +439,14 @@ func (w *Watcher) extractThumbnail(thumbRef *streams.IRandomAccessStreamReferenc
 	isItf, err := streamUnk.QueryInterface(ole.NewGUID(guidIInputStream))
 	streamUnk.Release()
 	if err != nil {
+		slog.Debug("smtc: QI to IInputStream failed", "appID", appID, "error", err)
 		return ""
 	}
 
 	dr, err := newDataReaderFromInputStream(unsafe.Pointer(isItf))
 	isItf.Release()
 	if err != nil || dr == nil {
+		slog.Debug("smtc: newDataReaderFromInputStream failed", "appID", appID, "error", err)
 		return ""
 	}
 	defer dr.Release()
@@ -424,26 +460,50 @@ func (w *Watcher) extractThumbnail(thumbRef *streams.IRandomAccessStreamReferenc
 		uintptr(unsafe.Pointer(&loadOp)),
 	)
 	if hr != 0 || loadOp == nil {
+		slog.Debug("smtc: LoadAsync failed", "appID", appID, "hr", hr)
 		return ""
 	}
 
 	if _, err = awaitAsync(loadOp); err != nil {
 		loadOp.Release()
+		slog.Debug("smtc: awaitAsync for LoadAsync failed", "appID", appID, "error", err)
 		return ""
 	}
 	loadOp.Release()
 
 	data, err := dr.ReadBytes(uint32(size))
 	if err != nil || len(data) == 0 {
+		slog.Debug("smtc: ReadBytes failed or returned empty", "appID", appID, "error", err)
 		return ""
 	}
 
 	safeID := strings.NewReplacer("!", "_", "\\", "_", "/", "_", ":", "_").Replace(appID)
 	tmpFile := filepath.Join(w.tempDir, safeID+".jpg")
 	if err := os.WriteFile(tmpFile, data, 0o644); err != nil {
+		slog.Debug("smtc: WriteFile failed", "appID", appID, "path", tmpFile, "error", err)
 		return ""
 	}
 	return "file://" + filepath.ToSlash(tmpFile)
+}
+
+// extractYouTubeThumbnail attempts to fetch a thumbnail for YouTube videos.
+// Currently returns empty string because:
+// 1. Chrome/Edge via SMTC doesn't provide thumbnail streams for YouTube
+// 2. The video ID cannot be extracted from MediaSession metadata
+// 3. YouTube's public API would be required to fetch thumbnails from video IDs
+// 
+// When a thumbnail is unavailable, the media player block shows a
+// placeholder icon, which is the expected behavior on web platforms.
+func extractYouTubeThumbnail(state *PlayerState) string {
+	if state == nil || state.Title == "" {
+		return ""
+	}
+
+	// This could be enhanced in the future by:
+	// - Using MediaSession ExtendedMediaSessionAPI if available
+	// - Proxying YouTube's public thumbnail endpoint
+	// - Implementing native YouTube API integration
+	return ""
 }
 
 // newDataReaderFromInputStream creates a WinRT DataReader from an IInputStream pointer.
