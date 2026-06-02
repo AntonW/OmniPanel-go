@@ -201,11 +201,11 @@ func New(cfg *config.Config, userPath, baseDir string) *RelayServer {
 	app.Get("/api/config", s.getConfig)
 	app.Post("/api/data/push", s.pushData)
 
-	// MPRIS media control endpoints (forwarded to host agent)
-	app.Get("/api/mpris/players", s.listMPRISPlayers)
-	app.Post("/api/mpris/control", s.controlMPRIS)
-	app.Post("/api/mpris/select", s.selectMPRISPlayer)
-	app.Get("/api/mpris/cover", s.serveMPRISCoverArt)
+	// Media control endpoints (forwarded to host agent)
+	app.Get("/api/media/players", s.listMPRISPlayers)
+	app.Post("/api/media/control", s.controlMPRIS)
+	app.Post("/api/media/select", s.selectMPRISPlayer)
+	app.Get("/api/media/cover", s.serveMPRISCoverArt)
 
 	s.app = app
 	return s
@@ -578,14 +578,14 @@ func (s *RelayServer) sendMPRISRequest(endpoint, method string, body map[string]
 	}
 }
 
-// listMPRISPlayers handles GET /api/mpris/players by forwarding the request
-// to the host agent and returning the list of connected MPRIS media players.
+// listMPRISPlayers handles GET /api/media/players by forwarding the request
+// to the host agent and returning the list of connected media players.
 // Returns 503 if no host is connected or the request times out.
 func (s *RelayServer) listMPRISPlayers(c *fiber.Ctx) error {
 	resp, err := s.sendMPRISRequest("/players", "GET", nil, nil)
 	if err != nil {
 		return c.Status(fiber.StatusServiceUnavailable).JSON(map[string]any{
-			"error":   "MPRIS is not available",
+			"error":   "Media integration is not available",
 			"enabled": false,
 			"players": []string{},
 		})
@@ -593,7 +593,7 @@ func (s *RelayServer) listMPRISPlayers(c *fiber.Ctx) error {
 	return c.JSON(resp)
 }
 
-// controlMPRIS handles POST /api/mpris/control by forwarding playback commands
+// controlMPRIS handles POST /api/media/control by forwarding playback commands
 // (play, pause, next, previous, stop, volume) to the host agent. Parses the
 // request body for player name, action, and optional volume value. Maps error
 // messages from the host to appropriate HTTP status codes.
@@ -621,7 +621,7 @@ func (s *RelayServer) controlMPRIS(c *fiber.Ctx) error {
 	resp, err := s.sendMPRISRequest("/control", "POST", body, nil)
 	if err != nil {
 		return c.Status(fiber.StatusServiceUnavailable).JSON(map[string]any{
-			"error": "MPRIS is not available",
+			"error": "Media integration is not available",
 		})
 	}
 
@@ -638,7 +638,7 @@ func (s *RelayServer) controlMPRIS(c *fiber.Ctx) error {
 	return c.JSON(resp)
 }
 
-// selectMPRISPlayer handles POST /api/mpris/select by forwarding the player
+// selectMPRISPlayer handles POST /api/media/select by forwarding the player
 // selection request to the host agent. The selected player's state is then
 // published to the DataBus and broadcast to all browsers via WebSocket.
 func (s *RelayServer) selectMPRISPlayer(c *fiber.Ctx) error {
@@ -665,7 +665,7 @@ func (s *RelayServer) selectMPRISPlayer(c *fiber.Ctx) error {
 	resp, err := s.sendMPRISRequest("/select", "POST", body, nil)
 	if err != nil {
 		return c.Status(fiber.StatusServiceUnavailable).JSON(map[string]any{
-			"error": "MPRIS is not available",
+			"error": "Media integration is not available",
 		})
 	}
 
@@ -680,7 +680,7 @@ func (s *RelayServer) selectMPRISPlayer(c *fiber.Ctx) error {
 	return c.JSON(resp)
 }
 
-// serveMPRISCoverArt handles GET /api/mpris/cover by forwarding the cover art
+// serveMPRISCoverArt handles GET /api/media/cover by forwarding the cover art
 // request to the host agent. The agent reads the local file (restricted to
 // /tmp/, /var/tmp/, and ~/.cache/ for security), base64-encodes it, and sends
 // it back over WebSocket. The relay server decodes and serves it with the
@@ -701,7 +701,7 @@ func (s *RelayServer) serveMPRISCoverArt(c *fiber.Ctx) error {
 	resp, err := s.sendMPRISRequest("/cover", "GET", nil, query)
 	if err != nil {
 		return c.Status(fiber.StatusServiceUnavailable).JSON(map[string]any{
-			"error": "MPRIS is not available",
+			"error": "Media integration is not available",
 		})
 	}
 

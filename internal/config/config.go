@@ -145,7 +145,7 @@ func (c *Config) Save(path string) error {
 	v.Set("speech", c.Speech)
 	v.Set("mpris", c.MPRIS)
 
-	return v.SafeWriteConfig()
+	return v.SafeWriteConfigAs(path)
 }
 
 // FindConfigPath searches for config.json in order:

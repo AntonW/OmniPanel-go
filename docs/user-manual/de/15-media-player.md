@@ -1,10 +1,10 @@
 # Kapitel 15: Medienwiedergabe
 
-Möchtest du sehen, welche Musik gerade läuft, und sie von deinem Panel aus steuern? Dieses Kapitel behandelt den Medienwiedergabe-Block und wie du ihn mit deinen Musik-Apps unter Linux verbindest.
+Möchtest du sehen, welche Musik gerade läuft, und sie von deinem Panel aus steuern? Dieses Kapitel behandelt den Medienwiedergabe-Block und wie du ihn mit deinen Musik-Apps unter Linux und Windows verbindest.
 
 ## Was ist der Medienwiedergabe-Block?
 
-Der Medienwiedergabe-Block zeigt Informationen über das aktuell abgespielte Medium (Musik, Video, Podcast) und ermöglicht dir die Steuerung der Wiedergabe mit Schaltflächen. Er funktioniert mit jeder App, die den MPRIS-Standard unter Linux unterstützt — einschließlich Spotify, VLC, Firefox, Chrome und vielen weiteren.
+Der Medienwiedergabe-Block zeigt Informationen über das aktuell abgespielte Medium (Musik, Video, Podcast) und ermöglicht dir die Steuerung der Wiedergabe mit Schaltflächen. Im Automatikmodus funktioniert er unter Linux über MPRIS und unter Windows über SMTC (System Media Transport Controls) — einschließlich Spotify, VLC, Browser-Mediensitzungen und vielen weiteren.
 
 ### Was wird angezeigt
 
@@ -21,9 +21,11 @@ Der Medienwiedergabe-Block zeigt Informationen über das aktuell abgespielte Med
 
 Der Medienwiedergabe-Block hat zwei Steuerungsmodi. Wähle den, der zu deinem Setup passt:
 
-### MPRIS-Modus (Linux Desktop)
+### MPRIS-Modus (Automatischer Medienmodus)
 
-Das ist der automatische Modus. OmniPanel-go verbindet sich mit dem Mediensystem deines Linux-Desktops (D-Bus) und findet automatisch alle laufenden Medienplayer.
+Das ist der automatische Modus. OmniPanel-go verbindet sich automatisch mit dem Medien-System der Plattform:
+- **Linux:** MPRIS über D-Bus
+- **Windows:** SMTC (System Media Transport Controls)
 
 **Was du bekommst:**
 - Echtzeit-Updates wenn sich der Song ändert
@@ -32,9 +34,8 @@ Das ist der automatische Modus. OmniPanel-go verbindet sich mit dem Mediensystem
 - Fortschrittsbalken der sich während der Wiedergabe bewegt
 
 **Voraussetzungen:**
-- Linux Desktop (KDE Plasma, GNOME, etc.)
-- Ein Medienplayer der MPRIS unterstützt (die meisten modernen Player tun das)
-- MPRIS aktiviert in `config.json` (siehe unten)
+- Linux-Desktop (KDE Plasma, GNOME, etc.) mit MPRIS-kompatiblem Player oder Windows 10/11 mit App, die Mediensteuerung bereitstellt
+- Medien-Watcher in `config.json` aktivieren (Abschnitt `mpris`, siehe unten)
 
 ### Tastatur-Modus (Alle Plattformen)
 
@@ -47,7 +48,7 @@ Dieser Modus sendet Tastatur-Medientasten (wie die Play/Pause-Taste auf deiner T
 
 ---
 
-## MPRIS-Modus einrichten
+## Automatischen Medienmodus einrichten
 
 ### Schritt 1: MPRIS in der Config aktivieren
 
@@ -67,12 +68,12 @@ Dieser Modus sendet Tastatur-Medientasten (wie die Play/Pause-Taste auf deiner T
 
 Starte OmniPanel-go nach dieser Änderung neu.
 
-### Schritt 2: Medienplayer starten
+### Schritt 2: Medien-App starten
 
-Öffne einen MPRIS-kompatiblen Medienplayer:
+Öffne eine Medien-App, die System-Mediensteuerung unterstützt:
 - **Spotify** (Desktop-App)
 - **VLC** (jede Plattform)
-- **Firefox** oder **Chrome** (mit laufender Medienwiedergabe)
+- **Firefox**, **Chrome** oder **Edge** (mit laufender Medienwiedergabe)
 - **Rhythmbox**, **Audacious**, **Clementine** und viele weitere
 
 ### Schritt 3: Medienwiedergabe-Block hinzufügen
@@ -89,7 +90,7 @@ Starte OmniPanel-go nach dieser Änderung neu.
 
 Öffne dein Panel in einem Browser. Wenn du Musik in deinem Medienplayer abspielst, sollte der Block automatisch Titel, Künstler und Cover-Bild anzeigen. Die Steuerungstasten sollten funktionieren um abzuspielen, zu pausieren, zu überspringen und die Lautstärke anzupassen.
 
-> **Hinweis für verteilte Setups (serve + connect mode):** MPRIS funktioniert genauso — der Medienwiedergabe-Block kommuniziert über den Relay-Server mit dem Host-Agent. Stelle sicher dass MPRIS in der `config.json` des Host-Agent aktiviert ist (nicht in der Server-Config). Der Host-Agent muss mit dem Relay-Server verbunden sein damit MPRIS funktioniert.
+> **Hinweis für verteilte Setups (serve + connect mode):** Der automatische Medienmodus funktioniert genauso — der Medienwiedergabe-Block kommuniziert über den Relay-Server mit dem Host-Agent. Aktiviere `mpris` in der `config.json` des Host-Agent (nicht in der Server-Config). Der Host-Agent muss mit dem Relay-Server verbunden sein.
 
 ---
 
@@ -145,7 +146,7 @@ Manche Browser (Chrome, Firefox) speichern Cover-Bilder in temporären Dateien d
 
 ### Tasten steuern meine Musik nicht
 
-Im MPRIS-Modus:
+Im automatischen Medienmodus (`Steuerungsmodus = mpris`):
 1. Stelle sicher dass dein Medienplayer läuft und abspielt
 2. Prüfe die Server-Logs auf MPRIS-Fehler
 3. Manche Player müssen "aktiv" sein (ein offenes Fenster haben) um Befehle anzunehmen
@@ -157,7 +158,7 @@ Im Tastatur-Modus:
 
 ### "Keine Medienplayer verbunden"
 
-Das bedeutet OmniPanel-go kann keine MPRIS-Player auf deinem System finden:
+Das bedeutet, OmniPanel-go kann keine aktiven Mediensitzungen auf deinem System finden:
 1. Stelle sicher dass `mpris.enabled` auf `true` in `config.json` steht
 2. Starte OmniPanel-go nach dem Aktivieren von MPRIS neu
 3. Starte einen Medienplayer (Spotify, VLC, etc.)
@@ -168,7 +169,7 @@ Das bedeutet OmniPanel-go kann keine MPRIS-Player auf deinem System finden:
 
 ## Unterstützte Medienplayer
 
-Jede Anwendung die das MPRIS2 D-Bus-Interface implementiert funktioniert. Übliche Player:
+Jede Anwendung mit System-Mediensteuerung funktioniert. Unter Linux sind das MPRIS2-Apps, unter Windows SMTC-Apps. Übliche Player:
 
 | Player | Cover-Bild | Steuerung | Hinweise |
 |--------|------------|-----------|----------|

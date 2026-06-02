@@ -10,6 +10,11 @@
 // cover art overlay when more than one player is available, letting the user switch
 // between players. The full list of available players is published to the
 // mpris_available_players DataBus key as a JSON array.
+//
+// On Windows, use watcher_windows.go (SMTC) instead.
+
+//go:build !windows
+
 package mpris
 
 import (
@@ -33,43 +38,6 @@ const (
 	mprisRootIface   = "org.mpris.MediaPlayer2"
 )
 
-// PlayerState holds the current state of an MPRIS media player.
-type PlayerState struct {
-	// Identity is the human-readable player name from the root MPRIS interface
-	// (e.g., "Spotify", "VLC media player", "Google Chrome").
-	Identity string
-	// PlayerName is the D-Bus service name suffix (e.g., "spotify", "vlc",
-	// "plasma-browser-integration").
-	PlayerName string
-	// PlaybackStatus is one of "Playing", "Paused", or "Stopped".
-	PlaybackStatus string
-	// Title is the current track title from xesam:title metadata.
-	Title string
-	// Artist is the current track artist from xesam:artist metadata.
-	// Multiple artists are joined with ", ".
-	Artist string
-	// Album is the current track album from xesam:album metadata.
-	Album string
-	// ArtURL is the cover art URL from mpris:artUrl metadata.
-	// May be a file:// path to a local temp file.
-	ArtURL string
-	// Length is the track duration in microseconds from mpris:length metadata.
-	Length int64
-	// Position is the current playback position in microseconds.
-	Position int64
-	// Volume is the player volume as a float between 0.0 (muted) and 1.0 (max).
-	Volume float64
-	// CanPlay indicates whether the Play method is supported.
-	CanPlay bool
-	// CanPause indicates whether the Pause method is supported.
-	CanPause bool
-	// CanGoNext indicates whether the Next method is supported.
-	CanGoNext bool
-	// CanGoPrevious indicates whether the Previous method is supported.
-	CanGoPrevious bool
-	// CanControl indicates whether the player accepts control commands.
-	CanControl bool
-}
 
 // Watcher monitors MPRIS media players on the D-Bus session bus
 // and publishes their state to the DataBus. When multiple players

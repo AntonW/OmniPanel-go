@@ -27,10 +27,11 @@ import (
 // all files and subdirectories recursively. If userPath already contains files,
 // Init returns immediately without making changes.
 func Init(userPath string) {
-	starterDir := findStarterDir() + "/user"
-	if starterDir == "" {
+	baseStarterDir := findStarterDir()
+	if baseStarterDir == "" {
 		return
 	}
+	starterDir := filepath.Join(baseStarterDir, "user")
 
 	empty, err := isDirEmpty(userPath)
 	if err != nil {
@@ -89,10 +90,7 @@ func copyDir(src, dst string) error {
 			return err
 		}
 
-		rel, err := filepath.Rel(src, path)
-		if err != nil {
-			return err
-		}
+		rel, _ := filepath.Rel(src, path)
 		target := filepath.Join(dst, rel)
 
 		if d.IsDir() {

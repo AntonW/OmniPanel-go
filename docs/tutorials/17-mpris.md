@@ -2,9 +2,9 @@
 
 ## What This Package Does
 
-The `mpris` package monitors media players on Linux desktop environments via the D-Bus session bus. It automatically discovers MPRIS-compliant players (Spotify, VLC, Firefox, etc.), polls their state (title, artist, cover art, progress, playback status), and publishes that data to the `DataBus` for frontend consumption.
+The `mpris` package provides the media watcher backend used by the Media Player block. On Linux it uses MPRIS over D-Bus; on Windows it uses SMTC (System Media Transport Controls). Both implementations publish the same `mpris_*` compatibility keys to the `DataBus` so the frontend logic stays the same.
 
-> **Platform Note:** MPRIS is Linux-only. It uses the `github.com/godbus/dbus/v5` library to connect to the D-Bus session bus. Windows and macOS do not have D-Bus, so this package is effectively a no-op on those platforms (the watcher returns `nil` when MPRIS is disabled or unavailable).
+> **Platform Note:** Linux uses `github.com/godbus/dbus/v5` (`internal/mpris/mpris.go`), while Windows uses WinRT/COM SMTC APIs (`internal/mpris/watcher_windows.go`). The REST API is platform-neutral (`/api/media/*`), but DataBus keys remain `mpris_*` for backward compatibility.
 
 ## Key Concepts
 
@@ -29,7 +29,7 @@ The MPRIS watcher operates in two phases:
 ## The Data Structures
 
 ```go
-// internal/mpris/mpris.go
+// internal/mpris/types.go
 type PlayerState struct {
     Identity       string  // Human-readable name (e.g., "Spotify", "VLC")
     PlayerName     string  // D-Bus service suffix (e.g., "spotify", "vlc")
@@ -68,7 +68,7 @@ The `Watcher` holds a D-Bus connection, a map of discovered players, a `selected
 ## Initialization
 
 ```go
-// internal/mpris/mpris.go
+// internal/mpris/mpris.go (Linux)
 func New(cfg *config.MPRISConfig, db *databus.DataBus, logger *slog.Logger) *Watcher {
     if cfg == nil || !cfg.Enabled {
         return nil
@@ -312,18 +312,18 @@ func (w *Watcher) SetSelectedPlayer(playerName string) error {
 
 ## HTTP API Endpoints
 
-Four endpoints in `internal/routes/mpris.go` (default mode) or `internal/relay/server.go` (serve mode):
+Four endpoints in `internal/routes/media.go` (default mode) or `internal/relay/server.go` (serve mode):
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/mpris/players` | GET | List connected players with their current state (identity, playback status, metadata, volume, capabilities) |
-| `/api/mpris/control` | POST | Send playback command (play, pause, next, etc.) |
-| `/api/mpris/select` | POST | Set the active player. Body: `{ "player": "spotify" }` |
-| `/api/mpris/cover` | GET | Proxy local cover art files for browser access |
+| `/api/media/players` | GET | List connected players with their current state (identity, playback status, metadata, volume, capabilities) |
+| `/api/media/control` | POST | Send playback command (play, pause, next, etc.) |
+| `/api/media/select` | POST | Set the active player. Body: `{ "player": "spotify" }` |
+| `/api/media/cover` | GET | Proxy local cover art files for browser access |
 
 ### Player Selection
 
-The `/api/mpris/select` endpoint changes which player's state is published to the DataBus. Control commands (`/api/mpris/control`) default to the selected player when no `player` field is provided in the request body:
+The `/api/media/select` endpoint changes which player's state is published to the DataBus. Control commands (`/api/media/control`) default to the selected player when no `player` field is provided in the request body:
 
 ```go
 if req.Player == "" {
@@ -340,9 +340,12 @@ func serveMPRISCoverArt(c *fiber.Ctx) error {
     filePath := c.Query("url")
     filePath = strings.TrimPrefix(filePath, "file://")
 
-    // Security: only allow files under /tmp, /var/tmp, or ~/.cache/
+    // Security: only allow files under trusted temp/cache directories
     cleanPath := filepath.Clean(filePath)
-    allowedPrefixes := []string{"/tmp/", "/var/tmp/", os.Getenv("HOME") + "/.cache/"}
+    allowedPrefixes := []string{
+        "/tmp/", "/var/tmp/", os.Getenv("HOME") + "/.cache/",
+        os.TempDir() + string(filepath.Separator),
+    }
     allowed := false
     for _, prefix := range allowedPrefixes {
         if strings.HasPrefix(cleanPath, prefix) {
@@ -359,7 +362,9 @@ func serveMPRISCoverArt(c *fiber.Ctx) error {
 }
 ```
 
-> **Key Pattern (Security):** The path is cleaned with `filepath.Clean()` and checked against allowed directory prefixes (`/tmp/`, `/var/tmp/`, `~/.cache/`) before reading. This prevents directory traversal attacks (`../../../etc/passwd`) while supporting cover art stored in common cache locations used by KDE Connect and other media players.
+> **Key Pattern (Security):** The path is cleaned with `filepath.Clean()` and checked against allowed directory prefixes before reading. Linux allows `/tmp/`, `/var/tmp/`, and `~/.cache/`; Windows also allows `os.TempDir()`. This blocks directory traversal (`../../../etc/passwd`) while still allowing cover art cache files.
+
+> **Concept (Go Build Tags):** OmniPanel-go uses build tags to compile platform-specific files. `internal/mpris/mpris.go` has `//go:build !windows` (Linux D-Bus), while `internal/mpris/watcher_windows.go` has `//go:build windows` (SMTC). Both expose the same `Watcher` API to the rest of the app.
 
 ## MPRIS in Distributed Deployments (Serve + Connect Mode)
 
@@ -367,10 +372,10 @@ In distributed deployments, the relay server (serve mode) has no MPRIS watcher �
 
 ### How It Works
 
-1. Browser makes HTTP request to `/api/mpris/*` on the relay server
+1. Browser makes HTTP request to `/api/media/*` on the relay server
 2. Relay server generates a unique request ID and registers a response channel
 3. Relay server sends an `mpris-request` message to the host agent via WebSocket
-4. Host agent processes the request locally against the D-Bus session
+4. Host agent processes the request locally against the platform watcher (Linux MPRIS or Windows SMTC)
 5. Host agent sends an `mpris-response` message back with the matching request ID
 6. Relay server delivers the response to the waiting HTTP handler
 7. HTTP handler returns the response to the browser
@@ -452,12 +457,12 @@ The relay server decodes the base64 data and serves it with the correct `Content
 
 ### Frontend Cover Art Auth Token
 
-In serve/connect mode with authentication enabled, the cover art endpoint (`/api/mpris/cover`) is behind auth middleware. The frontend must include the auth token when setting the cover art `<img>` src:
+In serve/connect mode with authentication enabled, the cover art endpoint (`/api/media/cover`) is behind auth middleware. The frontend must include the auth token when setting the cover art `<img>` src:
 
 ```javascript
 // static/client/client.js
 if (newCover && newCover.startsWith('file://')) {
-    newCover = '/api/mpris/cover?url=' + encodeURIComponent(newCover.substring(7));
+    newCover = '/api/media/cover?url=' + encodeURIComponent(newCover.substring(7));
     newCover = addTokenToUrl(newCover);  // Append ?token=xxx for auth
 }
 coverImg.src = newCover;
@@ -474,7 +479,7 @@ The frontend `handleDataUpdate()` function in `static/client/client.js` processe
 if (controlMode === 'mpris') {
     // Rewrite file:// URLs to HTTP proxy
     if (newCover && newCover.startsWith('file://')) {
-        newCover = '/api/mpris/cover?url=' + encodeURIComponent(newCover.substring(7));
+        newCover = '/api/media/cover?url=' + encodeURIComponent(newCover.substring(7));
     }
     coverImg.src = newCover;
 
@@ -504,7 +509,7 @@ function renderMediaSourceTabs() {
         }
         // Render tabs for each player...
         tab.addEventListener('click', async () => {
-            await fetch('/api/mpris/select', {
+            await fetch('/api/media/select', {
                 method: 'POST',
                 body: JSON.stringify({ player: player.name })
             });
@@ -515,26 +520,23 @@ function renderMediaSourceTabs() {
 
 > **Concept (JSON in DataBus):** The `mpris_available_players` key stores a JSON string (not a parsed object) because the DataBus values are primitive types. The frontend parses it with `JSON.parse()` each time the player list changes.
 
-Media control buttons route to either the MPRIS API or keyboard simulation. Volume buttons require special handling: they fetch the current volume from the selected player via `/api/mpris/players`, calculate a ±5% delta, and send a `volume` action to `/api/mpris/control`:
+Media control buttons route to either the media API or keyboard simulation. Volume buttons require special handling: they fetch current system volume via `/api/media/players`, calculate a ±5% delta, and send a `volume` action to `/api/media/control`:
 
 ```javascript
 // static/client/client.js
 if (controlMode === 'mpris') {
     if (action === 'volumedown' || action === 'volumeup') {
-        const volumeData = await (await fetch('/api/mpris/players')).json();
-        // Find the selected player; fall back to first available.
-        let currentPlayer = volumeData.players.find(p => p.name === mprisSelectedPlayer);
-        if (!currentPlayer) currentPlayer = volumeData.players[0];
-        const currentVolume = currentPlayer.volume || 0.5;
+        const volumeData = await (await fetch('/api/media/players')).json();
+        const currentVolume = volumeData.systemVolume ?? 0.5;
         const delta = action === 'volumedown' ? -0.05 : 0.05;
         const newVolume = Math.max(0, Math.min(1, currentVolume + delta));
-        await fetch('/api/mpris/control', {
+        await fetch('/api/media/control', {
             method: 'POST',
             body: JSON.stringify({ action: 'volume', volume: newVolume })
         });
         return;
     }
-    await fetch('/api/mpris/control', {
+    await fetch('/api/media/control', {
         method: 'POST',
         body: JSON.stringify({ action: 'playpause' })
     });
@@ -546,7 +548,9 @@ if (controlMode === 'mpris') {
 }
 ```
 
-> **Key Pattern (Player Selection in Frontend):** The volume button handler uses `mprisSelectedPlayer` to find the correct player in the `/api/mpris/players` response. If no player is selected yet, it falls back to `players[0]`. This ensures volume adjustments are relative to the actual current volume of the active player, not an arbitrary default.
+> **Key Pattern (JavaScript Fallback Values):** The volume button handler uses `volumeData.systemVolume ?? 0.5` so a missing field does not break controls. This is a common JS pattern: provide a safe default when API data may be unavailable.
+
+> **Key Pattern (Go Compatibility Contract):** Backend routes are now `/api/media/*`, but DataBus keys intentionally remain `mpris_*`. Keeping stable key names avoids breaking existing panel blocks and frontend templates while the transport/API naming evolves.
 
 ## Configuration
 

@@ -24,7 +24,7 @@ let commandHoldIntervals = {};
  */
 let rssSeenEntries = {};
 
-// Tracks available MPRIS players for source selection tabs.
+// Tracks available auto-media players (published via mpris_* compatibility keys).
 let mprisAvailablePlayers = [];
 let mprisSelectedPlayer = '';
 
@@ -381,13 +381,13 @@ async function renderBlockFromTemplate(blockWrapper) {
 }
 
 /**
- * Renders source selection tabs on media player blocks when multiple MPRIS players
+ * Renders source selection tabs on media player blocks when multiple players
  * are available. Called during block rendering and whenever the available players
  * list changes via data-update.
  *
  * When there is only one (or zero) players, the overlay is hidden. When there are
  * two or more, pill-style tabs are rendered inside the .media-source-tabs-overlay
- * element on the cover art. Clicking a tab sends POST /api/mpris/select to switch
+ * element on the cover art. Clicking a tab sends POST /api/media/select to switch
  * the active player, which triggers a data-update with the new player's state.
  */
 function renderMediaSourceTabs() {
@@ -420,7 +420,7 @@ function renderMediaSourceTabs() {
                 e.preventDefault();
 
                 try {
-                    await fetch('/api/mpris/select', {
+                    await fetch('/api/media/select', {
                         method: 'POST',
                         headers: addAuthHeaders({ 'Content-Type': 'application/json' }),
                         body: JSON.stringify({ player: player.name })
@@ -1048,7 +1048,7 @@ function handleCommandResult(data) {
  * 2. Media player blocks: updates cover art, title, artist, progress bar,
  *    and play/pause icon based on the block's data-control-mode attribute.
  *    - "mpris" mode: reads from mpris_* DataBus keys, rewrites file:// URLs
- *      to /api/mpris/cover?url=... so browsers can load local cover art.
+ *      to /api/media/cover?url=... so browsers can load local cover art.
  *      In serve/connect mode, the auth token is appended as a query parameter
  *      via addTokenToUrl() since the cover endpoint is behind auth middleware.
  *    - "keyboard" mode: reads from custom data-media-* attribute keys.
@@ -1125,7 +1125,8 @@ function handleDataUpdate(data) {
         }
 
         if (controlMode === 'mpris') {
-            // MPRIS mode: read from mpris_* DataBus keys published by the backend watcher
+            // Auto mode (control_mode="mpris"): read from mpris_* compatibility keys.
+            // Backend source is platform-specific: Linux uses MPRIS, Windows uses SMTC.
             const mprisCoverKey = 'mpris_cover_url';
             const mprisTitleKey = 'mpris_title';
             const mprisArtistKey = 'mpris_artist';
@@ -1138,7 +1139,7 @@ function handleDataUpdate(data) {
                 if (coverImg) {
                     let newCover = data[mprisCoverKey].value;
                     if (newCover && newCover.startsWith('file://')) {
-                        newCover = '/api/mpris/cover?url=' + encodeURIComponent(newCover.substring(7));
+                        newCover = '/api/media/cover?url=' + encodeURIComponent(newCover.substring(7));
                         newCover = addTokenToUrl(newCover);
                     }
                     if (coverImg.src !== newCover && newCover) {
@@ -1723,7 +1724,7 @@ function enableInputs() {
     }
 
     // Media player control buttons: dual-mode routing
-    // - MPRIS mode: sends HTTP requests to /api/mpris/control for playback commands,
+    // - Auto media mode (control_mode="mpris"): sends HTTP requests to /api/media/control,
     //   or fetches current volume then sends a volume set command (±5% delta).
     // - Keyboard mode: sends simulate-keyboard WebSocket messages to trigger
     //   media keys (MediaPlayPause, MediaTrackNext, etc.) on the host.
@@ -1741,13 +1742,13 @@ function enableInputs() {
 		if (controlMode === 'mpris') {
 			let mprisAction = action;
 			if (action === 'volumedown' || action === 'volumeup') {
-				const volumeRes = await fetch('/api/mpris/players', { headers: addAuthHeaders() });
+        const volumeRes = await fetch('/api/media/players', { headers: addAuthHeaders() });
 				if (handleUnauthorized(volumeRes)) return;
 				const volumeData = await volumeRes.json();
 				const currentVolume = volumeData.systemVolume ?? 0.5;
 				const delta = action === 'volumedown' ? -0.05 : 0.05;
 				const newVolume = Math.max(0, Math.min(1, currentVolume + delta));
-				const ctrlRes = await fetch('/api/mpris/control', {
+        const ctrlRes = await fetch('/api/media/control', {
 					method: 'POST',
 					headers: addAuthHeaders({ 'Content-Type': 'application/json' }),
 					body: JSON.stringify({ action: 'volume', volume: newVolume })
@@ -1759,7 +1760,7 @@ function enableInputs() {
 				return;
 			}
 
-			await fetch('/api/mpris/control', {
+      await fetch('/api/media/control', {
                     method: 'POST',
                     headers: addAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ action: mprisAction })

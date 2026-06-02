@@ -46,7 +46,7 @@ Many existing solutions are proprietary, require accounts, or are too bloated. O
 * **Extreme Customization:** Drag and drop blocks your dream cockpit. Advanced users can even create their own blocks using HTML and CSS.
 * **Command Blocks:** Execute shell commands or HTTP requests directly from your panel with adjustable parameters.
 * **Speech Commands:** Control your panel with your voice. Supports offline STT (Vosk with grammar-constrained recognition for high accuracy) and cloud APIs (llama-cpp-server/OpenAI-compatible). Push-to-talk or wake word activation.
-* **Media Player Control:** Display and control MPRIS media players (Spotify, VLC, Firefox) on Linux desktops. Auto-discovers players via D-Bus, shows cover art, title, artist, progress, and playback controls.
+* **Media Player Control:** Display and control media sessions on Linux and Windows. Linux uses MPRIS (D-Bus), Windows uses SMTC. Shows cover art, title, artist, progress, source tabs, and playback controls.
 * **RSS Feed Display:** Subscribe to multiple RSS/Atom feeds and display live entries on your panel. Server-side polling avoids CORS, per-client "new entry" highlighting, and click-to-open URLs on the host browser.
 * **Real-Time Data Bus:** Push any data via HTTP or WebSocket and display it live on your panel with the `data_display` block.
 * **Privacy Focused:** No accounts, no cloud, no data tracking.
@@ -70,7 +70,7 @@ OmniPanel-go v3 is a Go application that serves as:
 | **Virtual Mouse** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: SendInput API (CGO) |
 | **Virtual Keyboard** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: SendInput API (CGO) |
 | **Speech Engine** | Vosk (offline, CGO, requires `libvosk` shared library) or llama-cpp-server (HTTP, no CGO) |
-| **MPRIS Watcher** | Linux D-Bus session bus monitoring for media players (Spotify, VLC, Firefox). Auto-discovers players, polls state, publishes to DataBus |
+| **Media Watcher** | Linux: MPRIS over D-Bus · Windows: SMTC (System Media Transport Controls). Polls sessions, reads metadata/cover/progress, publishes compatibility keys to DataBus |
 | **RSS Feed Manager** | Server-side RSS/Atom feed polling with per-client seen-entry tracking. Pushes updates via WebSocket, opens URLs on host browser on click |
 | **Host Recording** | Uses miniaudio-go (CGO) for host microphone capture — unavailable in container builds |
 | **Start Page** | Served at `/` — panel list, editor link, host controls, and live connection log |
@@ -141,8 +141,10 @@ omnipanel-go/
     │   ├── recorder_stub.go # Recorder stub for non-CGO builds (+build !cgo)
     │   ├── decoder.go   # Audio format conversion (pion/opus)
     │   └── download.go  # Vosk model auto-download
-    ├── mpris/           # MPRIS D-Bus media player monitoring (Linux only)
-    │   └── mpris.go     # Watcher: D-Bus connection, player discovery, state polling, DataBus publishing
+    ├── mpris/           # Media watcher backend (Linux: MPRIS/D-Bus, Windows: SMTC)
+    │   ├── mpris.go     # Linux watcher: D-Bus connection, player discovery, state polling
+    │   ├── watcher_windows.go # Windows watcher: SMTC polling, metadata, cover extraction
+    │   └── types.go     # Shared PlayerState model used by both implementations
     ├── rssfeed/         # RSS/Atom feed polling and per-client update delivery
     │   ├── rssfeed.go   # Manager: feed parsing (gofeed), polling, per-client seen tracking, broadcast callback
     │   ├── openurl_linux.go    # Linux: xdg-open for host URL opening
@@ -811,10 +813,10 @@ The server broadcasts all Data Bus values to every connected client every 500ms:
 | `POST` | `/api/panel/save`           | Save panel. Body: `{ "fileName": "name", "content": { version: 2, blocks: [...], ... } }`                                                                                      |
 | `POST` | `/api/data/push`            | Push data to Data Bus. Body: `{ "key": "...", "value": ..., "unit": "...", "source": "..." }`                                                                                  |
 | `POST` | `/api/joystick-count`       | Update joystick count. Body: `{ "count": N }`                                                                                                                                  |
-| `GET`  | `/api/mpris/players`        | List connected MPRIS media players and their state (Linux only). Response includes: `name`, `identity`, `playbackStatus`, `title`, `artist`, `album`, `artUrl`, `canControl`, `volume` (0.0–1.0) |
-| `POST` | `/api/mpris/control`        | Send playback command. Body: `{ "action": "play"\|"pause"\|"playpause"\|"stop"\|"next"\|"previous"\|"volume", "volume": 0.5, "player": "spotify" }` |
-| `POST` | `/api/mpris/select`         | Set the active player. Body: `{ "player": "spotify" }`                                                                                                                         |
-| `GET`  | `/api/mpris/cover`          | Proxy cover art file for browser access. Query: `?url=<local-file-path>`                                                                                                       |
+| `GET`  | `/api/media/players`        | List connected media players and their state. Response includes: `name`, `identity`, `playbackStatus`, `title`, `artist`, `album`, `artUrl`, `canControl`, `volume` (0.0–1.0) |
+| `POST` | `/api/media/control`        | Send playback command. Body: `{ "action": "play"\|"pause"\|"playpause"\|"stop"\|"next"\|"previous"\|"volume", "volume": 0.5, "player": "spotify" }` |
+| `POST` | `/api/media/select`         | Set the active player. Body: `{ "player": "spotify" }`                                                                                                                         |
+| `GET`  | `/api/media/cover`          | Proxy cover art file for browser access. Query: `?url=<local-file-path>`                                                                                                       |
 
 ### WebSocket
 

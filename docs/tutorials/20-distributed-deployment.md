@@ -560,7 +560,7 @@ The agent dispatches to the appropriate MPRIS watcher method (`ListPlayers`, `Ca
 ```go
 // internal/agent/agent.go
 func (a *Agent) handleMPRISCover(query map[string]string) map[string]any {
-    // ... read file, check security (/tmp/, /var/tmp/, ~/.cache/) ...
+    // ... read file, check security (/tmp/, /var/tmp/, ~/.cache/, os.TempDir()) ...
     encoded := base64.StdEncoding.EncodeToString(data)
     return map[string]any{
         "content_type": contentType,
@@ -572,12 +572,12 @@ func (a *Agent) handleMPRISCover(query map[string]string) map[string]any {
 > **Concept: Base64 encoding for binary transport**
 > Base64 encoding converts binary data (image bytes) into ASCII text that can be safely transmitted in JSON. The overhead is ~33% (a 100KB image becomes ~133KB of text), but this is acceptable for cover art which is typically under 1MB. The alternative would be a separate binary WebSocket channel, which adds complexity.
 
-**Frontend auth token for cover art:** When authentication is enabled, the cover art endpoint (`/api/mpris/cover`) is behind auth middleware. The frontend appends the token as a query parameter:
+**Frontend auth token for cover art:** When authentication is enabled, the cover art endpoint (`/api/media/cover`) is behind auth middleware. The frontend appends the token as a query parameter:
 
 ```javascript
 // static/client/client.js
 if (newCover && newCover.startsWith('file://')) {
-    newCover = '/api/mpris/cover?url=' + encodeURIComponent(newCover.substring(7));
+    newCover = '/api/media/cover?url=' + encodeURIComponent(newCover.substring(7));
     newCover = addTokenToUrl(newCover);  // Appends ?token=xxx
 }
 coverImg.src = newCover;
@@ -615,9 +615,9 @@ coverImg.src = newCover;
 - Frontend detects auth requirement by probing `/api/config` (401 = auth needed)
 - Token is stored in localStorage (persistent) or sessionStorage (tab-only) based on user choice
 - All subsequent API requests include the token via Authorization headers and WebSocket URL params
-- MPRIS media player control works in connect mode via WebSocket request-response forwarding
-- The relay server sends `mpris-request` messages to the host agent for `/api/mpris/*` endpoints
-- The host agent processes MPRIS requests locally against D-Bus and replies with `mpris-response`
+- Media player control works in connect mode via WebSocket request-response forwarding
+- The relay server sends `mpris-request` messages to the host agent for `/api/media/*` endpoints
+- The host agent processes media requests locally against the platform watcher (Linux MPRIS or Windows SMTC) and replies with `mpris-response`
 - Cover art is base64-encoded by the agent and decoded by the relay server for HTTP serving
 - The frontend appends the auth token to cover art URLs via `addTokenToUrl()` when auth is enabled
 - MPRIS request forwarding uses a 5-second timeout to prevent indefinite blocking

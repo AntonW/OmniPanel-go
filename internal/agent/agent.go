@@ -68,6 +68,7 @@ import (
 	"omnipanel-go/internal/config"
 	"omnipanel-go/internal/databus"
 	"omnipanel-go/internal/devices"
+	"omnipanel-go/internal/mediautil"
 	"omnipanel-go/internal/mpris"
 	"omnipanel-go/internal/rssfeed"
 	"omnipanel-go/internal/speech"
@@ -518,98 +519,30 @@ func (a *Agent) handleMPRISRequest(raw string) {
 // Also includes the current system volume for accurate volume button calculations.
 // Called by handleMPRISRequest for the "/players" endpoint.
 func (a *Agent) handleMPRISListPlayers() map[string]any {
-	if a.MPRISWatcher == nil {
-		return map[string]any{
-			"enabled": false,
-			"players": []string{},
-		}
-	}
-
-	players := a.MPRISWatcher.ListPlayers()
-	playerStates := make([]map[string]any, 0, len(players))
-
-	for _, name := range players {
-		state := a.MPRISWatcher.GetPlayerState(name)
-		if state != nil {
-			playerStates = append(playerStates, map[string]any{
-				"name":           state.PlayerName,
-				"identity":       state.Identity,
-				"playbackStatus": state.PlaybackStatus,
-				"title":          state.Title,
-				"artist":         state.Artist,
-				"album":          state.Album,
-				"artUrl":         state.ArtURL,
-				"canControl":     state.CanControl,
-				"volume":         state.Volume,
-			})
-		}
-	}
-
 	sysVol, _ := getSystemVolume()
-
-	return map[string]any{
-		"enabled":       true,
-		"players":       playerStates,
-		"systemVolume":  sysVol,
-	}
+	return mediautil.BuildPlayersResponse(a.MPRISWatcher, sysVol)
 }
 
 // handleMPRISControl executes a playback command (play, pause, playpause,
-// stop, next, previous, volume) on the specified MPRIS player. If no player
-// is specified, uses the currently selected player. Returns success or error.
+// stop, next, previous, volume) on the selected media session.
+// If no player is specified, it uses the currently selected player.
 // Called by handleMPRISRequest for the "/control" endpoint.
 func (a *Agent) handleMPRISControl(body map[string]any) map[string]any {
 	if a.MPRISWatcher == nil {
 		return map[string]any{
-			"error": "MPRIS is not enabled",
+			"error": "Media integration is not enabled",
 		}
 	}
 
-	player, _ := body["player"].(string)
 	action, _ := body["action"].(string)
-
-	if player == "" {
-		player = a.MPRISWatcher.GetSelectedPlayer()
-	}
-	if player == "" {
-		players := a.MPRISWatcher.ListPlayers()
-		if len(players) == 0 {
-			return map[string]any{
-				"error": "No media players connected",
-			}
-		}
-		player = players[0]
-	}
-
-	var err error
+	player, _ := body["player"].(string)
 	slog.Info("mpris control (agent)", "player", player, "action", action, "volume", body["volume"])
-	switch action {
-	case "play":
-		err = a.MPRISWatcher.CallMethod(player, "Play")
-	case "pause":
-		err = a.MPRISWatcher.CallMethod(player, "Pause")
-	case "playpause":
-		err = a.MPRISWatcher.CallMethod(player, "PlayPause")
-	case "stop":
-		err = a.MPRISWatcher.CallMethod(player, "Stop")
-	case "next":
-		err = a.MPRISWatcher.CallMethod(player, "Next")
-	case "previous":
-		err = a.MPRISWatcher.CallMethod(player, "Previous")
-	case "volume":
-		volume, _ := body["volume"].(float64)
-		if volume < 0 || volume > 1 {
-			return map[string]any{
-				"error": "Volume must be between 0.0 and 1.0",
-			}
-		}
-		err = setSystemVolume(volume)
-	default:
-		return map[string]any{
-			"error": "Unknown action: " + action,
-		}
-	}
-
+	volume, _ := body["volume"].(float64)
+	player, err := mediautil.ExecuteControl(a.MPRISWatcher, mediautil.ControlRequest{
+		Player: player,
+		Action: action,
+		Volume: volume,
+	}, setSystemVolume)
 	if err != nil {
 		return map[string]any{
 			"error": err.Error(),
@@ -623,24 +556,18 @@ func (a *Agent) handleMPRISControl(body map[string]any) map[string]any {
 	}
 }
 
-// handleMPRISSelect changes the active MPRIS player whose state is published
+// handleMPRISSelect changes the active player whose state is published
 // to the DataBus. After selection, the new player's metadata is immediately
 // fetched and broadcast. Called by handleMPRISRequest for the "/select" endpoint.
 func (a *Agent) handleMPRISSelect(body map[string]any) map[string]any {
 	if a.MPRISWatcher == nil {
 		return map[string]any{
-			"error": "MPRIS is not enabled",
+			"error": "Media integration is not enabled",
 		}
 	}
 
 	player, _ := body["player"].(string)
-	if player == "" {
-		return map[string]any{
-			"error": "Player name is required",
-		}
-	}
-
-	if err := a.MPRISWatcher.SetSelectedPlayer(player); err != nil {
+	if err := mediautil.SelectPlayer(a.MPRISWatcher, player); err != nil {
 		return map[string]any{
 			"error": err.Error(),
 		}
@@ -653,8 +580,9 @@ func (a *Agent) handleMPRISSelect(body map[string]any) map[string]any {
 }
 
 // handleMPRISCover reads a local cover art file and returns it as a base64-encoded
-// string with the correct MIME type. File access is restricted to /tmp/, /var/tmp/,
-// and ~/.cache/ directories for security. Browsers cannot load file:// URLs directly,
+// string with the correct MIME type. File access is restricted to trusted temp/cache
+// directories (/tmp/, /var/tmp/, ~/.cache/, and os.TempDir()) for security.
+// Browsers cannot load file:// URLs directly,
 // so the relay server decodes this and serves it over HTTP.
 // Called by handleMPRISRequest for the "/cover" endpoint.
 func (a *Agent) handleMPRISCover(query map[string]string) map[string]any {
@@ -665,18 +593,11 @@ func (a *Agent) handleMPRISCover(query map[string]string) map[string]any {
 		}
 	}
 
-	filePath = strings.TrimPrefix(filePath, "file://")
+	filePath = mediautil.NormalizeFileURLPath(filePath)
 
 	cleanPath := filepath.Clean(filePath)
-	allowedPrefixes := []string{"/tmp/", "/var/tmp/", os.Getenv("HOME") + "/.cache/"}
-	allowed := false
-	for _, prefix := range allowedPrefixes {
-		if strings.HasPrefix(cleanPath, prefix) {
-			allowed = true
-			break
-		}
-	}
-	if !allowed {
+	allowedPrefixes := mediautil.AllowedCoverPrefixes(os.Getenv("HOME"), os.TempDir())
+	if !mediautil.IsAllowedCoverPath(cleanPath, allowedPrefixes) {
 		return map[string]any{
 			"error": "Access denied",
 		}
@@ -689,16 +610,7 @@ func (a *Agent) handleMPRISCover(query map[string]string) map[string]any {
 		}
 	}
 
-	ext := strings.ToLower(filepath.Ext(cleanPath))
-	contentType := "image/jpeg"
-	switch ext {
-	case ".png":
-		contentType = "image/png"
-	case ".gif":
-		contentType = "image/gif"
-	case ".webp":
-		contentType = "image/webp"
-	}
+	contentType := mediautil.ContentTypeForPath(cleanPath)
 
 	encoded := base64.StdEncoding.EncodeToString(data)
 

@@ -62,11 +62,11 @@ func NewRouter(s *state.AppState) *fiber.App {
 	app.Get("/api/config", getConfig)
 	app.Post("/api/data/push", pushData)
 
-	// MPRIS media control endpoints
-	app.Get("/api/mpris/players", listMPRISPlayers)
-	app.Post("/api/mpris/control", controlMPRIS)
-	app.Post("/api/mpris/select", selectMPRISPlayer)
-	app.Get("/api/mpris/cover", serveMPRISCoverArt)
+	// Media control endpoints
+	app.Get("/api/media/players", listMPRISPlayers)
+	app.Post("/api/media/control", controlMPRIS)
+	app.Post("/api/media/select", selectMPRISPlayer)
+	app.Get("/api/media/cover", serveMPRISCoverArt)
 
 	// Static file directories (only if they exist)
 	blocksPath := filepath.Join(s.UserPath, "blocks")

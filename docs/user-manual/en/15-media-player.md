@@ -1,10 +1,10 @@
 # Chapter 15: Media Player
 
-Want to see what music is playing and control it from your panel? This chapter covers the Media Player block and how to connect it to your music apps on Linux.
+Want to see what music is playing and control it from your panel? This chapter covers the Media Player block and how to connect it to your music apps on Linux and Windows.
 
 ## What Is the Media Player Block?
 
-The Media Player block shows information about the currently playing media (music, video, podcast) and lets you control playback with buttons. It works with any app that supports the MPRIS standard on Linux — including Spotify, VLC, Firefox, Chrome, and many more.
+The Media Player block shows information about the currently playing media (music, video, podcast) and lets you control playback with buttons. In automatic mode, it works with Linux players through MPRIS and Windows players through SMTC (System Media Transport Controls) — including Spotify, VLC, browser media sessions, and many more.
 
 ### What It Shows
 
@@ -21,9 +21,11 @@ The Media Player block shows information about the currently playing media (musi
 
 The Media Player block has two control modes. Choose the one that fits your setup:
 
-### MPRIS Mode (Linux Desktop)
+### MPRIS Mode (Automatic Media Mode)
 
-This is the automatic mode. OmniPanel-go connects to your Linux desktop's media system (D-Bus) and automatically finds any media player that's running.
+This is the automatic mode. OmniPanel-go automatically connects to the platform media system:
+- **Linux:** MPRIS over D-Bus
+- **Windows:** SMTC (System Media Transport Controls)
 
 **What you get:**
 - Real-time updates when the song changes
@@ -32,9 +34,8 @@ This is the automatic mode. OmniPanel-go connects to your Linux desktop's media 
 - Progress bar that moves as the track plays
 
 **Requirements:**
-- Linux desktop (KDE Plasma, GNOME, etc.)
-- A media player that supports MPRIS (most modern players do)
-- MPRIS enabled in `config.json` (see below)
+- Linux desktop (KDE Plasma, GNOME, etc.) with an MPRIS-compatible player, or Windows 10/11 with an app that exposes media controls
+- MPRIS/media watcher enabled in `config.json` (see below)
 
 ### Keyboard Mode (Any Platform)
 
@@ -47,7 +48,7 @@ This mode sends keyboard media keys (like the Play/Pause button on your keyboard
 
 ---
 
-## Setting Up MPRIS Mode
+## Setting Up Automatic Media Mode
 
 ### Step 1: Enable MPRIS in Config
 
@@ -67,12 +68,12 @@ Open `config.json` and add or update the `mpris` section:
 
 Restart OmniPanel-go after changing this setting.
 
-### Step 2: Start a Media Player
+### Step 2: Start a Media Player App
 
-Open any MPRIS-compatible media player:
+Open a media app that supports platform media controls:
 - **Spotify** (desktop app)
 - **VLC** (any platform)
-- **Firefox** or **Chrome** (with media playing)
+- **Firefox**, **Chrome**, or **Edge** (with media playing)
 - **Rhythmbox**, **Audacious**, **Clementine**, and many others
 
 ### Step 3: Add the Media Player Block
@@ -89,7 +90,7 @@ Open any MPRIS-compatible media player:
 
 Open your panel in a browser. When you play music in your media player, the block should automatically show the title, artist, and cover art. The control buttons should work to play, pause, skip, and adjust volume.
 
-> **Note for distributed setups (serve + connect mode):** MPRIS works the same way — the media player block communicates with the host agent through the relay server. Make sure MPRIS is enabled in the host agent's `config.json` (not the server's config). The host agent must be connected to the relay server for MPRIS to work.
+> **Note for distributed setups (serve + connect mode):** Automatic media mode works the same way — the media player block communicates with the host agent through the relay server. Enable `mpris` in the host agent's `config.json` (not the server config). The host agent must be connected to the relay server.
 
 ---
 
@@ -145,7 +146,7 @@ Some browsers (Chrome, Firefox) store cover art in temporary files that the bloc
 
 ### Buttons don't control my music
 
-In MPRIS mode:
+In automatic media mode (`Control Mode = mpris`):
 1. Make sure your media player is running and playing
 2. Check the server logs for MPRIS errors
 3. Some players need to be "active" (have a window open) to accept commands
@@ -157,7 +158,7 @@ In Keyboard mode:
 
 ### "No media players connected"
 
-This means OmniPanel-go can't find any MPRIS players on your system:
+This means OmniPanel-go can't find active media sessions on your system:
 1. Make sure `mpris.enabled` is `true` in `config.json`
 2. Restart OmniPanel-go after enabling MPRIS
 3. Start a media player (Spotify, VLC, etc.)
@@ -168,7 +169,7 @@ This means OmniPanel-go can't find any MPRIS players on your system:
 
 ## Supported Media Players
 
-Any application that implements the MPRIS2 D-Bus interface will work. Common ones include:
+Any app that exposes system media controls will work. On Linux this means MPRIS2 apps; on Windows this means SMTC-enabled apps. Common ones include:
 
 | Player | Cover Art | Controls | Notes |
 |--------|-----------|----------|-------|
