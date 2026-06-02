@@ -25,8 +25,8 @@ let commandHoldIntervals = {};
 let rssSeenEntries = {};
 
 // Tracks available auto-media players (published via mediacontrol_* keys).
-let mprisAvailablePlayers = [];
-let mprisSelectedPlayer = '';
+let mediaAvailablePlayers = [];
+let mediaSelectedPlayer = '';
 
 // Maps keyboard shortcut strings (e.g., "ctrl+a", "q") to block actions.
 // Populated by enableInputs() for any button/slider with a keyboard-key setting.
@@ -359,7 +359,7 @@ async function renderBlockFromTemplate(blockWrapper) {
             initRSSFeed(blockWrapper);
         }
 
-        if (blockWrapper.settings.control_mode === 'mpris') {
+        if (blockWrapper.settings.control_mode === 'mediacontrol') {
             renderMediaSourceTabs();
         }
 
@@ -391,12 +391,12 @@ async function renderBlockFromTemplate(blockWrapper) {
  * the active player, which triggers a data-update with the new player's state.
  */
 function renderMediaSourceTabs() {
-    const mediaBlocks = document.querySelectorAll('.media-player[data-control-mode="mpris"]');
+    const mediaBlocks = document.querySelectorAll('.media-player[data-control-mode="mediacontrol"]');
     mediaBlocks.forEach(block => {
         const overlay = block.querySelector('.media-source-tabs-overlay');
         if (!overlay) return;
 
-        if (mprisAvailablePlayers.length <= 1) {
+        if (mediaAvailablePlayers.length <= 1) {
             overlay.innerHTML = '';
             overlay.style.display = 'none';
             return;
@@ -405,13 +405,13 @@ function renderMediaSourceTabs() {
         overlay.style.display = 'flex';
         overlay.innerHTML = '';
 
-        mprisAvailablePlayers.forEach(player => {
+        mediaAvailablePlayers.forEach(player => {
             const tab = document.createElement('button');
             tab.className = 'media-source-tab';
             tab.textContent = player.identity || player.name;
             tab.dataset.player = player.name;
 
-            if (player.name === mprisSelectedPlayer) {
+            if (player.name === mediaSelectedPlayer) {
                 tab.classList.add('active');
             }
 
@@ -425,7 +425,7 @@ function renderMediaSourceTabs() {
                         headers: addAuthHeaders({ 'Content-Type': 'application/json' }),
                         body: JSON.stringify({ player: player.name })
                     });
-                    mprisSelectedPlayer = player.name;
+                    mediaSelectedPlayer = player.name;
 
                     overlay.querySelectorAll('.media-source-tab').forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
@@ -1047,7 +1047,7 @@ function handleCommandResult(data) {
  *    for any block with a [data-key] attribute matching a DataBus key.
  * 2. Media player blocks: updates cover art, title, artist, progress bar,
  *    and play/pause icon based on the block's data-control-mode attribute.
- *    - "mpris" mode: reads from mediacontrol_* DataBus keys, rewrites file:// URLs
+ *    - "mediacontrol" mode: reads from mediacontrol_* DataBus keys, rewrites file:// URLs
  *      to /api/media/cover?url=... so browsers can load local cover art.
  *      In serve/connect mode, the auth token is appended as a query parameter
  *      via addTokenToUrl() since the cover endpoint is behind auth middleware.
@@ -1107,10 +1107,10 @@ function handleDataUpdate(data) {
             try {
                 const players = JSON.parse(data['mediacontrol_available_players'].value);
                 if (Array.isArray(players)) {
-                    const changed = players.length !== mprisAvailablePlayers.length ||
-                        JSON.stringify(players.map(p => p.name)) !== JSON.stringify(mprisAvailablePlayers.map(p => p.name));
+                    const changed = players.length !== mediaAvailablePlayers.length ||
+                        JSON.stringify(players.map(p => p.name)) !== JSON.stringify(mediaAvailablePlayers.map(p => p.name));
                     if (changed) {
-                        mprisAvailablePlayers = players;
+                        mediaAvailablePlayers = players;
                         renderMediaSourceTabs();
                     }
                 }
@@ -1121,11 +1121,11 @@ function handleDataUpdate(data) {
 
         // Track selected player
         if (data['mediacontrol_player_name']) {
-            mprisSelectedPlayer = data['mediacontrol_player_name'].value;
+            mediaSelectedPlayer = data['mediacontrol_player_name'].value;
         }
 
-        if (controlMode === 'mpris') {
-            // Auto mode (control_mode="mpris"): read from mediacontrol_* keys.
+        if (controlMode === 'mediacontrol') {
+            // Auto mode (control_mode="mediacontrol"): read from mediacontrol_* keys.
             // Backend source is platform-specific: Linux uses MPRIS, Windows uses SMTC.
 
             const mediacontrolCoverKey = 'mediacontrol_cover_url';
@@ -1725,7 +1725,7 @@ function enableInputs() {
     }
 
     // Media player control buttons: dual-mode routing
-    // - Auto media mode (control_mode="mpris"): sends HTTP requests to /api/media/control,
+    // - Auto media mode (control_mode="mediacontrol"): sends HTTP requests to /api/media/control,
     //   or fetches current volume then sends a volume set command (±5% delta).
     // - Keyboard mode: sends simulate-keyboard WebSocket messages to trigger
     //   media keys (MediaPlayPause, MediaTrackNext, etc.) on the host.
@@ -1740,8 +1740,8 @@ function enableInputs() {
 
             if (!controlMode || !action) return;
 
-		if (controlMode === 'mpris') {
-			let mprisAction = action;
+    if (controlMode === 'mediacontrol') {
+			let mediaAction = action;
 			if (action === 'volumedown' || action === 'volumeup') {
         const volumeRes = await fetch('/api/media/players', { headers: addAuthHeaders() });
 				if (handleUnauthorized(volumeRes)) return;
@@ -1756,7 +1756,7 @@ function enableInputs() {
 				});
 				if (ctrlRes.status !== 200) {
 					const errData = await ctrlRes.json();
-					console.error('MPRIS volume control failed:', errData);
+          console.error('Media control volume failed:', errData);
 				}
 				return;
 			}
@@ -1764,7 +1764,7 @@ function enableInputs() {
       await fetch('/api/media/control', {
                     method: 'POST',
                     headers: addAuthHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ action: mprisAction })
+                    body: JSON.stringify({ action: mediaAction })
                 });
             } else {
                 // Keyboard mode: simulate media key press/release via WebSocket

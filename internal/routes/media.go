@@ -91,7 +91,7 @@ func controlMPRIS(c *fiber.Ctx) error {
 }
 
 // selectMPRISPlayer sets the active player for control and data updates.
-// The selected player's state is published to mpris_* DataBus keys for frontend
+// The selected player's state is published to mediacontrol_* DataBus keys for frontend
 // compatibility, and commands without explicit player target this selection.
 func selectMPRISPlayer(c *fiber.Ctx) error {
 	s := c.Locals("state").(*state.AppState)

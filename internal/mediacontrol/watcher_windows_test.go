@@ -123,7 +123,6 @@ func TestPublishHelpers(t *testing.T) {
 
 	// Simulate player stopping (publishing empty state)
 	if got, _ := db.Get("mediacontrol_title"); got.Value != "Song" {
-	if got, _ := db.Get("mpris_title"); got.Value != "Song" {
 		t.Fatalf("non-selected player should not update databus, got %#v", got)
 	}
 

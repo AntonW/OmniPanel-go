@@ -2,9 +2,9 @@
 
 ## What This Package Does
 
-The `mediacontrol` package provides the media watcher backend used by the Media Player block. On Linux it uses MPRIS over D-Bus; on Windows it uses SMTC (System Media Transport Controls). Both implementations publish the same `mpris_*` compatibility keys to the `DataBus` so the frontend logic stays the same.
+The `mediacontrol` package provides the media watcher backend used by the Media Player block. On Linux it uses MPRIS over D-Bus; on Windows it uses SMTC (System Media Transport Controls). Both implementations publish the same `mediacontrol_*` keys to the `DataBus` so the frontend logic stays the same.
 
-> **Platform Note:** Linux uses `github.com/godbus/dbus/v5` (`internal/mediacontrol/mpris.go`), while Windows uses WinRT/COM SMTC APIs (`internal/mediacontrol/watcher_windows.go`). The REST API is platform-neutral (`/api/media/*`). DataBus keys use the `mpris_*` prefix for backward compatibility with existing panels. The package name `mediacontrol` reflects that it's a platform-agnostic media control abstraction.
+> **Platform Note:** Linux uses `github.com/godbus/dbus/v5` (`internal/mediacontrol/mpris.go`), while Windows uses WinRT/COM SMTC APIs (`internal/mediacontrol/watcher_windows.go`). The REST API is platform-neutral (`/api/media/*`). DataBus keys use the `mediacontrol_*` prefix across both platforms.
 
 ## Key Concepts
 
@@ -270,7 +270,7 @@ func (w *Watcher) publishToDataBus(state *PlayerState) {
     }
     w.mu.RUnlock()
 
-    keyPrefix := "mpris_"
+    keyPrefix := "mediacontrol_"
 
     w.databus.SetSource(keyPrefix+"player_name", state.PlayerName, "", "mpris")
     w.databus.SetSource(keyPrefix+"identity", state.Identity, "", "mpris")
@@ -295,7 +295,7 @@ func (w *Watcher) publishPlayersList() {
         players = append(players, PlayerInfo{Name: name, Identity: state.Identity})
     }
     data, _ := json.Marshal(players)
-    w.databus.SetSource("mpris_available_players", string(data), "", "mpris")
+    w.databus.SetSource("mediacontrol_available_players", string(data), "", "mediacontrol")
 }
 ```
 
@@ -511,11 +511,11 @@ if (controlMode === 'mpris') {
 
 ### Source Selection Tabs
 
-When `mpris_available_players` contains more than one entry, the client renders pill-style tabs as an overlay on the cover art:
+When `mediacontrol_available_players` contains more than one entry, the client renders pill-style tabs as an overlay on the cover art:
 
 ```javascript
 function renderMediaSourceTabs() {
-    const mediaBlocks = document.querySelectorAll('.media-player[data-control-mode="mpris"]');
+    const mediaBlocks = document.querySelectorAll('.media-player[data-control-mode="mediacontrol"]');
     mediaBlocks.forEach(block => {
         const overlay = block.querySelector('.media-source-tabs-overlay');
         if (mprisAvailablePlayers.length <= 1) {
@@ -533,7 +533,7 @@ function renderMediaSourceTabs() {
 }
 ```
 
-> **Concept (JSON in DataBus):** The `mpris_available_players` key stores a JSON string (not a parsed object) because the DataBus values are primitive types. The frontend parses it with `JSON.parse()` each time the player list changes.
+> **Concept (JSON in DataBus):** The `mediacontrol_available_players` key stores a JSON string (not a parsed object) because the DataBus values are primitive types. The frontend parses it with `JSON.parse()` each time the player list changes.
 
 Media control buttons route to either the media API or keyboard simulation. Volume buttons require special handling: they fetch current system volume via `/api/media/players`, calculate a ±5% delta, and send a `volume` action to `/api/media/control`:
 
@@ -565,7 +565,7 @@ if (controlMode === 'mpris') {
 
 > **Key Pattern (JavaScript Fallback Values):** The volume button handler uses `volumeData.systemVolume ?? 0.5` so a missing field does not break controls. This is a common JS pattern: provide a safe default when API data may be unavailable.
 
-> **Key Pattern (Go Compatibility Contract):** Backend HTTP routes use the generic `/api/media/*` naming, but DataBus keys use the `mpris_*` prefix to clearly indicate media player state. This allows the frontend and blocks to reference media data by its technical origin.
+> **Key Pattern (Go Cross-Platform Contract):** Backend HTTP routes use the generic `/api/media/*` naming, and DataBus keys use the `mediacontrol_*` prefix across Linux and Windows. This keeps block templates and frontend update logic identical on both platforms.
 
 ## Configuration
 

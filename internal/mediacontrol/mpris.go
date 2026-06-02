@@ -573,18 +573,18 @@ func (w *Watcher) GetSelectedPlayer() string {
 	return w.selectedPlayer
 }
 
-// clearPlayerDataBus removes all MPRIS keys from the DataBus when a player disconnects.
+// clearPlayerDataBus removes all media-control keys from the DataBus when a player disconnects.
 func (w *Watcher) clearPlayerDataBus(playerName string) {
 	keys := []string{
-		"mpris_player_name", "mpris_identity", "mpris_playback_status",
-		"mpris_title", "mpris_artist", "mpris_album", "mpris_cover_url",
-		"mpris_progress", "mpris_volume",
-		"mpris_can_play", "mpris_can_pause", "mpris_can_go_next",
-		"mpris_can_go_previous", "mpris_can_control",
+		"mediacontrol_player_name", "mediacontrol_identity", "mediacontrol_playback_status",
+		"mediacontrol_title", "mediacontrol_artist", "mediacontrol_album", "mediacontrol_cover_url",
+		"mediacontrol_progress", "mediacontrol_volume",
+		"mediacontrol_can_play", "mediacontrol_can_pause", "mediacontrol_can_go_next",
+		"mediacontrol_can_go_previous", "mediacontrol_can_control",
 	}
 
 	for _, key := range keys {
-		w.databus.SetSource(key, "", "", "mpris")
+		w.databus.SetSource(key, "", "", "mediacontrol")
 	}
 }
 

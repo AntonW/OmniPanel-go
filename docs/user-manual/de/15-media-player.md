@@ -82,7 +82,7 @@ Starte OmniPanel-go nach dieser Änderung neu.
 2. Finde die **Medien**-Kategorie in der Block-Bibliothek (🎵 Symbol)
 3. Ziehe den **Medienwiedergabe**-Block auf deine Arbeitsfläche
 4. Klicke auf das Zahnrad-Symbol um die Einstellungen zu öffnen
-5. Setze **Steuerungsmodus** auf `mpris`
+5. Setze **Steuerungsmodus** auf `mediacontrol`
 6. Aktiviere die Features die du möchtest (Cover-Bild, Titel, Künstler, Fortschrittsbalken)
 7. Speichere das Panel
 
@@ -114,7 +114,7 @@ Wenn du mehrere Medienplayer gleichzeitig laufen hast (zum Beispiel Spotify und 
 
 | Einstellung | Was sie bewirkt | Beispielwerte |
 |-------------|-----------------|---------------|
-| **Steuerungsmodus** | Wie der Block Daten erhält und Befehle sendet | `mpris` (automatisch), `keyboard` (manuell) |
+| **Steuerungsmodus** | Wie der Block Daten erhält und Befehle sendet | `mediacontrol` (automatisch), `keyboard` (manuell) |
 | **Cover anzeigen** | Cover-Bild-Bereich ein- oder ausblenden | An / Aus |
 | **Cover-Bild** | Manuelle Bild-URL (nur Tastatur-Modus) | `https://...` oder leer lassen |
 | **Titel anzeigen** | Track-Titel ein- oder ausblenden | An / Aus |
@@ -146,7 +146,7 @@ Manche Browser (Chrome, Firefox) speichern Cover-Bilder in temporären Dateien d
 
 ### Tasten steuern meine Musik nicht
 
-Im automatischen Medienmodus (`Steuerungsmodus = mpris`):
+Im automatischen Medienmodus (`Steuerungsmodus = mediacontrol`):
 1. Stelle sicher dass dein Medienplayer läuft und abspielt
 2. Prüfe die Server-Logs auf MPRIS-Fehler
 3. Manche Player müssen "aktiv" sein (ein offenes Fenster haben) um Befehle anzunehmen

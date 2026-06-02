@@ -82,7 +82,7 @@ Open a media app that supports platform media controls:
 2. Find the **Media** category in the block library (🎵 icon)
 3. Drag the **Media Player** block onto your workspace
 4. Click the gear icon to open settings
-5. Set **Control Mode** to `mpris`
+5. Set **Control Mode** to `mediacontrol`
 6. Toggle on the features you want (cover art, title, artist, progress bar)
 7. Save the panel
 
@@ -114,7 +114,7 @@ If you have multiple media players running at the same time (for example, Spotif
 
 | Setting | What It Does | Example Values |
 |---------|-------------|----------------|
-| **Control Mode** | How the block gets data and sends commands | `mpris` (auto), `keyboard` (manual) |
+| **Control Mode** | How the block gets data and sends commands | `mediacontrol` (auto), `keyboard` (manual) |
 | **Show Cover** | Show or hide the cover art area | On / Off |
 | **Cover Image** | Manual image URL (keyboard mode only) | `https://...` or leave empty |
 | **Show Title** | Show or hide the track title | On / Off |
@@ -146,7 +146,7 @@ Some browsers (Chrome, Firefox) store cover art in temporary files that the bloc
 
 ### Buttons don't control my music
 
-In automatic media mode (`Control Mode = mpris`):
+In automatic media mode (`Control Mode = mediacontrol`):
 1. Make sure your media player is running and playing
 2. Check the server logs for MPRIS errors
 3. Some players need to be "active" (have a window open) to accept commands

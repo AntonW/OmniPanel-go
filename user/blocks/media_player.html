@@ -2,17 +2,17 @@
     Media Player Block — displays media cover art, title, artist, progress bar,
     and control buttons. Supports two control modes:
     - "keyboard": Sends keyboard media keys (Play/Pause, Next, Previous, Volume)
-    - "mpris": Automatically connects to system media players
+    - "mediacontrol": Automatically connects to system media players
       * Linux: MPRIS2 D-Bus media players (KDE Plasma, GNOME, Spotify, VLC, Firefox, etc.)
       * Windows: SMTC (System Media Transport Controls) enabled apps (Spotify, Chrome, Edge, VLC, etc.)
 
     Dynamic content (cover, title, artist, progress) can be updated via the data bus system.
-    In "mpris" mode, these are automatically populated from the active media player.
+    In "mediacontrol" mode, these are automatically populated from the active media player.
 
     When multiple media players are running, source selection tabs appear as an overlay
     on the cover art area. Clicking a tab switches the active player, updating the cover,
     title, artist, and progress bar to match the selected source. The tabs are rendered
-    automatically by the client when the mpris_available_players DataBus key contains
+    automatically by the client when the mediacontrol_available_players DataBus key contains
     more than one entry.
 
     Note on cover art: YouTube videos on Chrome/Edge don't show thumbnails because the
@@ -20,7 +20,7 @@
     icon instead. This is a browser and streaming service limitation, not our app.
 
     Settings:
-    - control_mode: "keyboard" or "mpris" (determines how controls work)
+    - control_mode: "keyboard" or "mediacontrol" (determines how controls work)
     - show_cover: Toggle to show/hide cover art area
     - cover_image: Cover art URL/path (dynamically updatable via data bus)
     - show_title: Toggle to show/hide title text
@@ -34,7 +34,7 @@
 <settings 
     control_mode="keyboard"
     type-control_mode="select"
-    options-control_mode="keyboard,mpris"
+    options-control_mode="keyboard,mediacontrol"
     show_cover="true"
     type-show_cover="toggle"
     cover_image=""

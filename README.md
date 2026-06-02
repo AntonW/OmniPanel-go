@@ -70,7 +70,7 @@ OmniPanel-go v3 is a Go application that serves as:
 | **Virtual Mouse** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: SendInput API (CGO) |
 | **Virtual Keyboard** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: SendInput API (CGO) |
 | **Speech Engine** | Vosk (offline, CGO, requires `libvosk` shared library) or llama-cpp-server (HTTP, no CGO) |
-| **Media Watcher** | Linux: MPRIS over D-Bus for media player discovery, metadata, and control · Windows: SMTC (System Media Transport Controls) API for the same. Polls sessions, reads metadata/cover/progress, publishes `mpris_*` compatibility keys to DataBus |
+| **Media Watcher** | Linux: MPRIS over D-Bus for media player discovery, metadata, and control · Windows: SMTC (System Media Transport Controls) API for the same. Polls sessions, reads metadata/cover/progress, publishes `mediacontrol_*` keys to DataBus |
 | **RSS Feed Manager** | Server-side RSS/Atom feed polling with per-client seen-entry tracking. Pushes updates via WebSocket, opens URLs on host browser on click |
 | **Host Recording** | Uses miniaudio-go (CGO) for host microphone capture — unavailable in container builds |
 | **Start Page** | Served at `/` — panel list, editor link, host controls, and live connection log |
@@ -838,7 +838,7 @@ Connect to `ws://<host>:<port>/ws` (or `wss://` behind a reverse proxy).
 | `force-reload` | — | Client should reload (panel changed) |
 | `enter-fullscreen` | — | Request client to enter fullscreen |
 | `exit-fullscreen` | — | Request client to exit fullscreen |
-| `data-update` | `{ "key": { "value": ..., "unit": "...", "source": "..." } }` | Data Bus snapshot broadcast (every 500ms). MPRIS keys: `mpris_title`, `mpris_artist`, `mpris_album`, `mpris_cover_url`, `mpris_progress` (0-100%), `mpris_volume` (0-100%), `mpris_playback_status` ("Playing"/"Paused"/"Stopped"), `mpris_player_name`, `mpris_identity`, `mpris_can_play`, `mpris_can_pause`, `mpris_can_go_next`, `mpris_can_go_previous`, `mpris_can_control`, `mpris_available_players` (JSON array of `{name, identity}` objects for multi-player selection) |
+| `data-update` | `{ "key": { "value": ..., "unit": "...", "source": "..." } }` | Data Bus snapshot broadcast (every 500ms). Media keys: `mediacontrol_title`, `mediacontrol_artist`, `mediacontrol_album`, `mediacontrol_cover_url`, `mediacontrol_progress` (0-100%), `mediacontrol_volume` (0-100%), `mediacontrol_playback_status` ("Playing"/"Paused"/"Stopped"), `mediacontrol_player_name`, `mediacontrol_identity`, `mediacontrol_can_play`, `mediacontrol_can_pause`, `mediacontrol_can_go_next`, `mediacontrol_can_go_previous`, `mediacontrol_can_control`, `mediacontrol_available_players` (JSON array of `{name, identity}` objects for multi-player selection) |
 | `rss-update` | `{ "block_id": "...", "entries": [{ "guid": "...", "title": "...", "link": "...", "published": "...", "description": "...", "feed_label": "...", "is_new": true }] }` | Per-client RSS feed update. `is_new` is true for entries the client hasn't seen yet |
 | `log-event` | `{ "timestamp": "...", "data": "..." }` | Connection log event (client connect/disconnect, host connect/disconnect) |
 | `speech-result` | `{ "text": "...", "matched": true, "speak": "..." }` | Speech transcription result |
