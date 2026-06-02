@@ -178,9 +178,14 @@ Nutze diese Namen in der Keyboard Key-Einstellung:
 | Buchstaben | `a` bis `z` |
 | Zahlen | `0` bis `9` |
 | Funktionstasten | `f1` bis `f12` |
-| Modifikatoren | `ctrl`, `shift`, `alt`, `meta` |
-| Sondertasten | `space`, `enter`, `escape`, `esc`, `tab`, `backspace`, `capslock` |
+| Modifikatoren | `ctrl`, `shift`, `alt`, `meta`, `win`, `super` |
+| Sondertasten | `space`, `enter`, `return`, `escape`, `esc`, `tab`, `backspace`, `capslock` |
 | Satzzeichen | `minus`, `equal`, `comma`, `dot`, `slash`, `semicolon`, `apostrophe`, `grave`, `backslash`, `leftbracket`, `rightbracket` |
+| Navigation | `insert` / `ins`, `delete` / `del`, `home`, `end`, `pageup` / `pgup`, `pagedown` / `pgdn` |
+| Pfeiltasten | `up`, `down`, `left`, `right` |
+| Numpad | `numpad0`–`numpad9`, `numpaddot`, `numpadenter`, `numpadplus`, `numpadminus`, `numpadmultiply`, `numpaddivide` |
+| Medien | `volumeup`, `volumedown`, `mute`, `playpause`, `stop`, `nextsong`, `previoussong` |
+| System | `printscreen`, `scrolllock`, `numlock` |
 
 Kombiniere Modifikatoren mit `+`: `ctrl+a`, `ctrl+shift+a`, `alt+f4`, `meta+e`.
 

@@ -108,6 +108,38 @@ const (
 	KEY_BRIGHTNESSUP   = 225
 	KEY_PRINT          = 99
 	KEY_SYSRQ          = 183
+
+	// Navigation cluster
+	KEY_INSERT   = 110
+	KEY_DELETE   = 111
+	KEY_HOME     = 102
+	KEY_END      = 107
+	KEY_PAGEUP   = 104
+	KEY_PAGEDOWN = 109
+
+	// Arrow keys
+	KEY_UP    = 103
+	KEY_DOWN  = 108
+	KEY_LEFT  = 105
+	KEY_RIGHT = 106
+
+	// Numpad
+	KEY_KP0      = 82
+	KEY_KP1      = 79
+	KEY_KP2      = 80
+	KEY_KP3      = 81
+	KEY_KP4      = 75
+	KEY_KP5      = 76
+	KEY_KP6      = 77
+	KEY_KP7      = 71
+	KEY_KP8      = 72
+	KEY_KP9      = 73
+	KEY_KPDOT    = 83
+	KEY_KPENTER  = 96
+	KEY_KPPLUS   = 78
+	KEY_KPMINUS  = 74
+	KEY_KPSLASH  = 98
+	// KEY_KPASTERISK = 55 (already defined above)
 )
 
 // KeyNameToCode maps human-readable key names to Linux input codes.
@@ -148,6 +180,26 @@ var KeyNameToCode = map[string]int{
 	"brightnessup": KEY_BRIGHTNESSUP, "brightnessdown": KEY_BRIGHTNESSDOWN,
 	"printscreen": KEY_PRINT, "sysrq": KEY_SYSRQ,
 	"screenshot": KEY_PRINT,
+	// Navigation cluster
+	"insert": KEY_INSERT, "ins": KEY_INSERT,
+	"delete": KEY_DELETE, "del": KEY_DELETE,
+	"home": KEY_HOME, "end": KEY_END,
+	"pageup": KEY_PAGEUP, "pgup": KEY_PAGEUP,
+	"pagedown": KEY_PAGEDOWN, "pgdn": KEY_PAGEDOWN, "pgdown": KEY_PAGEDOWN,
+	// Arrow keys
+	"up": KEY_UP, "down": KEY_DOWN, "left": KEY_LEFT, "right": KEY_RIGHT,
+	// Numpad
+	"numpad0": KEY_KP0, "numpad1": KEY_KP1, "numpad2": KEY_KP2,
+	"numpad3": KEY_KP3, "numpad4": KEY_KP4, "numpad5": KEY_KP5,
+	"numpad6": KEY_KP6, "numpad7": KEY_KP7, "numpad8": KEY_KP8,
+	"numpad9": KEY_KP9,
+	"numpaddot": KEY_KPDOT, "numpadenter": KEY_KPENTER,
+	"numpadplus": KEY_KPPLUS, "numpadminus": KEY_KPMINUS,
+	"numpadmultiply": KEY_KPASTERISK, "numpaddivide": KEY_KPSLASH,
+	// Common aliases
+	"return": KEY_ENTER,
+	"win": KEY_LEFTMETA, "super": KEY_LEFTMETA,
+	"windows": KEY_LEFTMETA,
 }
 
 // allKeys contains all key codes to register with uinput.
@@ -171,6 +223,14 @@ var allKeys = []uint16{
 	KEY_PLAYPAUSE, KEY_STOPCD, KEY_PREVIOUSSONG, KEY_NEXTSONG,
 	KEY_BRIGHTNESSUP, KEY_BRIGHTNESSDOWN,
 	KEY_PRINT, KEY_SYSRQ,
+	// Navigation cluster
+	KEY_INSERT, KEY_DELETE, KEY_HOME, KEY_END, KEY_PAGEUP, KEY_PAGEDOWN,
+	// Arrow keys
+	KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT,
+	// Numpad
+	KEY_KP0, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP4, KEY_KP5,
+	KEY_KP6, KEY_KP7, KEY_KP8, KEY_KP9,
+	KEY_KPDOT, KEY_KPENTER, KEY_KPPLUS, KEY_KPMINUS, KEY_KPASTERISK, KEY_KPSLASH,
 }
 
 // linuxKeyboard represents a virtual keyboard device created via uinput.

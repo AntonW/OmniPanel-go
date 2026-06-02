@@ -853,7 +853,7 @@ Connect to `ws://<host>:<port>/ws` (or `wss://` behind a reverse proxy).
 | `simulate-button` | `{ "js": 0, "id": 0, "state": 1 }` | Press/release button |
 | `simulate-slider` | `{ "js": 0, "id": 0, "value": 128 }` | Set slider value (0 to `max_value`, default 255) |
 | `simulate-joystick` | `{ "js": 0, "id": 0, "value": { "x": 127, "y": 127 } }` | Set joystick X/Y (0-255) |
-| `simulate-keyboard` | `{ "keyboard_index": 0, "key": "ctrl+a", "state": 1 }` | Press/release key or combo |
+| `simulate-keyboard` | `{ "keyboard_index": 0, "key": "ctrl+a", "state": 1 }` | Press/release key or combo. Key names: letters (`a`–`z`), digits (`0`–`9`), `f1`–`f12`, modifiers (`ctrl`/`shift`/`alt`/`meta`/`win`/`super`), navigation (`insert`/`ins`, `delete`/`del`, `home`, `end`, `pageup`/`pgup`, `pagedown`/`pgdn`), arrows (`up`, `down`, `left`, `right`), numpad (`numpad0`–`numpad9`, `numpadenter`, `numpadplus`, `numpadminus`, `numpadmultiply`, `numpaddivide`), special (`escape`/`esc`, `enter`/`return`, `space`, `tab`, `backspace`, `capslock`, `printscreen`) |
 | `push-data` | `{ "key": "...", "value": ..., "unit": "...", "source": "..." }` | Push data to Data Bus for broadcast |
 | `execute-command` | `{ "block_id": "...", "command_type": "shell", "command": "...", "http_method": "GET", "http_url": "...", "http_body": "...", "params": {...} }` | Execute command with parameters |
 | `start-recording` | `{ "mode": "push-to-talk" }` | Client begins audio recording |

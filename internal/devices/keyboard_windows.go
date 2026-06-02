@@ -100,6 +100,37 @@ const (
 	VK_LAUNCH_APP1         = 0xB6
 	VK_LAUNCH_APP2         = 0xB7
 	VK_LAUNCH_MEDIA_SELECT = 0xB5
+
+	// Navigation cluster
+	VK_INSERT   = 0x2D
+	VK_DELETE   = 0x2E
+	VK_HOME     = 0x24
+	VK_END      = 0x23
+	VK_PRIOR    = 0x21 // Page Up
+	VK_NEXT     = 0x22 // Page Down
+
+	// Arrow keys
+	VK_UP    = 0x26
+	VK_DOWN  = 0x28
+	VK_LEFT  = 0x25
+	VK_RIGHT = 0x27
+
+	// Numpad
+	VK_NUMPAD0  = 0x60
+	VK_NUMPAD1  = 0x61
+	VK_NUMPAD2  = 0x62
+	VK_NUMPAD3  = 0x63
+	VK_NUMPAD4  = 0x64
+	VK_NUMPAD5  = 0x65
+	VK_NUMPAD6  = 0x66
+	VK_NUMPAD7  = 0x67
+	VK_NUMPAD8  = 0x68
+	VK_NUMPAD9  = 0x69
+	VK_DECIMAL  = 0x6E
+	VK_ADD      = 0x6B
+	VK_SUBTRACT = 0x6D
+	VK_MULTIPLY = 0x6A
+	VK_DIVIDE   = 0x6F
 )
 
 // KeyNameToCode maps human-readable key names to Windows virtual key codes.
@@ -136,6 +167,26 @@ var KeyNameToCode = map[string]int{
 	"printscreen": VK_SNAPSHOT, "screenshot": VK_SNAPSHOT,
 	"launchapp1": VK_LAUNCH_APP1, "launchapp2": VK_LAUNCH_APP2,
 	"launchmedia": VK_LAUNCH_MEDIA_SELECT,
+	// Navigation cluster
+	"insert": VK_INSERT, "ins": VK_INSERT,
+	"delete": VK_DELETE, "del": VK_DELETE,
+	"home": VK_HOME, "end": VK_END,
+	"pageup": VK_PRIOR, "pgup": VK_PRIOR,
+	"pagedown": VK_NEXT, "pgdn": VK_NEXT, "pgdown": VK_NEXT,
+	// Arrow keys
+	"up": VK_UP, "down": VK_DOWN, "left": VK_LEFT, "right": VK_RIGHT,
+	// Numpad
+	"numpad0": VK_NUMPAD0, "numpad1": VK_NUMPAD1, "numpad2": VK_NUMPAD2,
+	"numpad3": VK_NUMPAD3, "numpad4": VK_NUMPAD4, "numpad5": VK_NUMPAD5,
+	"numpad6": VK_NUMPAD6, "numpad7": VK_NUMPAD7, "numpad8": VK_NUMPAD8,
+	"numpad9": VK_NUMPAD9,
+	"numpaddot": VK_DECIMAL, "numpadenter": VK_RETURN,
+	"numpadplus": VK_ADD, "numpadminus": VK_SUBTRACT,
+	"numpadmultiply": VK_MULTIPLY, "numpaddivide": VK_DIVIDE,
+	// Common aliases
+	"return":  VK_RETURN,
+	"win":     VK_LWIN, "super": VK_LWIN,
+	"windows": VK_LWIN,
 }
 
 // windowsKeyboard represents a virtual keyboard using Windows SendInput API.
