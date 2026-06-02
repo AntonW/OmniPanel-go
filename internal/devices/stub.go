@@ -4,6 +4,11 @@ package devices
 
 import "fmt"
 
+// KeyNameToCode is empty on unsupported/stub builds.
+// It exists so callers can compile in environments where the real
+// platform keyboard implementation is not available (e.g., CGO disabled).
+var KeyNameToCode = map[string]int{}
+
 // stubJoystick is a no-op joystick implementation for unsupported platforms.
 type stubJoystick struct{}
 
