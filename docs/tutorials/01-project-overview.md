@@ -168,7 +168,8 @@ OmniPanel-go/
 └── internal/
     └── systray/                 # System tray icon (fyne.io/systray)
         ├── systray.go           # Tray package with Open Panel, fullscreen toggle, and exit
-        └── icon.png             # Embedded tray icon (64x64 PNG from SVG logo)
+        ├── icon.png             # Embedded tray icon for Linux/macOS
+        └── icon.ico             # Embedded tray icon for Windows
 ```
 
 ## The Entry Point: `main.go`

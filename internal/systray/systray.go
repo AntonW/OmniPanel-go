@@ -6,7 +6,6 @@
 package systray
 
 import (
-	_ "embed"
 	"os"
 	"runtime"
 	"sync"
@@ -14,8 +13,11 @@ import (
 	"fyne.io/systray"
 )
 
-//go:embed icon.png
-var iconData []byte
+// setTrayIcon applies platform-specific embedded icon bytes.
+// On Windows this uses icon.ico bytes; on other platforms icon.png bytes.
+func setTrayIcon() {
+	systray.SetIcon(trayIconData)
+}
 
 // Tray manages the system tray icon and its menu items.
 // The menu provides Open Panel, Toggle Fullscreen, and Exit Application options.
@@ -75,7 +77,7 @@ func (t *Tray) Quit() {
 // The fullscreen item uses a static "Toggle Fullscreen" label — the internal
 // state tracks whether fullscreen is active, but the menu text does not change.
 func (t *Tray) onReady() {
-	systray.SetIcon(iconData)
+	setTrayIcon()
 	systray.SetTitle("OmniPanel")
 	systray.SetTooltip("OmniPanel-go")
 

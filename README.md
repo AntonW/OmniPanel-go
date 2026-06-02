@@ -114,7 +114,8 @@ omnipanel-go/
     │   └── agent.go     # WebSocket client, auto-reconnect, all subsystems
     ├── systray/         # System tray icon (fyne.io/systray)
     │   ├── systray.go   # Tray with Open Panel, fullscreen toggle, and exit controls
-    │   └── icon.png     # Embedded 64x64 PNG icon
+    │   ├── icon.png     # Embedded tray icon (PNG for non-Windows platforms)
+    │   └── icon.ico     # Embedded tray icon (ICO for Windows)
     ├── relay/           # Central relay server for distributed deployment (serve mode)
     │   ├── server.go    # Fiber HTTP server + WebSocket hub
     │   └── handler.go   # WebSocket message routing (browser ↔ host)
