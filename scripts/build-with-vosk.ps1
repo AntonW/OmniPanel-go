@@ -8,6 +8,18 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Test-UrlExists {
+    param(
+        [Parameter(Mandatory = $true)][string]$Url
+    )
+    try {
+        Invoke-WebRequest -Uri $Url -Method Head -UseBasicParsing | Out-Null
+        return $true
+    } catch {
+        return $false
+    }
+}
+
 function Select-AssetUrl {
     param(
         [Parameter(Mandatory = $true)] $Assets,
@@ -374,6 +386,12 @@ $runtimeDlls = @(
     (Join-Path $BinDir "libwinpthread-1.dll")
 )
 
+# vJoyInterface.dll aus vJoy-Installation
+$vjoyDll = "C:\Program Files\vJoy\x64\vJoyInterface.dll"
+if (Test-Path $vjoyDll) {
+    $runtimeDlls += $vjoyDll
+}
+
 foreach ($dll in $runtimeDlls) {
     if (Test-Path $dll) {
         Copy-Item -Force $dll $OutDir
@@ -385,14 +403,3 @@ if ($Run) {
     & $OutExe
 }
 
-function Test-UrlExists {
-    param(
-        [Parameter(Mandatory = $true)][string]$Url
-    )
-    try {
-        Invoke-WebRequest -Uri $Url -Method Head -UseBasicParsing | Out-Null
-        return $true
-    } catch {
-        return $false
-    }
-}
