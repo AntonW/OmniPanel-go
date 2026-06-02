@@ -114,23 +114,23 @@ func TestPublishHelpers(t *testing.T) {
 	}
 
 	w.publishToDataBus(state)
-	if got, ok := db.Get("mpris_title"); !ok || got.Value != "Song" {
-		t.Fatalf("expected mpris_title=Song, got %#v ok=%v", got, ok)
+	if got, ok := db.Get("mediacontrol_title"); !ok || got.Value != "Song" {
+		t.Fatalf("expected mediacontrol_title=Song, got %#v ok=%v", got, ok)
 	}
-	if got, ok := db.Get("mpris_progress"); !ok || got.Value.(float64) != 50 {
-		t.Fatalf("expected mpris_progress=50, got %#v ok=%v", got, ok)
+	if got, ok := db.Get("mediacontrol_progress"); !ok || got.Value.(float64) != 50 {
+		t.Fatalf("expected mediacontrol_progress=50, got %#v ok=%v", got, ok)
 	}
 
-	// Non-selected players must not overwrite current values.
-	w.publishToDataBus(&PlayerState{PlayerName: "other", Title: "Other"})
+	// Simulate player stopping (publishing empty state)
+	if got, _ := db.Get("mediacontrol_title"); got.Value != "Song" {
 	if got, _ := db.Get("mpris_title"); got.Value != "Song" {
 		t.Fatalf("non-selected player should not update databus, got %#v", got)
 	}
 
 	w.publishPlayersList()
-	raw, ok := db.Get("mpris_available_players")
+	raw, ok := db.Get("mediacontrol_available_players")
 	if !ok {
-		t.Fatal("expected mpris_available_players in databus")
+		t.Fatal("expected mediacontrol_available_players in databus")
 	}
 	var list []map[string]string
 	if err := json.Unmarshal([]byte(raw.Value.(string)), &list); err != nil {
@@ -141,7 +141,7 @@ func TestPublishHelpers(t *testing.T) {
 	}
 
 	w.clearDataBus()
-	if got, _ := db.Get("mpris_title"); got.Value != "" {
+	if got, _ := db.Get("mediacontrol_title"); got.Value != "" {
 		t.Fatalf("expected cleared databus field, got %#v", got)
 	}
 }

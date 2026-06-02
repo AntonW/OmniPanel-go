@@ -24,7 +24,7 @@ let commandHoldIntervals = {};
  */
 let rssSeenEntries = {};
 
-// Tracks available auto-media players (published via mpris_* compatibility keys).
+// Tracks available auto-media players (published via mediacontrol_* keys).
 let mprisAvailablePlayers = [];
 let mprisSelectedPlayer = '';
 
@@ -1047,17 +1047,17 @@ function handleCommandResult(data) {
  *    for any block with a [data-key] attribute matching a DataBus key.
  * 2. Media player blocks: updates cover art, title, artist, progress bar,
  *    and play/pause icon based on the block's data-control-mode attribute.
- *    - "mpris" mode: reads from mpris_* DataBus keys, rewrites file:// URLs
+ *    - "mpris" mode: reads from mediacontrol_* DataBus keys, rewrites file:// URLs
  *      to /api/media/cover?url=... so browsers can load local cover art.
  *      In serve/connect mode, the auth token is appended as a query parameter
  *      via addTokenToUrl() since the cover endpoint is behind auth middleware.
  *    - "keyboard" mode: reads from custom data-media-* attribute keys.
  *
  * Also processes MPRIS player list updates:
- *    - mpris_available_players: JSON array of {name, identity} objects. When
+ *    - mediacontrol_available_players: JSON array of {name, identity} objects. When
  *      the list changes, renderMediaSourceTabs() is called to show/hide
  *      source selection tabs on the cover art overlay.
- *    - mpris_player_name: tracks the currently selected player for tab highlighting.
+ *    - mediacontrol_player_name: tracks the currently selected player for tab highlighting.
  *
  * @param {Object} data - Snapshot of the DataBus from a data-update message.
  */
@@ -1103,9 +1103,9 @@ function handleDataUpdate(data) {
         const progressKey = block.getAttribute('data-media-progress');
 
         // Parse available players list and render source tabs
-        if (data['mpris_available_players']) {
+        if (data['mediacontrol_available_players']) {
             try {
-                const players = JSON.parse(data['mpris_available_players'].value);
+                const players = JSON.parse(data['mediacontrol_available_players'].value);
                 if (Array.isArray(players)) {
                     const changed = players.length !== mprisAvailablePlayers.length ||
                         JSON.stringify(players.map(p => p.name)) !== JSON.stringify(mprisAvailablePlayers.map(p => p.name));
@@ -1120,24 +1120,25 @@ function handleDataUpdate(data) {
         }
 
         // Track selected player
-        if (data['mpris_player_name']) {
-            mprisSelectedPlayer = data['mpris_player_name'].value;
+        if (data['mediacontrol_player_name']) {
+            mprisSelectedPlayer = data['mediacontrol_player_name'].value;
         }
 
         if (controlMode === 'mpris') {
-            // Auto mode (control_mode="mpris"): read from mpris_* compatibility keys.
+            // Auto mode (control_mode="mpris"): read from mediacontrol_* keys.
             // Backend source is platform-specific: Linux uses MPRIS, Windows uses SMTC.
-            const mprisCoverKey = 'mpris_cover_url';
-            const mprisTitleKey = 'mpris_title';
-            const mprisArtistKey = 'mpris_artist';
-            const mprisProgressKey = 'mpris_progress';
-            const mprisStatusKey = 'mpris_playback_status';
+
+            const mediacontrolCoverKey = 'mediacontrol_cover_url';
+            const mediacontrolTitleKey = 'mediacontrol_title';
+            const mediacontrolArtistKey = 'mediacontrol_artist';
+            const mediacontrolProgressKey = 'mediacontrol_progress';
+            const mediacontrolStatusKey = 'mediacontrol_playback_status';
 
             // Cover art: rewrite file:// URLs to HTTP proxy so browsers can load them
-            if (data[mprisCoverKey]) {
+            if (data[mediacontrolCoverKey]) {
                 const coverImg = block.querySelector('.media-cover-image');
                 if (coverImg) {
-                    let newCover = data[mprisCoverKey].value;
+                    let newCover = data[mediacontrolCoverKey].value;
                     if (newCover && newCover.startsWith('file://')) {
                         newCover = '/api/media/cover?url=' + encodeURIComponent(newCover.substring(7));
                         newCover = addTokenToUrl(newCover);
@@ -1148,30 +1149,30 @@ function handleDataUpdate(data) {
                 }
             }
 
-            if (data[mprisTitleKey]) {
+            if (data[mediacontrolTitleKey]) {
                 const titleEl = block.querySelector('.media-title');
                 if (titleEl) {
-                    const newTitle = data[mprisTitleKey].value;
+                    const newTitle = data[mediacontrolTitleKey].value;
                     if (titleEl.textContent !== newTitle) {
                         titleEl.textContent = newTitle || 'Unknown Title';
                     }
                 }
             }
 
-            if (data[mprisArtistKey]) {
+            if (data[mediacontrolArtistKey]) {
                 const artistEl = block.querySelector('.media-artist');
                 if (artistEl) {
-                    const newArtist = data[mprisArtistKey].value;
+                    const newArtist = data[mediacontrolArtistKey].value;
                     if (artistEl.textContent !== newArtist) {
                         artistEl.textContent = newArtist || 'Unknown Artist';
                     }
                 }
             }
 
-            if (data[mprisProgressKey]) {
+            if (data[mediacontrolProgressKey]) {
                 const progressFill = block.querySelector('.media-progress-fill');
                 if (progressFill) {
-                    const newProgress = data[mprisProgressKey].value;
+                    const newProgress = data[mediacontrolProgressKey].value;
                     const progressPercent = typeof newProgress === 'number' ? newProgress : parseFloat(newProgress);
                     if (!isNaN(progressPercent)) {
                         const currentWidth = progressFill.style.width;
@@ -1184,11 +1185,11 @@ function handleDataUpdate(data) {
             }
 
             // Toggle play/pause icons based on playback status
-            if (data[mprisStatusKey]) {
+            if (data[mediacontrolStatusKey]) {
                 const playIcon = block.querySelector('.play-icon');
                 const pauseIcon = block.querySelector('.pause-icon');
                 if (playIcon && pauseIcon) {
-                    const status = data[mprisStatusKey].value;
+                    const status = data[mediacontrolStatusKey].value;
                     if (status === 'Playing') {
                         playIcon.style.display = 'none';
                         pauseIcon.style.display = 'block';

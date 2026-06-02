@@ -663,7 +663,7 @@ func (w *Watcher) CallMethod(playerName, method string) error {
 
 // SetVolume is a no-op on Windows: per-player volume is not exposed by SMTC.
 // System volume is controlled directly by the /api/media/control HTTP endpoint
-// (routes/mpris_volume_windows.go) via WASAPI without going through the Watcher.
+// (routes/mediacontrol_volume_windows.go) via WASAPI without going through the Watcher.
 func (w *Watcher) SetVolume(_ string, _ float64) error {
 	return nil
 }
@@ -717,26 +717,26 @@ func (w *Watcher) publishToDataBus(state *PlayerState) {
 	}
 	w.mu.RUnlock()
 
-	const pfx = "mpris_"
-	w.databus.SetSource(pfx+"player_name", state.PlayerName, "", "mpris")
-	w.databus.SetSource(pfx+"identity", state.Identity, "", "mpris")
-	w.databus.SetSource(pfx+"playback_status", state.PlaybackStatus, "", "mpris")
-	w.databus.SetSource(pfx+"title", state.Title, "", "mpris")
-	w.databus.SetSource(pfx+"artist", state.Artist, "", "mpris")
-	w.databus.SetSource(pfx+"album", state.Album, "", "mpris")
-	w.databus.SetSource(pfx+"cover_url", state.ArtURL, "", "mpris")
+	const pfx = "mediacontrol_"
+	w.databus.SetSource(pfx+"player_name", state.PlayerName, "", "mediacontrol")
+	w.databus.SetSource(pfx+"identity", state.Identity, "", "mediacontrol")
+	w.databus.SetSource(pfx+"playback_status", state.PlaybackStatus, "", "mediacontrol")
+	w.databus.SetSource(pfx+"title", state.Title, "", "mediacontrol")
+	w.databus.SetSource(pfx+"artist", state.Artist, "", "mediacontrol")
+	w.databus.SetSource(pfx+"album", state.Album, "", "mediacontrol")
+	w.databus.SetSource(pfx+"cover_url", state.ArtURL, "", "mediacontrol")
 
 	progress := 0.0
 	if state.Length > 0 {
 		progress = float64(state.Position) / float64(state.Length) * 100.0
 	}
-	w.databus.SetSource(pfx+"progress", progress, "%", "mpris")
-	w.databus.SetSource(pfx+"volume", state.Volume*100.0, "%", "mpris")
-	w.databus.SetSource(pfx+"can_play", state.CanPlay, "", "mpris")
-	w.databus.SetSource(pfx+"can_pause", state.CanPause, "", "mpris")
-	w.databus.SetSource(pfx+"can_go_next", state.CanGoNext, "", "mpris")
-	w.databus.SetSource(pfx+"can_go_previous", state.CanGoPrevious, "", "mpris")
-	w.databus.SetSource(pfx+"can_control", state.CanControl, "", "mpris")
+	w.databus.SetSource(pfx+"progress", progress, "%", "mediacontrol")
+	w.databus.SetSource(pfx+"volume", state.Volume*100.0, "%", "mediacontrol")
+	w.databus.SetSource(pfx+"can_play", state.CanPlay, "", "mediacontrol")
+	w.databus.SetSource(pfx+"can_pause", state.CanPause, "", "mediacontrol")
+	w.databus.SetSource(pfx+"can_go_next", state.CanGoNext, "", "mediacontrol")
+	w.databus.SetSource(pfx+"can_go_previous", state.CanGoPrevious, "", "mediacontrol")
+	w.databus.SetSource(pfx+"can_control", state.CanControl, "", "mediacontrol")
 }
 
 func (w *Watcher) publishPlayersList() {
@@ -752,19 +752,19 @@ func (w *Watcher) publishPlayersList() {
 	w.mu.RUnlock()
 
 	data, _ := json.Marshal(list)
-	w.databus.SetSource("mpris_available_players", string(data), "", "mpris")
+	w.databus.SetSource("mediacontrol_available_players", string(data), "", "mediacontrol")
 }
 
 func (w *Watcher) clearDataBus() {
 	keys := []string{
-		"mpris_player_name", "mpris_identity", "mpris_playback_status",
-		"mpris_title", "mpris_artist", "mpris_album", "mpris_cover_url",
-		"mpris_progress", "mpris_volume",
-		"mpris_can_play", "mpris_can_pause", "mpris_can_go_next",
-		"mpris_can_go_previous", "mpris_can_control",
+		"mediacontrol_player_name", "mediacontrol_identity", "mediacontrol_playback_status",
+		"mediacontrol_title", "mediacontrol_artist", "mediacontrol_album", "mediacontrol_cover_url",
+		"mediacontrol_progress", "mediacontrol_volume",
+		"mediacontrol_can_play", "mediacontrol_can_pause", "mediacontrol_can_go_next",
+		"mediacontrol_can_go_previous", "mediacontrol_can_control",
 	}
 	for _, k := range keys {
-		w.databus.SetSource(k, "", "", "mpris")
+		w.databus.SetSource(k, "", "", "mediacontrol")
 	}
 }
 

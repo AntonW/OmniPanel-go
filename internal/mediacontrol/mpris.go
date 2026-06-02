@@ -11,10 +11,10 @@
 // and exposes their state through the DataBus.
 //
 // When multiple players are running, only the selected player's state is published
-// to the mpris_* DataBus keys. The frontend renders source selection tabs on the
+// to the mediacontrol_* DataBus keys. The frontend renders source selection tabs on the
 // cover art overlay when more than one player is available, letting the user switch
 // between players. The full list of available players is published to the
-// mpris_available_players DataBus key as a JSON array.
+// mediacontrol_available_players DataBus key as a JSON array.
 
 //go:build !windows
 
@@ -45,8 +45,8 @@ const (
 // Watcher monitors MPRIS media players on the D-Bus session bus
 // and publishes their state to the DataBus. When multiple players
 // are connected, only the selected player's state is published to
-// the mpris_* DataBus keys. The full player list is published to
-// mpris_available_players as a JSON array.
+// the mediacontrol_* DataBus keys. The full player list is published to
+// mediacontrol_available_players as a JSON array.
 type Watcher struct {
 	mu             sync.RWMutex
 	config         *config.MediaPlayerConfig
@@ -494,31 +494,31 @@ func (w *Watcher) publishToDataBus(state *PlayerState) {
 	}
 	w.mu.RUnlock()
 
-	keyPrefix := "mpris_"
+	keyPrefix := "mediacontrol_"
 
-	w.databus.SetSource(keyPrefix+"player_name", state.PlayerName, "", "mpris")
-	w.databus.SetSource(keyPrefix+"identity", state.Identity, "", "mpris")
-	w.databus.SetSource(keyPrefix+"playback_status", state.PlaybackStatus, "", "mpris")
-	w.databus.SetSource(keyPrefix+"title", state.Title, "", "mpris")
-	w.databus.SetSource(keyPrefix+"artist", state.Artist, "", "mpris")
-	w.databus.SetSource(keyPrefix+"album", state.Album, "", "mpris")
-	w.databus.SetSource(keyPrefix+"cover_url", state.ArtURL, "", "mpris")
+	w.databus.SetSource(keyPrefix+"player_name", state.PlayerName, "", "mediacontrol")
+	w.databus.SetSource(keyPrefix+"identity", state.Identity, "", "mediacontrol")
+	w.databus.SetSource(keyPrefix+"playback_status", state.PlaybackStatus, "", "mediacontrol")
+	w.databus.SetSource(keyPrefix+"title", state.Title, "", "mediacontrol")
+	w.databus.SetSource(keyPrefix+"artist", state.Artist, "", "mediacontrol")
+	w.databus.SetSource(keyPrefix+"album", state.Album, "", "mediacontrol")
+	w.databus.SetSource(keyPrefix+"cover_url", state.ArtURL, "", "mediacontrol")
 
 	if state.Length > 0 {
 		progress := float64(state.Position) / float64(state.Length) * 100.0
-		w.databus.SetSource(keyPrefix+"progress", progress, "%", "mpris")
+		w.databus.SetSource(keyPrefix+"progress", progress, "%", "mediacontrol")
 	} else {
-		w.databus.SetSource(keyPrefix+"progress", 0.0, "%", "mpris")
+		w.databus.SetSource(keyPrefix+"progress", 0.0, "%", "mediacontrol")
 	}
 
 	volumePercent := state.Volume * 100.0
-	w.databus.SetSource(keyPrefix+"volume", volumePercent, "%", "mpris")
+	w.databus.SetSource(keyPrefix+"volume", volumePercent, "%", "mediacontrol")
 
-	w.databus.SetSource(keyPrefix+"can_play", state.CanPlay, "", "mpris")
-	w.databus.SetSource(keyPrefix+"can_pause", state.CanPause, "", "mpris")
-	w.databus.SetSource(keyPrefix+"can_go_next", state.CanGoNext, "", "mpris")
-	w.databus.SetSource(keyPrefix+"can_go_previous", state.CanGoPrevious, "", "mpris")
-	w.databus.SetSource(keyPrefix+"can_control", state.CanControl, "", "mpris")
+	w.databus.SetSource(keyPrefix+"can_play", state.CanPlay, "", "mediacontrol")
+	w.databus.SetSource(keyPrefix+"can_pause", state.CanPause, "", "mediacontrol")
+	w.databus.SetSource(keyPrefix+"can_go_next", state.CanGoNext, "", "mediacontrol")
+	w.databus.SetSource(keyPrefix+"can_go_previous", state.CanGoPrevious, "", "mediacontrol")
+	w.databus.SetSource(keyPrefix+"can_control", state.CanControl, "", "mediacontrol")
 }
 
 // publishPlayersList publishes the list of available players to the DataBus.
@@ -538,11 +538,11 @@ func (w *Watcher) publishPlayersList() {
 	w.mu.RUnlock()
 
 	data, _ := json.Marshal(players)
-	w.databus.SetSource("mpris_available_players", string(data), "", "mpris")
+	w.databus.SetSource("mediacontrol_available_players", string(data), "", "mediacontrol")
 }
 
 // SetSelectedPlayer sets the active player whose state is published to the
-// DataBus. Only the selected player's metadata appears in the mpris_* keys
+// DataBus. Only the selected player's metadata appears in the mediacontrol_* keys
 // that the frontend reads. Returns an error if the player is not connected.
 // When the selection changes, the new player's state is immediately fetched
 // and published.
