@@ -66,7 +66,7 @@ OmniPanel-go v3 is a Go application that serves as:
 | **Host Agent** | Distributed mode (`connect` subcommand) — WebSocket client with all subsystems, auto-reconnects with exponential backoff |
 | **System Tray** | Cross-platform tray icon (default + connect modes, `fyne.io/systray`) with Open Panel (opens web UI in browser), fullscreen toggle, and graceful exit. Linux/Unix requires `DISPLAY` or `WAYLAND_DISPLAY`; Windows/macOS attempt tray startup by default |
 | **Starter Init** | Copies default user content (blocks, panels, themes, assets) into an empty volume on first run (Docker containers) |
-| **Virtual Joystick** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: vJoy driver (CGO, requires `vJoyInterface.dll`) |
+| **Virtual Joystick** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: vJoy driver (CGO, requires `vJoyInterface.dll` — auto-discovered from standard vJoy paths at runtime) |
 | **Virtual Mouse** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: SendInput API (CGO) |
 | **Virtual Keyboard** | Linux: `uinput` ioctl (pure Go, no CGO) · Windows: SendInput API (CGO) |
 | **Speech Engine** | Vosk (offline, CGO, requires `libvosk` shared library) or llama-cpp-server (HTTP, no CGO) |
@@ -913,7 +913,9 @@ Requires MinGW-w64 or MSYS2 GCC for CGO, and the [vJoy SDK](https://github.com/B
 ```bash
 git clone https://github.com/your-org/OmniPanel-go.git
 cd OmniPanel-go
-# Ensure vJoyInterface.dll is in your PATH or project directory
+# Use the maintained build script for reliable builds with vJoy
+.\scripts\build-with-vosk.ps1
+# Or build manually (vJoyInterface.dll will be auto-discovered at runtime)
 set CGO_ENABLED=1
 go build -o omnipanel-go.exe .
 omnipanel-go.exe
@@ -1004,13 +1006,19 @@ Windows uses [vJoy](https://github.com/BrunnerInnovation/vJoy) for virtual joyst
 2.  **Configure vJoy Devices:**
     Open the vJoy Configure utility and enable at least as many devices as your `numJoysticks` config value. Each device should have 8 axes and 16 buttons configured.
 3.  **Runtime DLL:**
-    Place `vJoyInterface.dll` (from the vJoy SDK) next to `omnipanel-go.exe` or in a directory in your `PATH`. The binary requires this DLL at runtime for joystick functionality.
+    Place `vJoyInterface.dll` (from the vJoy SDK) next to `omnipanel-go.exe`, or it will be auto-discovered from standard vJoy install paths. The binary searches multiple locations at startup for maximum compatibility:
+    - Current directory (where the binary is)
+    - `C:\Program Files\vJoy\x64\vJoyInterface.dll`
+    - `C:\Program Files (x86)\vJoy\x64\vJoyInterface.dll`
+    - `C:\Program Files\vJoy\bin\vJoyInterface.dll`
+    - `C:\Program Files (x86)\vJoy\bin\vJoyInterface.dll`
+    - System PATH
 4.  **Build with CGO (if building from source):**
-    Install MinGW-w64 or MSYS2 GCC.
+    Install MinGW-w64 or MSYS2 GCC. Use the maintained build script for reliable builds:
     ```bash
-    set CGO_ENABLED=1
-    go build -o omnipanel-go.exe .
+    .\scripts\build-with-vosk.ps1
     ```
+    This script handles vJoy DLL discovery and bundling automatically.
 5.  **Run:**
     ```bash
     omnipanel-go.exe

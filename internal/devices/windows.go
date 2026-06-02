@@ -110,7 +110,10 @@ type windowsJoystick struct {
 }
 
 // initVJoy checks if the vJoy driver is installed and available.
-// Tries multiple load strategies: PATH, binary directory, and standard vJoy install paths.
+// It calls wrap_vJoyEnabled via CGO, which attempts to load vJoyInterface.dll
+// from multiple paths (current directory, vJoy install directories, and PATH).
+// Returns true if vJoy is ready to use, false otherwise.
+// This initialization runs once on package load via sync.Once.
 func initVJoy() bool {
 	vjoyInitOnce.Do(func() {
 		vjoyAvailable = C.wrap_vJoyEnabled() == 1
@@ -156,6 +159,8 @@ func (j *windowsJoystick) SendButton(id int, state uint8) {
 }
 
 // SendAxis sets an axis to the given value (0-255), scaled to vJoy's 0-32767 range.
+// The axis ID must be in the valid range for configured vJoy devices (typically 0-7).
+// Out-of-range IDs are silently ignored.
 func (j *windowsJoystick) SendAxis(id int, value uint8) {
 	if id >= len(vjoyAxes) {
 		return

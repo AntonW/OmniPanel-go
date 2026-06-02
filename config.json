@@ -20,7 +20,7 @@
         "speech_allowlist": []
     },
     "mpris": {
-        "enabled": true,
+        "enabled": false,
         "poll_interval": 1000
     }
 }

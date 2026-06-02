@@ -64,12 +64,20 @@ sudo usermod -aG input $USER
 On Windows, OmniPanel-go uses the **vJoy driver** to create virtual joysticks.
 
 **Installation:**
-1. Download vJoy version **2.2.2.0** from the official website
+1. Download vJoy version **2.2.2.0** from the [official vJoy releases page](https://github.com/BrunnerInnovation/vJoy/releases/tag/v2.2.2.0)
 2. Run the installer
-3. During installation, make sure to enable the number of devices you want (at least 4)
+3. During installation, make sure to enable the number of devices you want (at least 4 is recommended)
 4. Restart your computer if prompted
 
-**Note:** vJoy is only needed for virtual joysticks. Virtual mouse input uses Windows' built-in `SendInput` function and doesn't require any extra drivers.
+**Getting vJoyInterface.dll:**
+After installing vJoy, OmniPanel-go will automatically find the `vJoyInterface.dll` file it needs. It searches in these locations:
+- Next to the OmniPanel-go executable (if bundled)
+- Standard vJoy installation directories: `C:\Program Files\vJoy\` or `C:\Program Files (x86)\vJoy\`
+- Your system PATH
+
+If you built OmniPanel-go from source using the `scripts/build-with-vosk.ps1` script, the DLL will be automatically copied next to your executable. Otherwise, OmniPanel-go will find it in the vJoy installation directory the first time it runs.
+
+**Note:** vJoy is only needed for virtual joysticks. Virtual mouse and keyboard input use Windows' built-in `SendInput` function and don't require any extra drivers.
 
 ### macOS
 
@@ -243,7 +251,12 @@ In your game's control settings:
 **Windows:**
 - Make sure vJoy is installed and configured
 - Open the vJoy configuration tool and verify devices are enabled
+- Ensure `vJoyInterface.dll` is in one of these locations:
+  - Next to `omnipanel-go.exe`
+  - In your vJoy installation directory
+  - In your system PATH
 - Restart OmniPanel-go after installing vJoy
+- Check that the DLL is not quarantined by antivirus software
 
 **Linux:**
 - Check that you have permission to access `/dev/uinput`

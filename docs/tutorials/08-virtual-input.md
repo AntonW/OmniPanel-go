@@ -352,22 +352,43 @@ Windows has no equivalent to Linux's `/dev/uinput`. OmniPanel-go uses the [vJoy 
 
 vJoy is a signed kernel driver that creates up to 16 virtual joystick devices. Each device supports up to 16 axes, 128 buttons, and 4 POV hats.
 
-#### CGO Integration
+#### CGO Integration and DLL Loading
 
-The Windows joystick implementation uses CGO to call `vJoyInterface.dll`:
+The Windows joystick implementation uses CGO to call `vJoyInterface.dll`. To improve reliability across different Windows installations and build environments, the code uses a **multi-path DLL loading strategy**:
 
 ```go
-//go:build windows
+//go:build windows && cgo
 
 package devices
 
 /*
-#cgo LDFLAGS: -L. -lvJoyInterface
 #include <windows.h>
+
+// load_vJoyInterface attempts to load vJoyInterface.dll from multiple paths:
+// 1. Current directory or PATH (most reliable for bundled/installed builds)
+// 2. Standard vJoy x64 install paths
+// 3. Standard vJoy bin paths
+// Returns the loaded module handle, or NULL if all paths fail.
+HMODULE load_vJoyInterface(void) {
+    HMODULE h = NULL;
+    const char* paths[] = {
+        "vJoyInterface.dll",              // Current dir / PATH
+        "C:\\Program Files\\vJoy\\x64\\vJoyInterface.dll",
+        "C:\\Program Files (x86)\\vJoy\\x64\\vJoyInterface.dll",
+        "C:\\Program Files\\vJoy\\bin\\vJoyInterface.dll",
+        "C:\\Program Files (x86)\\vJoy\\bin\\vJoyInterface.dll",
+        NULL
+    };
+    for (int i = 0; paths[i] != NULL; i++) {
+        h = LoadLibraryA(paths[i]);
+        if (h) return h;
+    }
+    return NULL;
+}
 
 int wrap_vJoyEnabled(void) {
     typedef BOOL (__cdecl *vJoyEnabled_t)(void);
-    HMODULE h = LoadLibraryA("vJoyInterface.dll");
+    HMODULE h = load_vJoyInterface();
     if (!h) return 0;
     vJoyEnabled_t fn = (vJoyEnabled_t)GetProcAddress(h, "vJoyEnabled");
     if (!fn) { FreeLibrary(h); return 0; }
@@ -381,6 +402,12 @@ import "C"
 
 > **Why wrapper functions?**
 > Go CGO can't directly call `__cdecl` functions from a dynamically loaded DLL. The C wrapper functions use `LoadLibraryA`/`GetProcAddress` to dynamically load the DLL at runtime, then call the vJoy functions. This avoids requiring the DLL at link time.
+
+> **Why multi-path loading?**
+> vJoy installs to different paths depending on Windows version, user permissions, and upgrade history. By checking multiple paths in order (PATH first for flexibility, then standard install directories), the code gracefully handles various configurations without requiring users to manually add vJoy to PATH or move DLLs around.
+
+> **Key Pattern: Graceful fallback chains**
+> The path array is a fallback chain — try the easiest option first, then progressively try more specific locations. This pattern appears throughout systems engineering: DNS resolution, environment variable lookup, and configuration file discovery all use similar strategies to maximize compatibility.
 
 #### Axis Mapping
 

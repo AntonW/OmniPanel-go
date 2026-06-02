@@ -36,10 +36,28 @@ From `scripts/build-with-vosk.ps1`:
 5. Builds with CGO and writes logs to:
    - `bin/build.stdout.log`
    - `bin/build.stderr.log`
-6. Copies runtime DLLs next to the built EXE
+6. Copies runtime DLLs next to the built EXE, including `vJoyInterface.dll` if found in vJoy install locations
 
 > **Key Pattern (PowerShell + CGO): fallback chain**
 > The script uses a fallback strategy for fragile external dependencies: authenticated GitHub API if available, direct release URL fallback, then local reuse on later runs. Similar to Go fallback code paths, this improves reliability under rate limits and network variation.
+
+### vJoyInterface.dll Provisioning
+
+The script automatically detects and copies `vJoyInterface.dll` from standard vJoy install paths:
+
+```powershell
+$vjoyDll = "C:\Program Files\vJoy\x64\vJoyInterface.dll"
+if (Test-Path $vjoyDll) {
+    $runtimeDlls += $vjoyDll
+}
+```
+
+This ensures the built binary has all required runtime dependencies. At runtime, the Go code uses a multi-path loading strategy to find `vJoyInterface.dll` from:
+1. Current directory (where the script placed it)
+2. Standard vJoy installation directories
+3. System PATH
+
+This two-pronged approach — build-time bundling + runtime multi-path search — maximizes compatibility across different Windows configurations.
 
 ## CI vs Local Script
 

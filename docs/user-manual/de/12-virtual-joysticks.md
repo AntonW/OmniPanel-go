@@ -64,12 +64,20 @@ sudo usermod -aG input $USER
 Unter Windows nutzt OmniPanel-go den **vJoy-Treiber**, um virtuelle Joysticks zu erstellen.
 
 **Installation:**
-1. Lade vJoy Version **2.2.2.0** von der offiziellen Website herunter
+1. Lade vJoy Version **2.2.2.0** von der [offiziellen vJoy Releases-Seite](https://github.com/BrunnerInnovation/vJoy/releases/tag/v2.2.2.0) herunter
 2. Führe den Installer aus
-3. Stelle während der Installation sicher, dass du die Anzahl der Geräte aktivierst, die du möchtest (mindestens 4)
+3. Stelle während der Installation sicher, dass du die Anzahl der Geräte aktivierst, die du möchtest (mindestens 4 wird empfohlen)
 4. Starte deinen Computer neu, wenn dazu aufgefordert
 
-**Hinweis:** vJoy wird nur für virtuelle Joysticks benötigt. Virtuelle Mauseingaben nutzen die eingebaute `SendInput`-Funktion von Windows und brauchen keine zusätzlichen Treiber.
+**Die vJoyInterface.dll bekommen:**
+Nach der Installation von vJoy findet OmniPanel-go automatisch die `vJoyInterface.dll`-Datei, die es braucht. Es sucht an diesen Orten:
+- Neben der OmniPanel-go-Anwendungsdatei (wenn mitgeliefert)
+- Standardinstallationsverzeichnisse von vJoy: `C:\Program Files\vJoy\` oder `C:\Program Files (x86)\vJoy\`
+- Dein System-PATH
+
+Wenn du OmniPanel-go von der Quelle mit dem Script `scripts/build-with-vosk.ps1` gebaut hast, wird die DLL automatisch neben deiner ausführbaren Datei kopiert. Andernfalls findet OmniPanel-go die DLL beim ersten Start im vJoy-Installationsverzeichnis.
+
+**Hinweis:** vJoy wird nur für virtuelle Joysticks benötigt. Virtuelle Maus- und Tastatureingaben nutzen die eingebaute `SendInput`-Funktion von Windows und brauchen keine zusätzlichen Treiber.
 
 ### macOS
 
@@ -243,7 +251,12 @@ In den Steuerelement-Einstellungen deines Spiels:
 **Windows:**
 - Stelle sicher, dass vJoy installiert und konfiguriert ist
 - Öffne das vJoy-Konfigurationstool und überprüfe, ob Geräte aktiviert sind
+- Stelle sicher, dass `vJoyInterface.dll` sich in einer dieser Speicherorte befindet:
+  - Neben `omnipanel-go.exe`
+  - In deinem vJoy-Installationsverzeichnis
+  - In deinem System-PATH
 - Starte OmniPanel-go nach der Installation von vJoy neu
+- Prüfe, dass die DLL nicht von Antivirus-Software unter Quarantäne gestellt wurde
 
 **Linux:**
 - Prüfe, ob du Berechtigung für den Zugriff auf `/dev/uinput` hast
