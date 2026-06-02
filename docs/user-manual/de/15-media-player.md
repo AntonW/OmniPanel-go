@@ -176,10 +176,17 @@ Jede Anwendung mit System-Mediensteuerung funktioniert. Unter Linux sind das MPR
 | Spotify (Desktop) | Ja | Vollständig | Beste Erfahrung |
 | VLC | Ja | Vollständig | Funktioniert super |
 | Firefox | Ja | Vollständig | Über Plasma Browser Integration |
-| Chrome/Chromium | Manchmal | Vollständig | Cover-Bild hängt von der Seite ab |
+| Chrome/Chromium | Teilweise | Vollständig | Streaming-Services zeigen Bild; YouTube nicht |
 | Rhythmbox | Ja | Vollständig | GNOME Standard |
 | Audacious | Ja | Vollständig | Leichtgewichtiger Player |
 | Clementine | Ja | Vollständig | Funktionsreicher Player |
+
+> **Hinweis zu YouTube auf Chrome/Edge:** YouTube-Videos zeigen kein Cover-Bild, weil:
+> - Die Medieninformationen von der MediaSession-API des Browsers stammen, die keine Grafiken für YouTube bereitstellt
+> - Windows SMTC (System Media Transport Controls) keine Miniaturansichten von YouTube in Chrome/Edge erhält
+> - Stattdessen sehen Sie ein Musiknoten-Platzhaltersymbol
+>
+> Dies ist eine Einschränkung, wie Browser und YouTube Medieninformationen gemeinsam nutzen. Andere Streaming-Dienste (Spotify, Apple Music, usw.) funktionieren in Browsern, weil sie richtige MediaSession-Grafiken bereitstellen.
 
 ---
 

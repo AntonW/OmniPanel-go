@@ -2,9 +2,9 @@
 
 ## What This Package Does
 
-The `mpris` package provides the media watcher backend used by the Media Player block. On Linux it uses MPRIS over D-Bus; on Windows it uses SMTC (System Media Transport Controls). Both implementations publish the same `mpris_*` compatibility keys to the `DataBus` so the frontend logic stays the same.
+The `mediacontrol` package provides the media watcher backend used by the Media Player block. On Linux it uses MPRIS over D-Bus; on Windows it uses SMTC (System Media Transport Controls). Both implementations publish the same `mpris_*` compatibility keys to the `DataBus` so the frontend logic stays the same.
 
-> **Platform Note:** Linux uses `github.com/godbus/dbus/v5` (`internal/mpris/mpris.go`), while Windows uses WinRT/COM SMTC APIs (`internal/mpris/watcher_windows.go`). The REST API is platform-neutral (`/api/media/*`). DataBus keys use the `mpris_*` prefix to keep frontend code consistent with the media watcher terminology.
+> **Platform Note:** Linux uses `github.com/godbus/dbus/v5` (`internal/mediacontrol/mpris.go`), while Windows uses WinRT/COM SMTC APIs (`internal/mediacontrol/watcher_windows.go`). The REST API is platform-neutral (`/api/media/*`). DataBus keys use the `mpris_*` prefix for backward compatibility with existing panels. The package name `mediacontrol` reflects that it's a platform-agnostic media control abstraction.
 
 ## Key Concepts
 
@@ -34,7 +34,7 @@ On **Linux**, it additionally uses **signal monitoring** to detect when new play
 ## The Data Structures
 
 ```go
-// internal/mpris/types.go
+// internal/mediacontrol/types.go
 type PlayerState struct {
     Identity       string  // Human-readable name (e.g., "Spotify", "VLC")
     PlayerName     string  // D-Bus service suffix (Linux) or AppUserModelId (Windows)
@@ -73,7 +73,7 @@ The `Watcher` holds references to discovered players, a `selectedPlayer` field t
 ## Initialization
 
 ```go
-// internal/mpris/mpris.go (Linux) and watcher_windows.go (Windows)
+// internal/mediacontrol/mpris.go (Linux) and watcher_windows.go (Windows)
 func New(cfg *config.MediaPlayerConfig, db *databus.DataBus, logger *slog.Logger) *Watcher {
     if cfg == nil || !cfg.Enabled {
         return nil
@@ -87,7 +87,7 @@ func New(cfg *config.MediaPlayerConfig, db *databus.DataBus, logger *slog.Logger
 
 ```go
 // internal/state/state.go
-mediaWatcher := mpris.New(&cfg.MediaPlayer, db, slog.Default())
+mediaWatcher := mediacontrol.New(&cfg.MediaPlayer, db, slog.Default())
 if mediaWatcher != nil {
     if err := mediaWatcher.Start(); err != nil {
         slog.Warn("Media watcher failed to start", "error", err)

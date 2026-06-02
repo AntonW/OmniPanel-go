@@ -47,7 +47,7 @@ A guided tour through the OmniPanel-go codebase, written for developers who are 
 | Chapter | Topic | File |
 |---------|-------|------|
 | [16](16-data-flow.md) | End-to-End Data Flow | `internal/websocket/handler.go`, `internal/state/state.go` |
-| [17](17-media-player.md) | Media Player Integration (Linux MPRIS + Windows SMTC) | `internal/mpris/mpris.go`, `internal/mpris/watcher_windows.go`, `internal/routes/media.go` |
+| [17](17-media-player.md) | Media Player Integration (Linux MPRIS + Windows SMTC) | `internal/mediacontrol/mpris.go`, `internal/mediacontrol/watcher_windows.go`, `internal/routes/media.go` |
 | [18](18-rss-feed.md) | RSS Feed Integration (Polling, WebSocket Push, Host URL Opening) | `internal/rssfeed/`, `static/client/client.js` |
 
 ## Part G: Build, CI & Deployment
