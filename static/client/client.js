@@ -568,6 +568,13 @@ function initButtonLayout(blockWrapper, btn) {
     }
 }
 
+/**
+ * initJoystick wires pointer events to joystick transport messages.
+ *
+ * The client always sends normalized `simulate-joystick` payloads (0-255 axis
+ * values). Backend runtime details (for example how Windows vJoy DLL loading is
+ * handled) stay server-side, so the frontend protocol remains stable.
+ */
 function initJoystick(blockWrapper) {
     const hitbox = blockWrapper.querySelector('.joy-hitbox');
     const base = blockWrapper.querySelector('.joy-base');

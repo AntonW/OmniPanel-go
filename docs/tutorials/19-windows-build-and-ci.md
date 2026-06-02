@@ -57,7 +57,18 @@ This ensures the built binary has all required runtime dependencies. At runtime,
 2. Standard vJoy installation directories
 3. System PATH
 
-This two-pronged approach — build-time bundling + runtime multi-path search — maximizes compatibility across different Windows configurations.
+After the first successful load, the DLL handle is cached and reused for the rest of the process. This avoids repeated load/unload cycles that can produce vJoy startup dialog errors on some systems.
+
+This two-pronged approach — build-time bundling + runtime multi-path search with process-lifetime caching — maximizes compatibility across different Windows configurations.
+
+> **Concept (Go): cache once, reuse many times**
+> `internal/devices/windows.go` keeps the vJoy module handle after the first successful `LoadLibraryA`. Reusing one handle is safer than repeatedly loading and unloading a DLL that does global initialization.
+
+> **Concept (JavaScript): no frontend coupling to runtime DLL state**
+> The panel client (`static/client/client.js`) continues sending the same joystick WebSocket payloads regardless of how Windows loads vJoy. This keeps client behavior predictable for users.
+
+> **Key Pattern (Go + JavaScript): transport and adapter split**
+> The frontend speaks a stable protocol (`simulate-joystick` messages), while the backend adapter handles platform-specific DLL and driver details. This split reduces regressions when platform internals change.
 
 ## CI vs Local Script
 

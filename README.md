@@ -1013,6 +1013,7 @@ Windows uses [vJoy](https://github.com/BrunnerInnovation/vJoy) for virtual joyst
     - `C:\Program Files\vJoy\bin\vJoyInterface.dll`
     - `C:\Program Files (x86)\vJoy\bin\vJoyInterface.dll`
     - System PATH
+    - After first successful load, OmniPanel-go keeps the DLL loaded for the process lifetime to avoid repeated vJoy reinitialization issues on some systems.
 4.  **Build with CGO (if building from source):**
     Install MinGW-w64 or MSYS2 GCC. Use the maintained build script for reliable builds:
     ```bash

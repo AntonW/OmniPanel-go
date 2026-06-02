@@ -22,10 +22,12 @@ package devices
 // CGO wrapper functions for vJoyInterface.dll calls
 // These are needed because Go CGO can't directly call __cdecl DLL functions
 // Attempts to load vJoyInterface.dll from multiple paths: current directory, vJoy install dir, and PATH.
+// The loaded module is cached for process lifetime because repeated load/unload cycles
+// can trigger initialization issues inside some vJoyInterface builds.
 
 HMODULE load_vJoyInterface(void) {
+	static HMODULE cached = NULL;
 	HMODULE h = NULL;
-	// Try: current directory, then vJoy standard install paths
 	const char* paths[] = {
 		"vJoyInterface.dll",              // Current dir / PATH
 		"C:\\Program Files\\vJoy\\x64\\vJoyInterface.dll",
@@ -34,9 +36,18 @@ HMODULE load_vJoyInterface(void) {
 		"C:\\Program Files (x86)\\vJoy\\bin\\vJoyInterface.dll",
 		NULL
 	};
+
+	if (cached) {
+		return cached;
+	}
+
+	// Try: current directory, then vJoy standard install paths
 	for (int i = 0; paths[i] != NULL; i++) {
 		h = LoadLibraryA(paths[i]);
-		if (h) return h;
+		if (h) {
+			cached = h;
+			return cached;
+		}
 	}
 	return NULL;
 }
@@ -46,9 +57,8 @@ int wrap_vJoyEnabled(void) {
 	HMODULE h = load_vJoyInterface();
 	if (!h) return 0;
 	vJoyEnabled_t fn = (vJoyEnabled_t)GetProcAddress(h, "vJoyEnabled");
-	if (!fn) { FreeLibrary(h); return 0; }
+	if (!fn) { return 0; }
 	BOOL result = fn();
-	FreeLibrary(h);
 	return result ? 1 : 0;
 }
 
@@ -57,9 +67,8 @@ int wrap_AcquireVJD(unsigned int rID) {
 	HMODULE h = load_vJoyInterface();
 	if (!h) return 0;
 	AcquireVJD_t fn = (AcquireVJD_t)GetProcAddress(h, "AcquireVJD");
-	if (!fn) { FreeLibrary(h); return 0; }
+	if (!fn) { return 0; }
 	BOOL result = fn(rID);
-	FreeLibrary(h);
 	return result ? 1 : 0;
 }
 
@@ -68,9 +77,8 @@ void wrap_RelinquishVJD(unsigned int rID) {
 	HMODULE h = load_vJoyInterface();
 	if (!h) return;
 	RelinquishVJD_t fn = (RelinquishVJD_t)GetProcAddress(h, "RelinquishVJD");
-	if (!fn) { FreeLibrary(h); return; }
+	if (!fn) { return; }
 	fn(rID);
-	FreeLibrary(h);
 }
 
 int wrap_SetAxis(long Value, unsigned int rID, unsigned int Axis) {
@@ -78,9 +86,8 @@ int wrap_SetAxis(long Value, unsigned int rID, unsigned int Axis) {
 	HMODULE h = load_vJoyInterface();
 	if (!h) return 0;
 	SetAxis_t fn = (SetAxis_t)GetProcAddress(h, "SetAxis");
-	if (!fn) { FreeLibrary(h); return 0; }
+	if (!fn) { return 0; }
 	BOOL result = fn(Value, rID, Axis);
-	FreeLibrary(h);
 	return result ? 1 : 0;
 }
 
@@ -89,9 +96,8 @@ int wrap_SetBtn(int Value, unsigned int rID, unsigned char nBtn) {
 	HMODULE h = load_vJoyInterface();
 	if (!h) return 0;
 	SetBtn_t fn = (SetBtn_t)GetProcAddress(h, "SetBtn");
-	if (!fn) { FreeLibrary(h); return 0; }
+	if (!fn) { return 0; }
 	BOOL result = fn(Value, rID, nBtn);
-	FreeLibrary(h);
 	return result ? 1 : 0;
 }
 */
@@ -110,8 +116,10 @@ type windowsJoystick struct {
 }
 
 // initVJoy checks if the vJoy driver is installed and available.
-// It calls wrap_vJoyEnabled via CGO, which attempts to load vJoyInterface.dll
-// from multiple paths (current directory, vJoy install directories, and PATH).
+// It calls wrap_vJoyEnabled via CGO, which loads vJoyInterface.dll from a
+// fallback path list and keeps the module loaded for the process lifetime.
+// Keeping the module loaded avoids repeated DLL reinitialization side effects
+// seen on some Windows setups.
 // Returns true if vJoy is ready to use, false otherwise.
 // This initialization runs once on package load via sync.Once.
 func initVJoy() bool {

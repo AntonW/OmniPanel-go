@@ -354,7 +354,7 @@ vJoy is a signed kernel driver that creates up to 16 virtual joystick devices. E
 
 #### CGO Integration and DLL Loading
 
-The Windows joystick implementation uses CGO to call `vJoyInterface.dll`. To improve reliability across different Windows installations and build environments, the code uses a **multi-path DLL loading strategy**:
+The Windows joystick implementation uses CGO to call `vJoyInterface.dll`. To improve reliability across different Windows installations and build environments, the code uses a **multi-path DLL loading strategy** and **caches the loaded DLL handle for the process lifetime**:
 
 ```go
 //go:build windows && cgo
@@ -369,7 +369,11 @@ package devices
 // 2. Standard vJoy x64 install paths
 // 3. Standard vJoy bin paths
 // Returns the loaded module handle, or NULL if all paths fail.
+// The handle is cached to avoid repeated load/unload reinitialization.
 HMODULE load_vJoyInterface(void) {
+    static HMODULE cached = NULL;
+    if (cached) return cached;
+
     HMODULE h = NULL;
     const char* paths[] = {
         "vJoyInterface.dll",              // Current dir / PATH
@@ -381,7 +385,10 @@ HMODULE load_vJoyInterface(void) {
     };
     for (int i = 0; paths[i] != NULL; i++) {
         h = LoadLibraryA(paths[i]);
-        if (h) return h;
+        if (h) {
+            cached = h;
+            return cached;
+        }
     }
     return NULL;
 }
@@ -391,9 +398,8 @@ int wrap_vJoyEnabled(void) {
     HMODULE h = load_vJoyInterface();
     if (!h) return 0;
     vJoyEnabled_t fn = (vJoyEnabled_t)GetProcAddress(h, "vJoyEnabled");
-    if (!fn) { FreeLibrary(h); return 0; }
+    if (!fn) return 0;
     BOOL result = fn();
-    FreeLibrary(h);
     return result ? 1 : 0;
 }
 */
@@ -403,11 +409,20 @@ import "C"
 > **Why wrapper functions?**
 > Go CGO can't directly call `__cdecl` functions from a dynamically loaded DLL. The C wrapper functions use `LoadLibraryA`/`GetProcAddress` to dynamically load the DLL at runtime, then call the vJoy functions. This avoids requiring the DLL at link time.
 
+> **Concept (Go/C interop): process-lifetime resource caching**
+> In `internal/devices/windows.go`, `load_vJoyInterface` stores the first successful `HMODULE` in a static variable and reuses it. This avoids repeated DLL initialization/cleanup cycles, which can trigger startup dialog errors in some `vJoyInterface.dll` builds.
+
 > **Why multi-path loading?**
 > vJoy installs to different paths depending on Windows version, user permissions, and upgrade history. By checking multiple paths in order (PATH first for flexibility, then standard install directories), the code gracefully handles various configurations without requiring users to manually add vJoy to PATH or move DLLs around.
 
 > **Key Pattern: Graceful fallback chains**
 > The path array is a fallback chain — try the easiest option first, then progressively try more specific locations. This pattern appears throughout systems engineering: DNS resolution, environment variable lookup, and configuration file discovery all use similar strategies to maximize compatibility.
+
+> **Concept (JavaScript): stable transport contract**
+> In `static/client/client.js` (`initJoystick`), the browser only sends normalized `simulate-joystick` messages (`0-255` axis range). It does not know about DLL paths or OS APIs. This separation keeps frontend behavior stable while backend internals evolve.
+
+> **Key Pattern (JavaScript): protocol-first design**
+> Keep wire messages small and consistent (`type` + `data` payload), and isolate platform-specific details in backend adapters. The same UI code works for Linux `uinput` and Windows vJoy because both consume the same protocol.
 
 #### Axis Mapping
 

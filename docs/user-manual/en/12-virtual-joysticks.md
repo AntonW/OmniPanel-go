@@ -77,6 +77,8 @@ After installing vJoy, OmniPanel-go will automatically find the `vJoyInterface.d
 
 If you built OmniPanel-go from source using the `scripts/build-with-vosk.ps1` script, the DLL will be automatically copied next to your executable. Otherwise, OmniPanel-go will find it in the vJoy installation directory the first time it runs.
 
+OmniPanel-go loads this DLL once and keeps it loaded while the app is running. This avoids repeated vJoy re-initialization on startup and improves stability on some Windows systems.
+
 **Note:** vJoy is only needed for virtual joysticks. Virtual mouse and keyboard input use Windows' built-in `SendInput` function and don't require any extra drivers.
 
 ### macOS
@@ -257,6 +259,8 @@ In your game's control settings:
   - In your system PATH
 - Restart OmniPanel-go after installing vJoy
 - Check that the DLL is not quarantined by antivirus software
+
+If you see startup popups from `vJoyInterface DLL` (for example `RegisterClassEx failed` or `Creation of dummy window failed`), fully close OmniPanel-go and start it again after verifying your vJoy install. Current versions of OmniPanel-go keep the DLL loaded once per run to reduce this issue.
 
 **Linux:**
 - Check that you have permission to access `/dev/uinput`
