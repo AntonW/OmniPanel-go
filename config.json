@@ -22,7 +22,7 @@
         "speech_allowlist": []
     },
     "media_player": {
-        "enabled": false,
+        "enabled": true,
         "poll_interval": 1000
     }
 }
